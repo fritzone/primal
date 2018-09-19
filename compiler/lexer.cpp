@@ -37,7 +37,12 @@ std::vector<token> lexer::tokenize()
                 if (current_token.is_allowed_to_combine_token(m_sequence[i], result.back()))
                 {
                     current_token.extend(m_sequence[i]);
-                    current_token.set_type(token::identify_type(m_sequence[i]));    // this might change later
+
+                    auto new_type = token::identify_type(m_sequence[i]);
+                    if(! (current_token.get_type() == token::type::TT_IDENTIFIER && new_type == token::type::TT_NUMBER))
+                    {
+                        current_token.set_type(new_type);    // this might change later
+                    }
                     i++;
                 }
                 else
