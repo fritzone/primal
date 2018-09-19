@@ -1,0 +1,11 @@
+#include <@OPCODE@.h>
+#include <vm.h>
+
+#include <iostream>
+
+bool impl_@OPCODE@(vm* v)
+{
+    std::cout << "@OPCODE@" << std::endl;
+    return false;
+}
+

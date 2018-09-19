@@ -1,0 +1,22 @@
+#ifndef @OPCODE@_H_INCLUDED
+#define @OPCODE@_H_INCLUDED
+
+#include "../hal/opcode.h"
+#include "token.h"
+
+#include <vector>
+class vm;
+
+namespace opcodes
+{
+    struct @OPCODE@ final : public opcode
+    {
+        uint8_t bin() override      {return @OPCODE_CODE@; }
+        std::string name() override {return "@OPCODE@";}
+    };
+}
+
+bool impl_@OPCODE@(vm*);
+bool compile_@OPCODE@(std::vector<token>&);
+
+#endif

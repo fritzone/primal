@@ -1,0 +1,12 @@
+#include <@OPCODE@.h>
+#include <token.h>
+
+#include <iostream>
+#include <vector>
+
+bool compile_@OPCODE@(std::vector<token>&)
+{
+    std::cout << "compile: @OPCODE@" << std::endl;
+    return false;
+}
+
