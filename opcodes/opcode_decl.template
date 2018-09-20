@@ -17,6 +17,6 @@ namespace opcodes
 }
 
 bool impl_@OPCODE@(vm*);
-bool compile_@OPCODE@(std::vector<token>&);
+std::vector<uint8_t> compile_@OPCODE@(std::vector<token>&);
 
 #endif

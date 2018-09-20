@@ -4,9 +4,9 @@
 #include <iostream>
 #include <vector>
 
-bool compile_GTE(std::vector<token>&)
+std::vector<uint8_t> compile_GTE(std::vector<token>&)
 {
     std::cout << "compile: GTE" << std::endl;
-    return false;
+    return std::vector<uint8_t>();
 }
 

@@ -9,11 +9,11 @@ using namespace opcodes;
 
 #include <iostream>
 
-bool kw_let::prepare(std::vector<token> &tokens)
+sequence::prepared_type kw_let::prepare(std::vector<token> &tokens)
 {
     if(tokens.empty())
     {
-        return false;
+        return sequence::prepared_type::PT_INVALID;
     }
     // fetching the name of the token, see if it's a valid identifier or not
     std::string name = tokens[0].data();
@@ -33,10 +33,10 @@ bool kw_let::prepare(std::vector<token> &tokens)
     tokens.erase(tokens.begin());
     if(tokens.empty())
     {
-        return false;
+        return sequence::prepared_type::PT_INVALID;
     }
 
-    return true;
+    return sequence::prepared_type::PT_NORMAL;
 }
 
 bool kw_let::compile(compiler* c)

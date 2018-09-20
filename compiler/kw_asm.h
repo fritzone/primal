@@ -11,10 +11,14 @@ public:
 
     explicit kw_asm(source& src) : sequence(src) {}
 
-    bool prepare(std::vector<token>& tokens) override;
+    sequence::prepared_type prepare(std::vector<token>& tokens) override;
     bool compile(compiler* c) override;
 
     std::string name() override { return N; }
+
+private:
+
+    std::vector<uint8_t> m_precompiled;
 };
 
 #endif

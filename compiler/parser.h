@@ -53,7 +53,8 @@ public:
             tokens.erase(tokens.begin());
 
             // let the current keyword sequence do required modifications on the tokens
-            if(!seq->prepare(tokens))
+            auto prep_t = seq->prepare(tokens);
+            if(prep_t == sequence::prepared_type::PT_INVALID)
             {
                 throw syntax_error(next_seq);
             }

@@ -19,7 +19,7 @@ public:
 
     explicit kw_let(source& src) : sequence(src) {}
 
-    virtual bool prepare(std::vector<token>& tokens) override;
+    sequence::prepared_type prepare(std::vector<token>& tokens) override;
     virtual bool compile(compiler* c) override;
 
     std::string name() override { return N; }

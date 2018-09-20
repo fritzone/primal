@@ -4,9 +4,9 @@
 #include <iostream>
 #include <vector>
 
-bool compile_EQ(std::vector<token>&)
+std::vector<uint8_t> compile_EQ(std::vector<token>&)
 {
     std::cout << "compile: EQ" << std::endl;
-    return false;
+    return std::vector<uint8_t>();
 }
 

@@ -82,7 +82,7 @@ file(APPEND ${OPCC} "#include <opcodes.h>\n")
 file(APPEND ${OPCC} "void register_opcode_compilers() {\n")
 foreach(opcode ${registered_opcodes})
     set(VOPCODE ${opcode})
-    string(CONFIGURE "\topcode_compiler_store::instance().register_opcode(opcodes::${VOPCODE}(), [&](std::vector<token>& t) -> bool { return compile_${VOPCODE}(t); });" conf_line @ONLY)
+    string(CONFIGURE "\topcode_compiler_store::instance().register_opcode(opcodes::${VOPCODE}(), [&](std::vector<token>& t) -> std::vector<uint8_t> { return compile_${VOPCODE}(t); });" conf_line @ONLY)
     file(APPEND ${OPCC} "${conf_line}\n")
     # and here add the cpp file to the project sources
     list(APPEND opcode-compiler-sources ${CMAKE_CURRENT_SOURCE_DIR}/compile/compile_${opcode}.cpp)

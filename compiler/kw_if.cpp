@@ -11,11 +11,11 @@
 
 using namespace opcodes;
 
-bool kw_if::prepare(std::vector<token> &tokens)
+sequence::prepared_type kw_if::prepare(std::vector<token> &tokens)
 {
     if(tokens.empty())
     {
-        return false;
+        return sequence::prepared_type::PT_INVALID;
     }
 
     // find the then at the end of this sequence
@@ -36,7 +36,7 @@ bool kw_if::prepare(std::vector<token> &tokens)
     last);
 
 
-    return true;
+    return sequence::prepared_type::PT_NORMAL;
 }
 
 bool kw_if::compile(compiler* c)

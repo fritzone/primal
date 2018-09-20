@@ -4,9 +4,9 @@
 #include <iostream>
 #include <vector>
 
-bool compile_LT(std::vector<token>&)
+std::vector<uint8_t> compile_LT(std::vector<token>&)
 {
     std::cout << "compile: LT" << std::endl;
-    return false;
+    return std::vector<uint8_t>();
 }
 

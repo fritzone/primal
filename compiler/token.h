@@ -3,6 +3,8 @@
 
 #include <string>
 
+#include <hal.h>
+
 /* This class represents a token */
 class token
 {
@@ -22,6 +24,7 @@ public:
         TT_ASSIGNMENT = 7,
         TT_COMPARISON = 8,
         TT_EXCLAMATION = 9,
+        TT_REGISTER = 10,
         TT_UNKNOWN = 255
     };
 
@@ -43,6 +46,10 @@ public:
 
     std::string data() const;
     type get_type() const;
+
+    // will create a register from this token for easier compilation
+    reg create_register() const;
+    numeric_t to_number() const;
 public:
 
     // Gets the type of a character

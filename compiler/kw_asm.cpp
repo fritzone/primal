@@ -1,11 +1,12 @@
 #include "kw_asm.h"
 #include "asm_compiler.h"
+#include "generate.h"
 
-bool kw_asm::prepare(std::vector<token> &tokens)
+sequence::prepared_type kw_asm::prepare(std::vector<token> &tokens)
 {
     if(tokens.empty())
     {
-        return false;
+        return sequence::prepared_type::PT_INVALID;
     }
 
     // fetching the opcode
@@ -15,21 +16,18 @@ bool kw_asm::prepare(std::vector<token> &tokens)
     // see if it's registered or not
     if(opcode_compiler_store::instance().have_opcode(opcode))
     {
-        opcode_compiler_store::instance().opcode_compiler(opcode)(tokens);
+        m_precompiled = opcode_compiler_store::instance().opcode_compiler(opcode)(tokens);
     }
 
-    // erasing the equality sign, check for error
-    tokens.erase(tokens.begin());
-    if(tokens.empty())
-    {
-        return false;
-    }
-
-    return true;
+    return sequence::prepared_type::PT_PRECOMPILED;
 }
 
 bool kw_asm::compile(compiler *c)
 {
-    return sequence::compile(c);
+    for(auto b : m_precompiled)
+    {
+        compiled_code::instance(c).append(b);
+    }
+    return true;
 }
 

@@ -39,10 +39,15 @@ std::vector<token> lexer::tokenize()
                     current_token.extend(m_sequence[i]);
 
                     auto new_type = token::identify_type(m_sequence[i]);
-                    if(! (current_token.get_type() == token::type::TT_IDENTIFIER && new_type == token::type::TT_NUMBER))
+
+                    if(
+                            (!(current_token.get_type() == token::type::TT_IDENTIFIER && new_type == token::type::TT_NUMBER))
+                         && (!(current_token.get_type() == token::type::TT_REGISTER))
+                      )
                     {
                         current_token.set_type(new_type);    // this might change later
                     }
+
                     i++;
                 }
                 else

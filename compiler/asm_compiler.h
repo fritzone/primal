@@ -20,7 +20,7 @@ public:
     }
 
     template<class T>
-    void register_opcode(T&& v, std::function<bool(std::vector<token>&)> cmplr)
+    void register_opcode(T&& v, std::function<std::vector<uint8_t>(std::vector<token>&)> cmplr)
     {
         instance().register_opcode_by_name(v.name(), cmplr);
     }
@@ -30,7 +30,7 @@ public:
         return opcode_compilers.count(opc) > 0;
     }
 
-    std::function<bool(std::vector<token>&)>& opcode_compiler(const std::string& opc)
+    std::function<std::vector<uint8_t>(std::vector<token>&)>& opcode_compiler(const std::string& opc)
     {
         if(!have_opcode(opc))
         {
@@ -41,13 +41,13 @@ public:
 
 private:
 
-    void register_opcode_by_name(const std::string& name, const std::function<bool(std::vector<token>&)>& cmplr)
+    void register_opcode_by_name(const std::string& name, const std::function<std::vector<uint8_t>(std::vector<token>&)>& cmplr)
     {
         opcode_compilers[name] = cmplr;
     }
 
 
-    std::map<std::string, std::function<bool(std::vector<token>&)>> opcode_compilers;
+    std::map<std::string, std::function<std::vector<uint8_t>(std::vector<token>&)>> opcode_compilers;
 };
 
 #endif //PRIMITIVE_ASM_COMPILER_H

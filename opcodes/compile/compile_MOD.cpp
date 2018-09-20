@@ -4,9 +4,9 @@
 #include <iostream>
 #include <vector>
 
-bool compile_MOD(std::vector<token>&)
+std::vector<uint8_t> compile_MOD(std::vector<token>&)
 {
     std::cout << "compile: MOD" << std::endl;
-    return false;
+    return std::vector<uint8_t>();
 }
 

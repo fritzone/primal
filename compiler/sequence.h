@@ -15,13 +15,21 @@ class compiler;
 class sequence
 {
 public:
+
+    enum class prepared_type
+    {
+        PT_NORMAL = 1,
+        PT_PRECOMPILED = 2,
+        PT_INVALID = 255
+    };
+
     virtual ~sequence() = default;
 
     /* Creates a new sequence from the given source */
     explicit sequence(source& src) : m_src(src) {}
 
     /* This method will do some preliminary preparations on the token vector */
-    virtual bool prepare(std::vector<token>& tokens) = 0;
+    virtual prepared_type prepare(std::vector<token>& tokens) = 0;
 
     /* This compiles the expression that remained after prepare. Overrides of this method
     should call this first. This leaves the result in R0 */
