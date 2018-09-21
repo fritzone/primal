@@ -1,17 +1,22 @@
 #ifndef LABEL_H
 #define LABEL_H
 
+#include "sequence.h"
+
 #include <string>
 
 /* Simple class to represent a label in the assembly output */
-class label
+class label : public sequence
 {
 public:
-    static label create();
+
+    label(source&);
+
+    static label create(source&);
     std::string name() const;
 
-private:
-    label();
+    prepared_type prepare(std::vector<token>& tokens) override;
+    bool compile(compiler*) override;
 
 private:
     static uint32_t label_counter;

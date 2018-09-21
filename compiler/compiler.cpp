@@ -28,9 +28,9 @@ std::shared_ptr<compiler> compiler::initalize()
 bool compiler::compile(const std::string &s)
 {
     parser p;
-    source src(s);
+    m_src = source(s);
     std::string last;
-    auto seqs = p.parse(src, [&](std::string) {return false;}, last);
+    auto seqs = p.parse(m_src, [&](std::string) {return false;}, last);
     for(const auto& seq : seqs) seq->compile(this);
     compiled_code::instance(this).finalize();
 
@@ -46,4 +46,9 @@ std::vector<uint8_t> compiler::bytecode() const
 std::shared_ptr<generate> compiler::gen_code()
 {
     return std::make_shared<generate>(this);
+}
+
+source &compiler::get_source()
+{
+    return m_src;
 }

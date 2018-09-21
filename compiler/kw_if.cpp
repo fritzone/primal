@@ -42,8 +42,8 @@ sequence::prepared_type kw_if::prepare(std::vector<token> &tokens)
 bool kw_if::compile(compiler* c)
 {
     sequence::compile(c);
-    label lbl_after_if = label::create();
-    label lbl_if_body = label::create();
+    label lbl_after_if = label::create(c->get_source());
+    label lbl_if_body = label::create(c->get_source());
 
     (*c->gen_code()) << (dynamic_cast<comp*>(operators[m_root->data.data()].get()))->jump << lbl_if_body;
     (*c->gen_code()) << JMP() << lbl_after_if;

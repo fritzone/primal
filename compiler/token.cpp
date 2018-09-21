@@ -24,6 +24,11 @@ bool token::is_allowed_to_combine_token(char next, const token& previos_token)
 
 bool token::is_allowed_to_combine_token(char next)
 {
+    if(m_type == token::type::TT_LABEL && (::isalnum(next) || next == '_'))
+    {
+        return true;
+    }
+
     token::type t2 = identify_type(next);
 
     return ( (m_type == token::type::TT_IDENTIFIER && t2 == token::type::TT_NUMBER)
@@ -66,6 +71,7 @@ token::type token::identify_type(char c)
     if (c == '=') return token::type::TT_ASSIGNMENT;
     if (c == '!') return token::type::TT_EXCLAMATION;
     if (c == '$') return token::type::TT_REGISTER;
+    if (c == ':') return token::type::TT_LABEL;
 
     return token::type::TT_UNKNOWN;
 }

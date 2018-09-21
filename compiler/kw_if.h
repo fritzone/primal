@@ -30,7 +30,7 @@ public:
 
     explicit kw_endif(source& src) : sequence(src) {}
     sequence::prepared_type prepare(std::vector<token>&) override { return sequence::prepared_type::PT_NORMAL; }
-    virtual bool compile(compiler*) override { return true; }
+    bool compile(compiler*) override { return true; }
 
     std::string name() override { return N; }
 

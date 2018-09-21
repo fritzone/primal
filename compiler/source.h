@@ -7,8 +7,16 @@
 class source
 {
 public:
+    source() = default;
     source(const char* src);
     source(const std::string& src);
+
+    source& operator = (const source& oth)
+    {
+        m_ss << oth.m_ss.str();
+        m_empty = oth.m_empty;
+        return *this;
+    }
 
     virtual ~source() = default;
 

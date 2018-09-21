@@ -11,6 +11,8 @@ struct reg final
 
     reg& operator = (numeric_t v) { m_value = v; return *this; }
 
+    bool operator == (numeric_t v) const { return m_value == v; }
+
     uint8_t idx() const {return m_reg_idx;}
     void set_idx(uint8_t i) { m_reg_idx = i; }
 

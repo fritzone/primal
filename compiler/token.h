@@ -15,17 +15,18 @@ public:
     /* What type a token is */
     enum class type
     {
-        TT_OPERATOR = 1,
-        TT_IDENTIFIER = 2,
-        TT_NUMBER = 3,
-        TT_OPEN_PARENTHESES = 4,
-        TT_CLOSE_PARENTHESES = 5,
-        TT_VARIABLE = 6,
-        TT_ASSIGNMENT = 7,
-        TT_COMPARISON = 8,
-        TT_EXCLAMATION = 9,
-        TT_REGISTER = 10,
-        TT_UNKNOWN = 255
+        TT_OPERATOR             = 1,
+        TT_IDENTIFIER           = 2,
+        TT_NUMBER               = 3,
+        TT_OPEN_PARENTHESES     = 4,
+        TT_CLOSE_PARENTHESES    = 5,
+        TT_VARIABLE             = 6,
+        TT_ASSIGNMENT           = 7,
+        TT_COMPARISON           = 8,
+        TT_EXCLAMATION          = 9,
+        TT_REGISTER             = 10,
+        TT_LABEL                = 11,
+        TT_UNKNOWN              = 255
     };
 
     // Constructor

@@ -11,6 +11,7 @@
 #include "registers.h"
 #include "keywords.h"
 #include "compiler.h"
+#include "label.h"
 
 #include <iostream>
 
@@ -33,13 +34,25 @@ std::shared_ptr<ast>& sequence::root()
 
 std::shared_ptr<sequence> sequence::create(std::vector<token> & tokens, source& src)
 {
-    std::string keyword = util::to_upper(tokens[0].data());
-    if(keyword::store.count(keyword))
+    if(tokens.empty())
     {
-        return keyword::store[keyword](src);
+        throw syntax_error("Invalid sequence");
     }
 
-    return std::shared_ptr<sequence>();
+    if(tokens[0].get_type() == token::type::TT_LABEL)
+    {
+        return std::make_shared<label>(src);
+    }
+    else
+    {
+        std::string keyword = util::to_upper(tokens[0].data());
+        if(keyword::store.count(keyword))
+        {
+            return keyword::store[keyword](src);
+        }
+
+        return std::shared_ptr<sequence>();
+    }
 }
 
 void sequence::traverse_ast(uint8_t level, const std::shared_ptr<ast>& croot, compiler* c)

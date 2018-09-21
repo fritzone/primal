@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <vector>
+#include "source.h"
 
 class generate;
 
@@ -17,6 +18,12 @@ public:
     std::vector<uint8_t> bytecode() const;
 
     std::shared_ptr<generate> gen_code();
+
+    source& get_source();
+
+private:
+
+    source m_src;
 };
 
 #endif
