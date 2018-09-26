@@ -15,7 +15,15 @@ function(register_opcode opcode bincode)
     set(registered_opcodes "${registered_opcodes};${opcode}" PARENT_SCOPE)
 endfunction()
 
-# register all the opcodes and the corresponding binary value
+########################################################################################################################
+# Register all the opcodes and the corresponding binary value the keywords, add yours and extend here if necessary.    #
+#                                                                                                                      #
+#                  Register the keyword by using: register_opcode(NEW_OPCODE BINARY_VALUE)                             #
+#                                                                                                                      #
+#   Do not forget to provide the implementation in the compile and impl directories for the required operations.       #
+#                                                                                                                      #
+########################################################################################################################
+
 register_opcode("MOV" 0x40)
 register_opcode("ADD" 0x41)
 register_opcode("SUB" 0x42)
@@ -37,6 +45,9 @@ register_opcode("PUSH" 0x51)
 register_opcode("POP" 0x52)
 register_opcode("COPY" 0x53)
 
+########################################################################################################################
+#                 Done, no more opcodes have to be added after this point in the code                                  #
+########################################################################################################################
 
 # Now create the "opcodes.h"
 string(TIMESTAMP now)

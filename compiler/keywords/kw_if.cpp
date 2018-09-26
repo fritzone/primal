@@ -6,6 +6,7 @@
 #include "label.h"
 #include "opcodes.h"
 #include "compiler.h"
+#include "kw_endif.h"
 
 #include <iostream>
 

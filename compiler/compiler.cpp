@@ -9,17 +9,11 @@
 
 #include <opcodes.h>
 
-#include "kw_if.h"
-#include "kw_let.h"
-#include "kw_asm.h"
+#include <all_keywords.h>
 
 std::shared_ptr<compiler> compiler::initalize()
 {
-    REGISTER_KEYWORD(kw_asm);
-    REGISTER_KEYWORD(kw_if);
-    REGISTER_KEYWORD(kw_endif);
-    REGISTER_KEYWORD(kw_let);
-
+    register_all_keywords();
     register_opcode_compilers();
 
     return std::make_shared<compiler>();
