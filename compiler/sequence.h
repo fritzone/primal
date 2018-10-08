@@ -20,6 +20,7 @@ public:
     {
         PT_NORMAL = 1,
         PT_PRECOMPILED = 2,
+        PT_CONSUMED = 3,
         PT_INVALID = 255
     };
 

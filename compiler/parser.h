@@ -59,12 +59,14 @@ public:
                 throw syntax_error(next_seq);
             }
 
-            // create the RPN for the expression
-            std::vector<token> output = shuntyard(tokens);
+            if(prep_t != sequence::prepared_type::PT_CONSUMED)
+            {
+                // create the RPN for the expression
+                std::vector<token> output = shuntyard(tokens);
 
-            // build the abstract syntax tree for the result of the shuntyard
-            ast::build_ast(output, seq->root());
-
+                // build the abstract syntax tree for the result of the shuntyard
+                ast::build_ast(output, seq->root());
+            }
             result.push_back(seq);
         }
 

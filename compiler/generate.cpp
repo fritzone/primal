@@ -7,9 +7,11 @@
 #include "label.h"
 #include "options.h"
 #include "util.h"
+#include "types.h"
 
 #include <iostream>
 #include <limits>
+#include <cstring>
 
 using namespace opcodes;
 
@@ -176,11 +178,17 @@ void compiled_code::declare_label(const label& l)
 
 void compiled_code::finalize()
 {
+    // finalize the labels
     for(const auto& ldecl : label_declarations)
     {
         for(const auto& lref : label_encounters[ldecl.first])
         {
-            std::cout << "decl:" << ldecl.first << "(@" << ldecl.second << ") " << " found at " << lref << std::endl;
+            numeric_t dist_diff = ldecl.second - lref;
+            auto vm_ord = htovm(dist_diff);
+            memcpy( &bytes[0] + lref, &vm_ord, sizeof(vm_ord));
+
+            std::cout << "decl:" << ldecl.first << "(@" << ldecl.second << ") " << " ref found at " << lref << " patching to:" << vm_ord << std::endl;
+
         }
     }
 }

@@ -42,7 +42,10 @@ sequence::prepared_type kw_if::prepare(std::vector<token> &tokens)
 
 bool kw_if::compile(compiler* c)
 {
+    // to compile the expression
     sequence::compile(c);
+
+    // and set up the jumps depending on the trueness of the expression
     label lbl_after_if = label::create(c->get_source());
     label lbl_if_body = label::create(c->get_source());
 

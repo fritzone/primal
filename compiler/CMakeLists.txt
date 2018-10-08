@@ -56,6 +56,7 @@ register_keyword(if)
 register_keyword(endif)
 register_keyword(let)
 register_keyword(asm)
+register_keyword(goto)
 
 ########################################################################################################################
 #                 Done, no more keywords have to be added after this point in the code                                 #

@@ -41,7 +41,9 @@ std::shared_ptr<sequence> sequence::create(std::vector<token> & tokens, source& 
 
     if(tokens[0].get_type() == token::type::TT_LABEL)
     {
-        return std::make_shared<label>(src);
+        auto lbl = std::make_shared<label>(src);
+        lbl->set_name(tokens[0].data().substr(1));
+        return lbl;
     }
     else
     {

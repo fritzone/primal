@@ -6,7 +6,7 @@
 TEST_CASE("Compiler compiles", "[compiler]")
 {
     auto c = compiler::initalize();
-    c->compile(":a_label\nlet x = -2\nlet y = 5\n if x != 3 then\n let x = y + 3 \n endif\nlet x=5");
+    c->compile(":a_label\nlet x = -2\nlet y = 5\n if x != 3 then\n let x = y + 3 \ngoto a_label\nendif\nlet x=5\ngoto a_label");
     auto vm = vm::create();
     vm->run(c->bytecode());
 }
