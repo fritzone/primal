@@ -45,6 +45,15 @@ std::vector<uint8_t> compile_MOV(std::vector<token>& tokens)
             break;
         }
 
+        case token::type::TT_REGISTER:
+        {
+            reg r = tokens[1].create_register();
+            result.push_back(static_cast<uint8_t>(util::to_integral(type_destination::TYPE_MOD_REG)));
+            result.push_back(r.idx());
+            break;
+        }
+
+
         default:
             throw syntax_error("Invalid MOV source");
     }

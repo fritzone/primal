@@ -21,24 +21,40 @@ vm::vm()
 
 bool vm::run(const std::vector<uint8_t> &app)
 {
-    // firstly set up the memory segment for this machine
+    // firstly set up the memory segment for this machine and initialize it to 0xFF
     ms = std::make_unique<uint8_t[]>(app.size() + VM_MEM_SEGMENT_SIZE);
+    std::fill(ms.get(), ms.get() + VM_MEM_SEGMENT_SIZE + app.size(), 0xFF);
+
+    // set up the stack
     ss = std::make_unique<uint8_t[]>(VM_STACK_SEGMENT_SIZE * sizeof(numeric_t));
 
-    // then copy over the data from app to the memory segment
-    std::copy(app.begin(), app.end(), ms.get());
+    // then copy over the data from app to the end of the memory segment
+    std::copy(app.begin(), app.end(), ms.get() + VM_MEM_SEGMENT_SIZE);
+
+    // set the IP to point to the correct location
+    m_ip = VM_MEM_SEGMENT_SIZE;
 
     // then start running it
-    if(vm_runner.count( ms[m_ip] ))
+    while(vm_runner.count(ms[m_ip]))
     {
+        // read in an opcode
         uint8_t opc = ms[m_ip ++];
+
+        // is there a registered opcode runner for the given opcode?
         if(!vm_runner[ opc ].opcode_runner(this))
         {
-            std::cout << "PANIC!" << std::endl;
+            panic();
             return false;
         }
+
+        // is the opcode after the current one 0xFF meaning: halt the machine?
+        if(ms[m_ip] == 0xFF)
+        {
+            return true;
+        }
     }
-    return true;
+    panic();
+    return false;
 }
 
 std::shared_ptr<vm> vm::create()
@@ -56,7 +72,7 @@ type_destination vm::fetch_type_dest()
 
 void vm::panic()
 {
-    std::cout << "PANIC";
+    std::cout << "PANIC!" << std::endl;
     exit(2);
 }
 

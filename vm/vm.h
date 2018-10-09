@@ -20,8 +20,8 @@ public:
     bool run(const std::vector<uint8_t>& app);
 
     // access function for the IP. You can use this to modify it though for faster access
-    numeric_t& ip()      {return m_ip;}
-    numeric_t ip() const {return m_ip;}
+    std::size_t& ip()      {return m_ip;}
+    std::size_t ip() const {return m_ip;}
 
     // access function for the given regstser. You can use this to modify it though for faster access
     reg& r(uint8_t i)             { return m_r[i];}
@@ -52,7 +52,7 @@ private:
     static std::map<uint8_t, executor> vm_runner;
 
     reg m_r[VM_REG_COUNT];              // the registers of the machine
-    numeric_t m_ip = 0;                 // the instructions pointer
+    std::size_t m_ip = 0;               // the instructions pointer
     numeric_t sp = 0;                   // the stack pointer
 
     /* the memory segment */

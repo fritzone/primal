@@ -2,7 +2,7 @@
 
 #include <vm.h>
 #include <compiler.h>
-
+/*
 TEST_CASE("Compiler compiles", "[compiler]")
 {
     auto c = compiler::initalize();
@@ -10,16 +10,19 @@ TEST_CASE("Compiler compiles", "[compiler]")
     auto vm = vm::create();
     vm->run(c->bytecode());
 }
+*/
 
-/*
 TEST_CASE("ASM compiler", "[compiler]")
 {
     auto c = compiler::initalize();
-    c->compile("asm MOV $r1 20");
+    c->compile(R"code(
+                 asm MOV $r1 20
+                 asm MOV $r2 $r1
+                )code"
+              );
     auto vm = vm::create();
-    vm->run(c->bytecode());
+    REQUIRE(vm->run(c->bytecode()));
     REQUIRE(vm->r(1) == 20);
+    REQUIRE(vm->r(2) == 20);
 
 }
-
-*/

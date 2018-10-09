@@ -22,14 +22,15 @@ std::shared_ptr<compiler> compiler::initalize()
 bool compiler::compile(const std::string &s)
 {
     parser p;
-    m_src = source(s);
+    std::string trimmed = s;
+    trimmed = util::strim(trimmed);
+    m_src = source(trimmed);
     std::string last;
     auto seqs = p.parse(m_src, [&](std::string) {return false;}, last);
     for(const auto& seq : seqs) seq->compile(this);
     compiled_code::instance(this).finalize();
 
     return true;
-
 }
 
 std::vector<uint8_t> compiler::bytecode() const

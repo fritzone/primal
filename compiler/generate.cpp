@@ -191,6 +191,9 @@ void compiled_code::finalize()
 
         }
     }
+
+    // push a halt instruction at the end.
+    bytes.push_back(0xFF);
 }
 
 void compiled_code::append_number(numeric_t v)
