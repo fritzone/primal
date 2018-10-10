@@ -10,7 +10,7 @@ class label : public sequence
 {
 public:
 
-    label(source&);
+    explicit label(source&);
 
     static label create(source&);
     std::string name() const;

@@ -78,8 +78,16 @@ token::type token::identify_type(char c)
 
 reg token::create_register() const
 {
-    if(m_data.length() < 3 || (m_data[0] != '$' && m_data[1] != 'r')) throw syntax_error("Invalid register: " + m_data);
-    return reg( static_cast<uint8_t>(std::stoi(m_data.substr(2))) );
+    if(   (m_data.length() < 3 || (m_data[0] != '$' && m_data[1] != 'r'))
+        ||(m_data.length() < 3 || (m_data[0] != '$' && m_data[1] != 's' && m_data[2] != 'p'))
+      )
+    {
+        throw syntax_error("Invalid register: " + m_data);
+    }
+    uint8_t ridx = 0;
+    if(m_data == "$sp") { ridx = 255; } else { ridx = static_cast<uint8_t>(std::stoi(m_data.substr(2))); }
+
+    return reg( ridx );
 }
 
 numeric_t token::to_number() const

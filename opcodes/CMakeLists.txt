@@ -44,6 +44,9 @@ register_opcode("GTE" 0x50)
 register_opcode("PUSH" 0x51)
 register_opcode("POP" 0x52)
 register_opcode("COPY" 0x53)
+register_opcode("DJT" 0x54)
+register_opcode("DJNT" 0x55)
+register_opcode("DJMP" 0x56)
 
 ########################################################################################################################
 #                 Done, no more opcodes have to be added after this point in the code                                  #

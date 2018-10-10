@@ -53,7 +53,7 @@ private:
     std::map<std::string, numeric_t> label_declarations;
 
     static std::map<const compiler*, std::shared_ptr<compiled_code>> compilers_codes;
-    compiler* m_compiler;
+    compiler* m_compiler = nullptr;
 };
 
 class generate final

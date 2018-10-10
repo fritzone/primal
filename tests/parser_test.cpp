@@ -2,6 +2,8 @@
 
 #include <vm.h>
 #include <compiler.h>
+#include <iostream>
+
 /*
 TEST_CASE("Compiler compiles", "[compiler]")
 {
@@ -24,5 +26,4 @@ TEST_CASE("ASM compiler", "[compiler]")
     REQUIRE(vm->run(c->bytecode()));
     REQUIRE(vm->r(1) == 20);
     REQUIRE(vm->r(2) == 20);
-
 }

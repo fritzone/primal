@@ -23,6 +23,10 @@ public:
     std::size_t& ip()      {return m_ip;}
     std::size_t ip() const {return m_ip;}
 
+    // access function for the SP. You can use this to modify it though for faster access
+    numeric_t& sp()      {return m_sp;}
+    numeric_t sp() const {return m_sp;}
+
     // access function for the given regstser. You can use this to modify it though for faster access
     reg& r(uint8_t i)             { return m_r[i];}
     const reg& r(uint8_t i) const { return m_r[i];}
@@ -53,13 +57,10 @@ private:
 
     reg m_r[VM_REG_COUNT];              // the registers of the machine
     std::size_t m_ip = 0;               // the instructions pointer
-    numeric_t sp = 0;                   // the stack pointer
+    numeric_t& m_sp;                    // the stack pointer
 
     /* the memory segment */
     std::unique_ptr<uint8_t[]> ms;
-
-    /* the statck segment */
-    std::unique_ptr<uint8_t[]> ss;
 };
 
 #endif

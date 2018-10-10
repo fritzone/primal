@@ -59,7 +59,7 @@ public:
 private:
 
     std::string m_data;
-    type m_type;
+    type m_type = type::TT_UNKNOWN;
 };
 
 #endif // TOKEN_H

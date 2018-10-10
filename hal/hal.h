@@ -5,12 +5,9 @@
 #include "registers.h"
 
 /* Holds the number of registers in the virtual machine */
-static const int VM_REG_COUNT = 255;
+static const int VM_REG_COUNT = 256;
 
 /* The size of the free memory region, 1MB initially can be increased if you feel like */
 static const int VM_MEM_SEGMENT_SIZE = 1024 * 1024;
-
-/* The size of the stack, 1MB initially can be increased*/
-static const int VM_STACK_SEGMENT_SIZE = 1024 * 1024;
 
 #endif //PRIMITIVE_HAL_H

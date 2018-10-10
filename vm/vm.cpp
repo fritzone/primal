@@ -10,7 +10,7 @@
 
 std::map<uint8_t, vm::executor> vm::vm_runner;
 
-vm::vm()
+vm::vm() : m_sp( m_r[255].value() )
 {
     for(uint8_t i = 0; i<255; i++)
     {
@@ -24,9 +24,6 @@ bool vm::run(const std::vector<uint8_t> &app)
     // firstly set up the memory segment for this machine and initialize it to 0xFF
     ms = std::make_unique<uint8_t[]>(app.size() + VM_MEM_SEGMENT_SIZE);
     std::fill(ms.get(), ms.get() + VM_MEM_SEGMENT_SIZE + app.size(), 0xFF);
-
-    // set up the stack
-    ss = std::make_unique<uint8_t[]>(VM_STACK_SEGMENT_SIZE * sizeof(numeric_t));
 
     // then copy over the data from app to the end of the memory segment
     std::copy(app.begin(), app.end(), ms.get() + VM_MEM_SEGMENT_SIZE);

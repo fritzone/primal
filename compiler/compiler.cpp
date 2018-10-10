@@ -4,7 +4,6 @@
 #include "source.h"
 #include "sequence.h"
 #include "generate.h"
-#include "keyword_def.h"
 #include "keywords.h"
 
 #include <opcodes.h>

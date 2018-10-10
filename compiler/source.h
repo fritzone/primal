@@ -8,8 +8,8 @@ class source
 {
 public:
     source() = default;
-    source(const char* src);
-    source(const std::string& src);
+    explicit source(const char* src);
+    explicit source(const std::string& src);
 
     source& operator = (const source& oth)
     {

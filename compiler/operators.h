@@ -46,12 +46,12 @@ static std::map<std::string, std::unique_ptr<ops>> operators = util::create_map<
     ("%",  util::make_unique<ops> ("%", PRIO_20, new opcodes::MOD))
     ("|",  util::make_unique<ops> ("|", PRIO_40, new opcodes::OR ))
     ("&",  util::make_unique<ops> ("&", PRIO_30, new opcodes::AND))
-    ("==", util::make_unique<comp>("==",PRIO_50, new opcodes::EQ, new opcodes::JT ))
-    ("!=", util::make_unique<comp>("!=",PRIO_50, new opcodes::EQ, new opcodes::JNT))
-    ("<",  util::make_unique<comp>("<", PRIO_50, new opcodes::LT, new opcodes::JT ))
-    (">",  util::make_unique<comp>(">", PRIO_50, new opcodes::GT, new opcodes::JT ))
-    ("<=", util::make_unique<comp>("<=",PRIO_50, new opcodes::LTE,new opcodes::JT ))
-    (">=", util::make_unique<comp>(">=",PRIO_50, new opcodes::GTE,new opcodes::JT ))
+    ("==", util::make_unique<comp>("==",PRIO_50, new opcodes::EQ, new opcodes::DJT ))
+    ("!=", util::make_unique<comp>("!=",PRIO_50, new opcodes::EQ, new opcodes::DJNT))
+    ("<",  util::make_unique<comp>("<", PRIO_50, new opcodes::LT, new opcodes::DJT ))
+    (">",  util::make_unique<comp>(">", PRIO_50, new opcodes::GT, new opcodes::DJT ))
+    ("<=", util::make_unique<comp>("<=",PRIO_50, new opcodes::LTE,new opcodes::DJT ))
+    (">=", util::make_unique<comp>(">=",PRIO_50, new opcodes::GTE,new opcodes::DJT ))
 ;
 
 #endif

@@ -10,7 +10,7 @@ class lexer
 {
 public:
 
-    explicit lexer(const std::string& s) : m_sequence(s) {}
+    explicit lexer(std::string s) : m_sequence(std::move(s)) {}
 
     std::vector<token> tokenize();
 

@@ -19,7 +19,7 @@ public:
 public:
 
     keyword() = default;
-    virtual ~keyword() {}
+    virtual ~keyword() = default;
     virtual std::string name() = 0;
 };
 

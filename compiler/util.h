@@ -12,7 +12,7 @@ class syntax_error : public std::runtime_error
 {
 public:
     explicit syntax_error(const std::string& s) : std::runtime_error(s), m_message("[syntax error] " + s)  {}
-    virtual const char* what() const throw() override
+    const char* what() const noexcept override
     {
         return m_message.c_str();
     }
