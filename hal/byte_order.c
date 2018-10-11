@@ -52,6 +52,9 @@ uint16_t htovm_16(uint16_t s)
     U2 mask,res;
     unsigned char* p = (unsigned char*)&s;
     mask.s = 0x0100;
+#ifdef _WINDOWS
+#pragma warning(suppress: 6386)
+#endif
     res.c[mask.c[0]] = p[0];
     res.c[mask.c[1]] = p[1];
     return res.s;

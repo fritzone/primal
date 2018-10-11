@@ -24,7 +24,7 @@ label label::create(source& s)
     return label(s);
 }
 
-sequence::prepared_type label::prepare(std::vector<token> &tokens)
+sequence::prepared_type label::prepare(std::vector<token>&)
 {
     return sequence::prepared_type::PT_NORMAL;
 }

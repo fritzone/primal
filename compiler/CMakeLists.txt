@@ -37,7 +37,6 @@ set(${project}-headers
         ${CMAKE_CURRENT_SOURCE_DIR}/variable.h
         ${CMAKE_CURRENT_SOURCE_DIR}/generate.h
         ${CMAKE_CURRENT_SOURCE_DIR}/keywords.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/keyword_def.h
         ${CMAKE_CURRENT_SOURCE_DIR}/compiler.h
         ${CMAKE_CURRENT_SOURCE_DIR}/label.h
         ${CMAKE_CURRENT_SOURCE_DIR}/options.h

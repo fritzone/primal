@@ -1,4 +1,4 @@
-#include "token.h"
+ #include "token.h"
 #include "util.h"
 
 token::token(const std::string &s, token::type t) : m_data(s), m_type(t)
