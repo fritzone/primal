@@ -6,12 +6,13 @@
 
 struct reg final
 {
-    reg() : m_reg_idx(0), m_value(0) {}
+    reg()                   : m_reg_idx(0) {}
     explicit reg(uint8_t i) : m_reg_idx(i) {}
 
     reg& operator = (numeric_t v) { m_value = v; return *this; }
 
     bool operator == (numeric_t v) const { return m_value == v; }
+    bool operator == (const reg& v) const { return m_value == v.m_value; }
 
     uint8_t idx() const {return m_reg_idx;}
     void set_idx(uint8_t i) { m_reg_idx = i; }
@@ -21,8 +22,8 @@ struct reg final
 
 private:
 
-    uint8_t m_reg_idx;
     numeric_t m_value = 0;
+    uint8_t m_reg_idx;
 };
 
 #endif

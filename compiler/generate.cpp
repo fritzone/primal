@@ -38,12 +38,15 @@ generate &generate::operator<<(opcode &&opc)
 
 generate &generate::operator<<(variable &&var)
 {
-    if(options::instance().generate_assembly()) { std::cout << "[" << var.location() << "]" << " "; }
+    numeric_t a = var.location() * sizeof(numeric_t);
+    auto address = htovm(a);
+
+    if(options::instance().generate_assembly()) { std::cout << "[" << address << "]" << " "; }
 
     // firstly we tell the VM the type of the data
-    compiled_code::instance(m_compiler).append(static_cast<uint8_t>(util::to_integral(type_destination ::TYPE_MOD_VAR)));
+    compiled_code::instance(m_compiler).append(static_cast<uint8_t>(util::to_integral(type_destination ::TYPE_MOD_MEM_IMM)));
 
-    compiled_code::instance(m_compiler).append_number(var.location());
+    compiled_code::instance(m_compiler).append_number(address);
 
     return *this;
 }
@@ -116,24 +119,6 @@ generate &generate::operator<<(declare_label &&dl)
 {
     if(options::instance().generate_assembly()) { std::cout << ":" << dl.get_label().name(); }
     compiled_code::instance(m_compiler).declare_label(dl.get_label());
-    return *this;
-}
-
-generate &generate::operator<<(type_destination td)
-{
-    if(options::instance().generate_assembly())
-    {
-        switch(td)
-        {
-            case type_destination::TYPE_MOD_REG: std::cout << "R"; break;
-            case type_destination::TYPE_MOD_VAR: std::cout << "V"; break;
-            case type_destination::TYPE_MOD_IMM: std::cout << "I"; break;
-            case type_destination::TYPE_MOD_MEM_IMM: std::cout << "M"; break;
-            default: std::cout << "?";
-        }
-    }
-
-    compiled_code::instance(m_compiler).append(static_cast<uint8_t>(util::to_integral(td)));
     return *this;
 }
 

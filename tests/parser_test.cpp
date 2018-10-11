@@ -11,8 +11,7 @@ TEST_CASE("Compiler compiles", "[compiler]")
     c->compile(":a_label\nlet x = -2\nlet y = 5\n if x != 3 then\n let x = y + 3 \ngoto a_label\nendif\nlet x=5\ngoto a_label");
     auto vm = vm::create();
     vm->run(c->bytecode());
-}
-*/
+}*/
 
 TEST_CASE("ASM compiler", "[compiler]")
 {
@@ -20,10 +19,12 @@ TEST_CASE("ASM compiler", "[compiler]")
     c->compile(R"code(
                  asm MOV $r1 20
                  asm MOV $r2 $r1
+                 asm MOV [0] $r2
                 )code"
               );
     auto vm = vm::create();
     REQUIRE(vm->run(c->bytecode()));
     REQUIRE(vm->r(1) == 20);
     REQUIRE(vm->r(2) == 20);
+    REQUIRE(vm->get_mem(0) == 20);
 }

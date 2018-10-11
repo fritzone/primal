@@ -7,10 +7,11 @@
 #include <iostream>
 #include <algorithm>
 #include <memory>
+#include <cstring>
 
 std::map<uint8_t, vm::executor> vm::vm_runner;
 
-vm::vm() : m_sp( m_r[255].value() )
+vm::vm() : m_sp( m_r[255].value() ), m_dp( m_r[254].value() ), m_op( m_r[253].value() )
 {
     for(uint8_t i = 0; i<255; i++)
     {
@@ -83,4 +84,16 @@ numeric_t vm::fetch_immediate()
     numeric_t retv = htovm(*(reinterpret_cast<numeric_t*>(ms.get() + m_ip)));
     m_ip += sizeof(numeric_t);
     return retv;
+}
+
+void vm::set_mem(size_t address, numeric_t new_value)
+{
+    std::memcpy( &ms[0] + address, &new_value, sizeof(new_value));
+}
+
+numeric_t vm::get_mem(size_t address)
+{
+    numeric_t v = 0;
+    std::memcpy(&v, &ms[0] + address, sizeof(v));
+    return v;
 }

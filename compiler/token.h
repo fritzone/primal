@@ -26,6 +26,7 @@ public:
         TT_EXCLAMATION          = 9,
         TT_REGISTER             = 10,
         TT_LABEL                = 11,
+        TT_ASM_MEMORY_ADDRESS   = 12,
         TT_UNKNOWN              = 255
     };
 
@@ -46,6 +47,8 @@ public:
     void set_type(type t);
 
     std::string data() const;
+    void set_data(const std::string& d);
+
     type get_type() const;
 
     // will create a register from this token for easier compilation

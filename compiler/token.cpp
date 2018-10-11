@@ -94,3 +94,8 @@ numeric_t token::to_number() const
 {
     return std::stoi(m_data);
 }
+
+void token::set_data(const std::string &d)
+{
+    m_data = d;
+}

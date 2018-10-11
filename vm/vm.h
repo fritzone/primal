@@ -27,6 +27,18 @@ public:
     numeric_t& sp()      {return m_sp;}
     numeric_t sp() const {return m_sp;}
 
+    // access function for the SP. You can use this to modify it though for faster access
+    numeric_t& dp()      {return m_dp;}
+    numeric_t dp() const {return m_dp;}
+
+    // access function for the SP. You can use this to modify it though for faster access
+    numeric_t& op()      {return m_op;}
+    numeric_t op() const {return m_op;}
+
+    // will set the memory at the given addres to the new value
+    void set_mem(size_t address, numeric_t new_value);
+    numeric_t get_mem(size_t address);
+
     // access function for the given regstser. You can use this to modify it though for faster access
     reg& r(uint8_t i)             { return m_r[i];}
     const reg& r(uint8_t i) const { return m_r[i];}
@@ -58,9 +70,9 @@ private:
     reg m_r[VM_REG_COUNT];              // the registers of the machine
     std::size_t m_ip = 0;               // the instructions pointer
     numeric_t& m_sp;                    // the stack pointer
-
-    /* the memory segment */
-    std::unique_ptr<uint8_t[]> ms;
+    numeric_t& m_dp;                    // the destination pointer
+    numeric_t& m_op;                    // the origin pointer
+    std::unique_ptr<uint8_t[]> ms;      // the memory segment
 };
 
 #endif

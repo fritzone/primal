@@ -71,7 +71,7 @@ public:
     generate& operator << (const token& tok);
     generate& operator << (const label& l);
     generate& operator << (declare_label&& dl);
-    generate& operator << (type_destination td);
+    //generate& operator << (type_destination td);
 
 private:
     compiler* m_compiler;
