@@ -20,11 +20,17 @@ TEST_CASE("ASM compiler", "[compiler]")
                  asm MOV $r1 20
                  asm MOV $r2 $r1
                  asm MOV [0] $r2
+                 asm MOV [4] $r2
                 )code"
               );
+
+    //                  asm MOV $r3@1 18
+
     auto vm = vm::create();
     REQUIRE(vm->run(c->bytecode()));
     REQUIRE(vm->r(1) == 20);
     REQUIRE(vm->r(2) == 20);
     REQUIRE(vm->get_mem(0) == 20);
+    REQUIRE(vm->get_mem(4) == 20);
+    REQUIRE(vm->get_mem(4) != 21);
 }

@@ -1,4 +1,4 @@
- #include "token.h"
+#include "token.h"
 #include "util.h"
 
 token::token(const std::string &s, token::type t) : m_data(s), m_type(t)
@@ -98,4 +98,87 @@ numeric_t token::to_number() const
 void token::set_data(const std::string &d)
 {
     m_data = d;
+}
+
+void token::set_extra_info(numeric_t v)
+{
+    m_extra = v;
+}
+
+numeric_t token::get_extra_info() const
+{
+    return m_extra;
+}
+
+std::vector<token> token::identify_assembly_parameters(const std::vector<token> &tokens, const opcodes::opcode& opc)
+{
+ std::vector<token> work_tokens;
+
+ // see if any of the tokens are of memory address type
+ for(size_t i = 0; i<tokens.size(); i++)
+ {
+     token t = tokens[i];
+     if(t.data() == "[")
+     {
+         token new_entry;
+         new_entry.set_type(token::type::TT_ASM_MEMORY_ADDRESS);
+         std::string token_data;
+         bool valid_mem_entry = false;
+         for(size_t j = i+1; j<tokens.size(); j++, i++)
+         {
+             if(tokens[j].data() != "]")
+             {
+                 token_data += tokens[j].data();
+             }
+             else
+             {
+                 valid_mem_entry = true;
+                 i++;    // skip "]" in the initial token list
+                 break;
+             }
+         }
+
+         if(!valid_mem_entry)
+         {
+             throw syntax_error("Invalid memory addres syntax");
+         }
+
+         new_entry.set_data(token_data);
+         work_tokens.push_back(new_entry);
+     }
+     else
+     if(t.data() == "@")
+     {
+         auto& l = work_tokens.back();
+         l.set_type(token::type::TT_ASM_REG_SUBBYTE);
+         i++; // skip to the next one, being the number
+         if(i < tokens.size())
+         {
+             int subbyte_nr = std::stoi(tokens[i].data());
+             if(subbyte_nr < static_cast<int>(sizeof(numeric_t)))
+             {
+                 l.set_extra_info(subbyte_nr);
+             }
+             else
+             {
+                 throw syntax_error("Invalid register subbyte index");
+             }
+         }
+         else
+         {
+             throw syntax_error("Incomplete register subbyte operation");
+         }
+     }
+     else
+     {
+         work_tokens.push_back(t);
+     }
+ }
+ if(work_tokens.size() != opc.paramcount())
+ {
+     throw syntax_error("Invalid assembler statemet");
+ }
+
+ return work_tokens;
+
 }

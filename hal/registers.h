@@ -20,6 +20,10 @@ struct reg final
     numeric_t& value()      {return m_value;}
     numeric_t value() const {return m_value;}
 
+    void set_value(numeric_t v) {m_value = v;}
+    void set_value(const reg& ov) {m_value = ov.m_value;}
+
+
 private:
 
     numeric_t m_value = 0;

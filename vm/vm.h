@@ -17,6 +17,7 @@ public:
 
     static std::shared_ptr<vm> create();
 
+    // will run the given application
     bool run(const std::vector<uint8_t>& app);
 
     // access function for the IP. You can use this to modify it though for faster access
@@ -38,6 +39,9 @@ public:
     // will set the memory at the given addres to the new value
     void set_mem(size_t address, numeric_t new_value);
     numeric_t get_mem(size_t address);
+
+    void set_mem_byte(size_t address, uint8_t b);
+    uint8_t get_mem_byte(size_t address);
 
     // access function for the given regstser. You can use this to modify it though for faster access
     reg& r(uint8_t i)             { return m_r[i];}

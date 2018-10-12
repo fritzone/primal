@@ -16,11 +16,12 @@ bool impl_MOV(vm* v)
             uint8_t ridx = v->fetch_register_index();
 
             // fetch what are we moving in the register
-            switch(v->fetch_type_dest())
+            auto src = v->fetch_type_dest();
+            switch(src)
             {
                 // we are moving a number into the register
-                case type_destination::TYPE_MOD_IMM: { v->r(ridx) = v->fetch_immediate(); return true; }
-                case type_destination::TYPE_MOD_REG: { auto idx2 = v->fetch_register_index(); v->r(ridx) = v->r(idx2); return true; }
+                case type_destination::TYPE_MOD_IMM: { v->r(ridx).set_value(v->fetch_immediate()); return true; }
+                case type_destination::TYPE_MOD_REG: { v->r(ridx).set_value(v->r(v->fetch_register_index())); return true; }
             }
 
             break;
@@ -31,9 +32,10 @@ bool impl_MOV(vm* v)
         {
             numeric_t addr = v->fetch_immediate();
             // fetch what we are moving into the memory addres.
-            switch(v->fetch_type_dest())
+            auto src = v->fetch_type_dest();
+            switch(src)
             {
-                case type_destination::TYPE_MOD_REG: { auto idx = v->fetch_register_index(); v->set_mem(addr, v->r(idx).value()); return true; }
+                case type_destination::TYPE_MOD_REG: { v->set_mem(addr, v->r(v->fetch_register_index()).value()); return true; }
             }
         }
     }

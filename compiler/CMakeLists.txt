@@ -10,6 +10,7 @@ endfunction()
 # Generic project source files
 #
 set(${project}-sources
+        ${CMAKE_CURRENT_SOURCE_DIR}/asm_compiler.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/ast.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/parser.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/token.cpp
@@ -22,7 +23,7 @@ set(${project}-sources
         ${CMAKE_CURRENT_SOURCE_DIR}/compiler.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/label.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/options.cpp
-        )
+)
 
 set(${project}-headers
         ${CMAKE_CURRENT_SOURCE_DIR}/asm_compiler.h
@@ -40,7 +41,7 @@ set(${project}-headers
         ${CMAKE_CURRENT_SOURCE_DIR}/compiler.h
         ${CMAKE_CURRENT_SOURCE_DIR}/label.h
         ${CMAKE_CURRENT_SOURCE_DIR}/options.h
-        )
+)
 
 ########################################################################################################################
 #                 Register the keywords, add yours and extend here if necessary.                                       #

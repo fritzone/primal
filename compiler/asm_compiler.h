@@ -1,13 +1,13 @@
 #ifndef PRIMITIVE_ASM_COMPILER_H
 #define PRIMITIVE_ASM_COMPILER_H
 
+#include "token.h"
+
 #include <string>
 #include <functional>
 #include <map>
 #include <vector>
-#include "token.h"
-
-class token;
+#include <set>
 
 class opcode_compiler_store
 {
@@ -48,6 +48,17 @@ private:
 
 
     std::map<std::string, std::function<std::vector<uint8_t>(std::vector<token>&)>> opcode_compilers;
+};
+
+/**
+ * Class representing an assembly compiler. Will take in a vector of tokens and will produce a vector of binary sumbols
+ **/
+class asm_compiler
+{
+public:
+
+    // will generate the assebmly code for the given token holding assembly instructions
+    static void generate_assembly_code(const std::vector<token>& tokens, std::vector<uint8_t>& result);
 };
 
 #endif //PRIMITIVE_ASM_COMPILER_H

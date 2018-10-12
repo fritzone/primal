@@ -88,12 +88,40 @@ numeric_t vm::fetch_immediate()
 
 void vm::set_mem(size_t address, numeric_t new_value)
 {
+    if(address > VM_MEM_SEGMENT_SIZE)
+    {
+        panic();
+    }
+
     std::memcpy( &ms[0] + address, &new_value, sizeof(new_value));
 }
 
 numeric_t vm::get_mem(size_t address)
 {
+    if(address > VM_MEM_SEGMENT_SIZE)
+    {
+        panic();
+    }
+
     numeric_t v = 0;
     std::memcpy(&v, &ms[0] + address, sizeof(v));
     return v;
+}
+
+void vm::set_mem_byte(size_t address, uint8_t b)
+{
+    if(address > VM_MEM_SEGMENT_SIZE)
+    {
+        panic();
+    }
+    ms[address] = b;
+}
+
+uint8_t vm::get_mem_byte(size_t address)
+{
+    if(address > VM_MEM_SEGMENT_SIZE)
+    {
+        panic();
+    }
+    return ms[address];
 }

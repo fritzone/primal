@@ -1,9 +1,11 @@
 #ifndef TOKEN_H
 #define TOKEN_H
 
-#include <string>
-
 #include <hal.h>
+
+#include <vector>
+#include <string>
+#include <opcode.h>
 
 /* This class represents a token */
 class token
@@ -27,6 +29,7 @@ public:
         TT_REGISTER             = 10,
         TT_LABEL                = 11,
         TT_ASM_MEMORY_ADDRESS   = 12,
+        TT_ASM_REG_SUBBYTE      = 13,
         TT_UNKNOWN              = 255
     };
 
@@ -51,6 +54,9 @@ public:
 
     type get_type() const;
 
+    void set_extra_info(numeric_t v);
+    numeric_t  get_extra_info() const;
+
     // will create a register from this token for easier compilation
     reg create_register() const;
     numeric_t to_number() const;
@@ -59,10 +65,15 @@ public:
     // Gets the type of a character
     static type identify_type(char c);
 
+
+    // will create a valid assembly <DST, SRC> pair for assembly commands supporting it
+    static std::vector<token> identify_assembly_parameters(const std::vector<token>& tokens, const opcodes::opcode& opc);
+
 private:
 
     std::string m_data;
     type m_type = type::TT_UNKNOWN;
+    numeric_t m_extra = -1;
 };
 
 #endif // TOKEN_H
