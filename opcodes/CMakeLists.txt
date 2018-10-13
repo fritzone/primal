@@ -9,6 +9,7 @@ function(register_opcode opcode bincode pc)
     set(OPCODE ${opcode})
     set(OPCODE_CODE ${bincode})
     set(PARAMCOUNT ${pc})
+    string(TIMESTAMP now)
 
     configure_file("opcode_decl.template"
                    "${CMAKE_CURRENT_BINARY_DIR}/${opcode}.h"
