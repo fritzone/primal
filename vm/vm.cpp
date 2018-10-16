@@ -125,3 +125,75 @@ uint8_t vm::get_mem_byte(size_t address)
     }
     return ms[address];
 }
+
+reg_subbyte* vm::rsb(uint8_t ridx, uint8_t bidx)
+{
+    static reg_subbyte t1(&r(0), 0);
+    t1.m_r = &r(ridx);
+    t1.m_bidx = bidx;
+    return &t1;
+}
+
+memaddress* vm::mem(numeric_t address)
+{
+    auto setter = [&](numeric_t a, numeric_t v)->void{set_mem(a,v);};
+    static memaddress ma(address, setter);
+    ma.m_address = address;
+    ma.m_setter = setter;
+    return &ma;
+}
+
+immediate *vm::imm(numeric_t v)
+{
+    static immediate i(-1);
+    i.m_value = v;
+    return &i;
+}
+
+valued *vm::fetch()
+{
+    auto dst = fetch_type_dest();
+    switch(dst)
+    {
+        case type_destination::TYPE_MOD_IMM:
+        {
+            return imm(fetch_immediate());
+        }
+
+        case type_destination::TYPE_MOD_REG_BYTE0:  // [[fallthrough]]
+        case type_destination::TYPE_MOD_REG_BYTE1:
+        case type_destination::TYPE_MOD_REG_BYTE2:
+        case type_destination::TYPE_MOD_REG_BYTE3:
+        {
+            uint8_t ridx = fetch_register_index();
+            return rsb(ridx, static_cast<uint8_t>(dst) - static_cast<uint8_t>(type_destination::TYPE_MOD_REG_BYTE0));
+        }
+
+            // are we moving something into a register?
+        case type_destination::TYPE_MOD_REG:
+        {
+            uint8_t ridx = fetch_register_index();
+            return &(r(ridx));
+        }
+
+            // are we moving something into an immediate memory address?
+        case type_destination::TYPE_MOD_MEM_IMM:
+        {
+            numeric_t vaddr = fetch_immediate();
+            return mem(vaddr);
+        }
+
+        case type_destination::TYPE_MOD_DP:
+        {
+            return &(r(254));
+        }
+
+        case type_destination::TYPE_MOD_OP:
+        {
+            return &(r(253));
+        }
+    }
+
+    return nullptr;
+
+}

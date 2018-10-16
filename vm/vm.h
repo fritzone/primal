@@ -8,6 +8,8 @@
 #include <functional>
 #include <memory>
 
+using namespace std::placeholders;
+
 class vm final
 {
 
@@ -47,6 +49,14 @@ public:
     reg& r(uint8_t i)             { return m_r[i];}
     const reg& r(uint8_t i) const { return m_r[i];}
 
+    // access function for a given sub reg byte
+    reg_subbyte* rsb(uint8_t ridx, uint8_t bidx);
+
+    // access the memory at the given location
+    memaddress* mem(numeric_t address);
+
+    immediate* imm(numeric_t v);
+
     type_destination fetch_type_dest();
     uint8_t fetch_register_index();
     numeric_t fetch_immediate();
@@ -60,7 +70,9 @@ public:
         vm_runner[o.bin()] = t;
     };
 
-    void panic();
+    [[noreturn]] void panic() ;
+
+    valued* fetch();
 
 private:
 
