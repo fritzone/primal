@@ -6,6 +6,7 @@
 
 #include <map>
 #include <functional>
+#include <array>
 
 static constexpr std::array< std::pair<uint32_t, uint8_t> , 4> masks = {std::make_pair(0x000000FF, 0),
                                                                         std::make_pair(0x0000FF00, 8),
@@ -56,9 +57,7 @@ struct valued
     valued& operator ++ () { m_value ++; return *this; }
     valued operator ++ (int) { valued ret(*this); ++(*this); return ret;}
 
-
-    numeric_t& value()      {return m_value;}
-    numeric_t value() const {return m_value;}
+    virtual numeric_t value() const {return m_value;}
 
     virtual void set_value(numeric_t v) {m_value = v;}
 
@@ -90,13 +89,19 @@ struct reg final : public valued
 struct memaddress final : public valued
 {
     memaddress() = default;
-    explicit memaddress(numeric_t address, std::function<void(numeric_t, numeric_t)> setter) : m_address(address) {}
+    explicit memaddress(numeric_t address, 
+        std::function<void(numeric_t, numeric_t)> setter,
+        std::function<numeric_t(numeric_t)> getter
+    ) : m_address(address), m_setter(setter), m_getter(getter) {}
+
     void set_value(numeric_t v) override
     {
         m_setter(m_address, v);
     }
+    numeric_t value() const override { return m_getter(m_address); }
 
     numeric_t m_address = -1;
+    std::function<numeric_t(numeric_t)> m_getter;
     std::function<void(numeric_t, numeric_t)> m_setter;
 };
 
@@ -119,7 +124,7 @@ struct immediate : public valued
     immediate() = default;
     explicit immediate(numeric_t p) { m_value = p; }
 
-    void set_value(numeric_t v) override
+    void set_value(numeric_t) override
     {
         throw "cannot do this";
     }

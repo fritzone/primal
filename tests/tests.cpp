@@ -40,6 +40,7 @@ TEST_CASE("Compiler compiles", "[compiler]")
     vm->run(c->bytecode());
 }*/
 
+/*
 TEST_CASE("ASM compiler - basic operations", "[asm-compiler]")
 {
     auto c = compiler::initalize();
@@ -79,19 +80,33 @@ TEST_CASE("ASM compiler - basic operations", "[asm-compiler]")
     REQUIRE(vm->r(7).value() == 1);
     REQUIRE(vm->r(2).value() == 24);
 }
+/**/
 
-
-TEST_CASE("ASM compiler - XOR operations", "[asm-compiler]")
+TEST_CASE("Script compiler - XOR operations", "[asm-compiler]")
 {
     auto c = compiler::initalize();
     c->compile(R"code(
                       let x = 20
                       let x = x ^ 10
                 )code"
-              );
+    );
 
     auto vm = vm::create();
     REQUIRE(vm->run(c->bytecode()));
     REQUIRE(vm->get_mem(0) == 30);
-}
+}/**/
+
+TEST_CASE("Script compiler - Basic memory access", "[asm-compiler]")
+{
+    auto c = compiler::initalize();
+    c->compile(R"code(
+                      let x = 40
+                )code"
+    );
+
+    auto vm = vm::create();
+    REQUIRE(vm->run(c->bytecode()));
+    REQUIRE(vm->get_mem(0) == 20);
+}/**/
+
 

@@ -11,7 +11,7 @@
 
 std::map<uint8_t, vm::executor> vm::vm_runner;
 
-vm::vm() : m_sp( m_r[255].value() ), m_dp( m_r[254].value() ), m_op( m_r[253].value() )
+vm::vm()
 {
     for(uint8_t i = 0; i<255; i++)
     {
@@ -42,7 +42,6 @@ bool vm::run(const std::vector<uint8_t> &app)
         if(!vm_runner[ opc ].opcode_runner(this))
         {
             panic();
-            return false;
         }
 
         // is the opcode after the current one 0xFF meaning: halt the machine?
@@ -136,8 +135,9 @@ reg_subbyte* vm::rsb(uint8_t ridx, uint8_t bidx)
 
 memaddress* vm::mem(numeric_t address)
 {
-    auto setter = [&](numeric_t a, numeric_t v)->void{set_mem(a,v);};
-    static memaddress ma(address, setter);
+    auto setter = [&](numeric_t a, numeric_t v) -> void { set_mem(a,v); };
+    auto getter = [&](numeric_t a) -> numeric_t { return get_mem(a); };
+    static memaddress ma(address, setter, getter);
     ma.m_address = address;
     ma.m_setter = setter;
     return &ma;
