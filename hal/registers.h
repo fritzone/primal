@@ -32,6 +32,9 @@ struct valued
     valued& operator += (numeric_t v) { m_value += v; return *this; }
     valued& operator += (const valued& v) { m_value += v.value(); return *this; }
 
+    valued& operator -= (numeric_t v) { m_value -= v; return *this; }
+    valued& operator -= (const valued& v) { m_value -= v.value(); return *this; }
+
     valued& operator /= (numeric_t v) { m_value /= v; return *this; }
     valued& operator /= (const valued& v) { m_value /= v.value(); return *this; }
 
@@ -43,6 +46,15 @@ struct valued
 
     valued& operator &= (numeric_t v) { m_value &= v; return *this; }
     valued& operator &= (const valued& v) { m_value &= v.value(); return *this; }
+
+    valued& operator |= (numeric_t v) { m_value |= v; return *this; }
+    valued& operator |= (const valued& v) { m_value |= v.value(); return *this; }
+
+    valued& operator ^= (numeric_t v) { m_value ^= v; return *this; }
+    valued& operator ^= (const valued& v) { m_value ^= v.value(); return *this; }
+
+    valued& operator ++ () { m_value ++; return *this; }
+    valued operator ++ (int) { valued ret(*this); ++(*this); return ret;}
 
 
     numeric_t& value()      {return m_value;}

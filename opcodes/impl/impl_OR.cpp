@@ -5,7 +5,11 @@
 
 bool impl_OR(vm* v)
 {
-    std::cout << "OR" << std::endl;
-    return false;
+    valued* dest = v->fetch();
+    valued* src  = v->fetch();
+
+    *dest |= *src;
+
+    return true;
 }
 

@@ -13,11 +13,13 @@ public:
     ValueEquals( const reg& rv) : m_value(rv.value()){}
 
     // Performs the test for this matcher
-    virtual bool match( numeric_t  const& i ) const override {
+    virtual bool match( numeric_t  const& i ) const override 
+    {
         return i == m_value;
     }
 
-    virtual std::string describe() const {
+    std::string describe() const override 
+    {
         std::ostringstream ss;
         ss << "equals " << m_value;
         return ss.str();
@@ -38,41 +40,58 @@ TEST_CASE("Compiler compiles", "[compiler]")
     vm->run(c->bytecode());
 }*/
 
-TEST_CASE("ASM compiler", "[compiler]")
+TEST_CASE("ASM compiler - basic operations", "[asm-compiler]")
 {
     auto c = compiler::initalize();
     c->compile(R"code(
-                 asm MOV $r1 20
-                 asm MOV $r2 $r1
-                 asm MOV $r5 9
-                 asm MOV [0] $r2
-                 asm MOV [4] $r2
-                 asm MOV $r3@1 9
-                 asm MOV $r4@2 $r5
-                 asm ADD $r2 $r1
+                      asm MOV $r1 20
+                      asm MOV $r2 $r1
+                      asm MOV $r5 9
+                      asm MOV [0] $r2
+                      asm MOV [4] $r2
+                      asm MOV $r3@1 9
+                      asm MOV $r4@2 $r5
+                      asm ADD $r2 $r1
 
-                 # Comment in here
-                 asm ADD $r2 10
-                 asm MOV $r7 $r2
-                 asm MOD $r7 7
-                 asm DIV $r2 2
-                 asm MOV $r6 11
-                 asm AND $r6 10
-                 asm MUL $r6 10
+                      # Comment in here
+                      asm ADD $r2 10
+                      asm MOV $r7 $r2
+                      asm MOD $r7 7
+                      asm DIV $r2 2
+                      asm MOV $r6 11
+                      asm AND $r6 10
+                      asm MUL $r6 10
+                      asm OR  $r6 1
+                      asm SUB $r2 1
                 )code"
               );
 
-
-
     auto vm = vm::create();
     REQUIRE(vm->run(c->bytecode()));
+
     REQUIRE(vm->r(1) == 20);
     REQUIRE(vm->r(3).value() == 0x0000000900);
     REQUIRE(vm->get_mem(0) == 20);
     REQUIRE(vm->get_mem(4) == 20);
     REQUIRE(vm->get_mem(4) != 21);
     REQUIRE(vm->r(4) == 0x00090000);
-    REQUIRE(vm->r(6).value() == 100);
+    REQUIRE(vm->r(6).value() == 101);
     REQUIRE(vm->r(7).value() == 1);
-    REQUIRE(vm->r(2).value() == 25);
+    REQUIRE(vm->r(2).value() == 24);
 }
+
+
+TEST_CASE("ASM compiler - XOR operations", "[asm-compiler]")
+{
+    auto c = compiler::initalize();
+    c->compile(R"code(
+                      let x = 20
+                      let x = x ^ 10
+                )code"
+              );
+
+    auto vm = vm::create();
+    REQUIRE(vm->run(c->bytecode()));
+    REQUIRE(vm->get_mem(0) == 30);
+}
+
