@@ -16,6 +16,7 @@ std::vector<token> lexer::tokenize()
         // get the type of the current token
         // now parse the token starting at expr[i]
         token current_token {m_sequence[i], token::identify_type(m_sequence[i]) };
+
         i++;
         while (i < m_sequence.length() && !util::is_whitespace(m_sequence[i]) )
         {
@@ -70,6 +71,8 @@ std::vector<token> lexer::tokenize()
         }
 
         result.push_back(current_token);
+        if(current_token.get_type() == token::type::TT_COMMENT_LINE) break;
+
     }
     return result;
 }

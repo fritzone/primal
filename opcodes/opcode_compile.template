@@ -6,10 +6,12 @@
 #include <@OPCODE@.h>
 #include <token.h>
 #include <asm_compiler.h>
+#include <options.h>
 
 #include <iostream>
 #include <vector>
 #include <util.h>
+#include <token.h>
 
 std::vector<uint8_t> compile_@OPCODE@(std::vector<token>& tokens)
 {
@@ -21,6 +23,32 @@ std::vector<uint8_t> compile_@OPCODE@(std::vector<token>& tokens)
         {
             throw syntax_error(opc.name() + " cannot complete this operation");
         }
+    }
+
+    if(options::instance().generate_assembly())
+    {
+        std::cout << "@OPCODE@ ";
+        for(const auto& t : work_tokens)
+        {
+            if(t.get_type() == token::type::TT_ASM_MEMORY_ADDRESS)
+            {
+                std::cout << "[";
+            }
+
+            std::cout << t.data();
+
+            if(t.get_type() == token::type::TT_ASM_REG_SUBBYTE)
+            {
+                std::cout << "@" << t.get_extra_info();
+            }
+            if(t.get_type() == token::type::TT_ASM_MEMORY_ADDRESS)
+            {
+                std::cout << "]";
+            }
+
+            std::cout << " ";
+        }
+        std::cout << std::endl;
     }
 
     std::vector<uint8_t> result;

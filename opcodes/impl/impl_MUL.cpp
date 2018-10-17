@@ -5,7 +5,11 @@
 
 bool impl_MUL(vm* v)
 {
-    std::cout << "MUL" << std::endl;
-    return false;
+    valued* dest = v->fetch();
+    valued* src  = v->fetch();
+
+    *dest *= *src;
+
+    return true;
 }
 

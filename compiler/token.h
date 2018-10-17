@@ -30,6 +30,7 @@ public:
         TT_LABEL                = 11,
         TT_ASM_MEMORY_ADDRESS   = 12,
         TT_ASM_REG_SUBBYTE      = 13,
+        TT_COMMENT_LINE         = 14,
         TT_UNKNOWN              = 255
     };
 

@@ -5,7 +5,16 @@
 
 bool impl_DIV(vm* v)
 {
-    std::cout << "DIV" << std::endl;
-    return false;
+    valued* dest = v->fetch();
+    valued* src  = v->fetch();
+
+    if(src->value() == 0)
+    {
+        v->panic();
+    }
+
+    *dest /= *src;
+
+    return true;
 }
 

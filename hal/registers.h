@@ -28,8 +28,22 @@ struct valued
     ~valued() = default;
 
     bool operator == (numeric_t v) const { return m_value == v; }
+
     valued& operator += (numeric_t v) { m_value += v; return *this; }
     valued& operator += (const valued& v) { m_value += v.value(); return *this; }
+
+    valued& operator /= (numeric_t v) { m_value /= v; return *this; }
+    valued& operator /= (const valued& v) { m_value /= v.value(); return *this; }
+
+    valued& operator *= (numeric_t v) { m_value *= v; return *this; }
+    valued& operator *= (const valued& v) { m_value *= v.value(); return *this; }
+
+    valued& operator %= (numeric_t v) { m_value %= v; return *this; }
+    valued& operator %= (const valued& v) { m_value %= v.value(); return *this; }
+
+    valued& operator &= (numeric_t v) { m_value &= v; return *this; }
+    valued& operator &= (const valued& v) { m_value &= v.value(); return *this; }
+
 
     numeric_t& value()      {return m_value;}
     numeric_t value() const {return m_value;}

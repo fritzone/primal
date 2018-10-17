@@ -30,9 +30,10 @@ public:
                 break;
             }
 
+            // this might be an empty line
             if (next_seq.empty())
             {
-                break;
+                continue;
             }
 
             // Now, tokenizing the sequence
@@ -46,6 +47,10 @@ public:
             std::shared_ptr<sequence> seq = sequence::create(tokens, input);
             if (!seq)
             {
+                if(tokens[0].get_type() == token::type::TT_COMMENT_LINE)
+                {
+                    continue;
+                }
                 throw syntax_error(next_seq);
             }
 

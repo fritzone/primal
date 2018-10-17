@@ -5,7 +5,11 @@
 
 bool impl_MOD(vm* v)
 {
-    std::cout << "MOD" << std::endl;
-    return false;
+    valued* dest = v->fetch();
+    valued* src  = v->fetch();
+
+    *dest %= *src;
+
+    return true;
 }
 

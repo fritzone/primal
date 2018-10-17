@@ -5,7 +5,11 @@
 
 bool impl_AND(vm* v)
 {
-    std::cout << "AND" << std::endl;
-    return false;
+    valued* dest = v->fetch();
+    valued* src  = v->fetch();
+
+    *dest &= *src;
+
+    return true;
 }
 
