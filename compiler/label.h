@@ -12,10 +12,11 @@ public:
 
     explicit label(source&);
 
+    static void reset_counter();
+
     static label create(source&);
     std::string name() const;
     void set_name(const std::string& name) { lblname = name; }
-
 
     prepared_type prepare(std::vector<token>& tokens) override;
     bool compile(compiler*) override;

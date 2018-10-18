@@ -39,7 +39,6 @@ register_opcode("MUL" 0x43 2)
 register_opcode("DIV" 0x44 2)
 register_opcode("MOD" 0x45 2)
 register_opcode("OR" 0x46 2)
-register_opcode("XOR" 0x57 2)
 register_opcode("AND" 0x47 2)
 register_opcode("EQ" 0x48 2)
 register_opcode("NEQ" 0x49 2)
@@ -56,7 +55,8 @@ register_opcode("COPY" 0x53 2)
 register_opcode("DJT" 0x54 2)
 register_opcode("DJNT" 0x55 2)
 register_opcode("DJMP" 0x56 2)
-
+register_opcode("XOR" 0x57 2)
+register_opcode("NOT" 0x58 1)
 
 ########################################################################################################################
 #                 Done, no more opcodes have to be added after this point in the code                                  #

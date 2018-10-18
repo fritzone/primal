@@ -55,7 +55,10 @@ struct valued
     valued& operator ^= (const valued& v) { m_value ^= v.value(); return *this; }
 
     valued& operator ++ () { m_value ++; return *this; }
-    valued operator ++ (int) { valued ret(*this); ++(*this); return ret;}
+    const valued operator ++ (int) { valued ret(*this); ++(*this); return ret;}
+
+    valued& operator -- () { m_value --; return *this; }
+    const valued operator -- (int) { valued ret(*this); --(*this); return ret;}
 
     virtual numeric_t value() const {return m_value;}
 
@@ -89,10 +92,7 @@ struct reg final : public valued
 struct memaddress final : public valued
 {
     memaddress() = default;
-    explicit memaddress(numeric_t address, 
-        std::function<void(numeric_t, numeric_t)> setter,
-        std::function<numeric_t(numeric_t)> getter
-    ) : m_address(address), m_setter(setter), m_getter(getter) {}
+    explicit memaddress(numeric_t address, std::function<void(numeric_t, numeric_t)> setter, std::function<numeric_t(numeric_t)> getter) : m_address(address), m_getter(std::move(getter)), m_setter(std::move(setter)) {}
 
     void set_value(numeric_t v) override
     {
@@ -103,6 +103,11 @@ struct memaddress final : public valued
     numeric_t m_address = -1;
     std::function<numeric_t(numeric_t)> m_getter;
     std::function<void(numeric_t, numeric_t)> m_setter;
+};
+
+struct memaddress_byte_ref final : public valued
+{
+
 };
 
 /* This class represents a sub byte of a register */

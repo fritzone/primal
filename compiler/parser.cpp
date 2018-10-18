@@ -27,11 +27,17 @@ std::vector<token> parser::shuntyard(const std::vector<token>& tokens)
         }
         else
         {
+            if(tt == token::type::TT_EXCLAMATION)
+            {
+                stck.push(t);
+            }
+            else
             if (tt == token::type::TT_OPERATOR || tt == token::type::TT_COMPARISON) // is this an operator?
             {
                 if (!stck.empty())
                 {
-                    if ((operators[stck.top().data()]->precedence >= operators[s]->precedence) && stck.top().get_type() != token::type::TT_OPEN_PARENTHESES)
+                    auto t2 = stck.top();
+                    if (t2.get_type() != token::type::TT_OPEN_PARENTHESES && (operators[t2.data()]->precedence >= operators[s]->precedence))
                     {
                         result.insert(result.begin(), stck.top());
                         stck.pop();

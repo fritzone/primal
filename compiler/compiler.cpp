@@ -14,7 +14,7 @@ std::shared_ptr<compiler> compiler::initalize()
 {
     register_all_keywords();
     register_opcode_compilers();
-
+    label::reset_counter();
     return std::make_shared<compiler>();
 }
 
@@ -45,4 +45,9 @@ std::shared_ptr<generate> compiler::gen_code()
 source &compiler::get_source()
 {
     return m_src;
+}
+
+compiler::~compiler()
+{
+    compiled_code::instance(this).destroy();
 }

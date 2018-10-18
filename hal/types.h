@@ -25,13 +25,13 @@ enum class type_destination : uint8_t
 {
     TYPE_MOD_IMM        = 0x00,     // what follows is a 32 bit integer value
     TYPE_MOD_REG        = 0x01,     // what follows is the index of a register, 1 byte
-    TYPE_MOD_DP         = 0x02,     // The value from the memory at the value of the DP
-    TYPE_MOD_OP         = 0x03,     // The value from the memory at teh value of the OP
+    TYPE_MOD_DP         = 0x02,     // The byte value from the memory at the value of the DP
+    TYPE_MOD_OP         = 0x03,     // The byte value from the memory at teh value of the OP
     TYPE_MOD_REG_BYTE0  = 0x40,     // The 0th byte of a register
     TYPE_MOD_REG_BYTE1  = 0x41,     // The 1st byte of a register
     TYPE_MOD_REG_BYTE2  = 0x42,     // The 2nd byte of a register
     TYPE_MOD_REG_BYTE3  = 0x43,     // The 3rd byte of a register
-    TYPE_MOD_MEM_IMM    = 0x05      // what follows is the address of a memory cell, byte, immediate value
+    TYPE_MOD_MEM_IMM    = 0x05,     // what follows is the address of a memory cell, numeric_t value
 };
 
 

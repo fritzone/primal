@@ -14,6 +14,7 @@ public:
     static std::shared_ptr<compiler> initalize();
 
     compiler() = default;
+    virtual ~compiler();
 
     bool compile(const std::string& s);
     std::vector<uint8_t> bytecode() const;

@@ -34,3 +34,8 @@ bool label::compile(compiler* c)
     (*c->gen_code()) << declare_label(*this);
     return true;
 }
+
+void label::reset_counter()
+{
+    label_counter = 0;
+}

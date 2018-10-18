@@ -190,3 +190,16 @@ void compiled_code::append_number(numeric_t v)
         append( * ((reinterpret_cast<uint8_t *>(&nv) + i ) ));
     }
 }
+
+void compiled_code::destroy()
+{
+    if(m_compiler == nullptr)
+    {
+        return;
+    }
+
+    if(compilers_codes.count(m_compiler))
+    {
+        compilers_codes.erase(m_compiler);
+    }
+}

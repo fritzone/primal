@@ -33,7 +33,7 @@ public:
     void encountered(const label&);
     void declare_label(const label&);
 
-    uint32_t location() const
+    numeric_t location() const
     {
         return bytes.size();
     }
@@ -42,6 +42,9 @@ public:
     void finalize();
 
     const std::vector<uint8_t>& bytecode() const { return bytes; }
+
+    /* Removes the instance of the compiler from the internals of the system, since it was destructed */
+    void destroy();
 
 private:
     std::vector<uint8_t> bytes;

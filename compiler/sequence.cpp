@@ -73,6 +73,13 @@ void sequence::traverse_ast(uint8_t level, const std::shared_ptr<ast>& croot, co
         (*c->gen_code()) << operators.at(croot->data.data())->opcode << reg(level) << reg(level + 1) ;
     }
     else
+    if(tt == token::type::TT_EXCLAMATION)
+    {
+        traverse_ast(level + 1, croot->right, c);
+        (*c->gen_code()) << MOV() << reg(level) << reg(level + 1);
+        (*c->gen_code()) << NOT() << reg(level);
+    }
+    else
     if (tt == token::type::TT_NUMBER)
     {
         (*c->gen_code()) << MOV() << reg(level) << croot->data;

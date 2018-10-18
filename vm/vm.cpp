@@ -22,6 +22,8 @@ vm::vm()
 
 bool vm::run(const std::vector<uint8_t> &app)
 {
+
+    std::cout << "ADDR: " << &app << std::endl;
     // firstly set up the memory segment for this machine and initialize it to 0xFF
     ms = std::make_unique<uint8_t[]>(app.size() + VM_MEM_SEGMENT_SIZE);
     std::fill(ms.get(), ms.get() + VM_MEM_SEGMENT_SIZE + app.size(), 0xFF);
@@ -135,8 +137,15 @@ reg_subbyte* vm::rsb(uint8_t ridx, uint8_t bidx)
 
 memaddress* vm::mem(numeric_t address)
 {
-    auto setter = [&](numeric_t a, numeric_t v) -> void { set_mem(a,v); };
-    auto getter = [&](numeric_t a) -> numeric_t { return get_mem(a); };
+    auto setter = [&](numeric_t a, numeric_t v) -> void
+        {
+            set_mem(a,v);
+        };
+    auto getter = [&](numeric_t a) -> numeric_t
+        {
+            return get_mem(a);
+        };
+
     static memaddress ma(address, setter, getter);
     ma.m_address = address;
     ma.m_setter = setter;
