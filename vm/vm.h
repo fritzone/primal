@@ -42,12 +42,14 @@ public:
 
     // access the memory at the given location
     memaddress* mem(numeric_t address);
-
+    memaddress_byte_ref* mem_byte(numeric_t address);
     immediate* imm(numeric_t v);
 
     type_destination fetch_type_dest();
     uint8_t fetch_register_index();
     numeric_t fetch_immediate();
+
+    bool copy(numeric_t dest, numeric_t src, numeric_t cnt);
 
     template<class OPC, class EXECUTOR>
     static void register_opcode(OPC&& o, EXECUTOR&& ex)
@@ -74,6 +76,15 @@ private:
     reg m_r[VM_REG_COUNT];              // the registers of the machine
     std::size_t m_ip = 0;               // the instructions pointer
     std::unique_ptr<uint8_t[]> ms;      // the memory segment
+
+    reg_subbyte t1 {&r(0), 0};
+    immediate imv {-1};
+    memaddress_byte_ref mb[2];
+    memaddress ma[2];
+    int mb_i = 0;
+    int ma_i = 0;
+
+
 };
 
 #endif

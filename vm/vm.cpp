@@ -23,7 +23,6 @@ vm::vm()
 bool vm::run(const std::vector<uint8_t> &app)
 {
 
-    std::cout << "ADDR: " << &app << std::endl;
     // firstly set up the memory segment for this machine and initialize it to 0xFF
     ms = std::make_unique<uint8_t[]>(app.size() + VM_MEM_SEGMENT_SIZE);
     std::fill(ms.get(), ms.get() + VM_MEM_SEGMENT_SIZE + app.size(), 0xFF);
@@ -129,7 +128,6 @@ uint8_t vm::get_mem_byte(size_t address)
 
 reg_subbyte* vm::rsb(uint8_t ridx, uint8_t bidx)
 {
-    static reg_subbyte t1(&r(0), 0);
     t1.m_r = &r(ridx);
     t1.m_bidx = bidx;
     return &t1;
@@ -146,17 +144,36 @@ memaddress* vm::mem(numeric_t address)
             return get_mem(a);
         };
 
-    static memaddress ma(address, setter, getter);
-    ma.m_address = address;
-    ma.m_setter = setter;
-    return &ma;
+    ma_i = !ma_i;
+    ma[ma_i].m_address = address;
+    ma[ma_i].m_setter = setter;
+    ma[ma_i].m_getter = getter;
+    return &ma[ma_i];
 }
+
+memaddress_byte_ref* vm::mem_byte(numeric_t address)
+{
+    auto setter = [&](numeric_t a, numeric_t v) -> void
+    {
+        set_mem(a,v);
+    };
+    auto getter = [&](numeric_t a) -> numeric_t
+    {
+        return get_mem(a);
+    };
+
+    mb_i = !mb_i;
+    mb[mb_i].m_address = address;
+    mb[mb_i].m_setter = setter;
+    mb[mb_i].m_getter = getter;
+    return &mb[mb_i];
+}
+
 
 immediate *vm::imm(numeric_t v)
 {
-    static immediate i(-1);
-    i.m_value = v;
-    return &i;
+    imv.m_value = v;
+    return &imv;
 }
 
 valued *vm::fetch()
@@ -192,17 +209,35 @@ valued *vm::fetch()
             return mem(vaddr);
         }
 
-        case type_destination::TYPE_MOD_DP:
+        case type_destination::TYPE_MOD_MEM_REG_IDX:
         {
-            return &(r(254));
+            uint8_t ridx = fetch_register_index();
+            return mem(r(ridx).value());
         }
 
-        case type_destination::TYPE_MOD_OP:
+        case type_destination::TYPE_MOD_MEM_REG_BYTE:
         {
-            return &(r(253));
+            uint8_t ridx = fetch_register_index();
+            return mem_byte(r(ridx).value());
+        }
+
+        case type_destination::TYPE_MOD_MEM_IMM_BYTE:
+        {
+            numeric_t vaddr = fetch_immediate();
+            return mem_byte(vaddr);
         }
     }
 
     return nullptr;
 
+}
+
+bool vm::copy(numeric_t dest, numeric_t src, numeric_t cnt)
+{
+    if(dest + cnt > VM_MEM_SEGMENT_SIZE)
+    {
+        return false;
+    }
+    std::memmove(&ms[dest], &ms[src], cnt);
+    return false;
 }

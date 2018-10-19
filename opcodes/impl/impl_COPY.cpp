@@ -5,7 +5,9 @@
 
 bool impl_COPY(vm* v)
 {
-    std::cout << "COPY" << std::endl;
-    return false;
+    auto* dest = v->fetch();
+    auto* src  = v->fetch();
+    auto* cnt = v->fetch();
+    return v->copy(dest->value(), src->value(), cnt->value());
 }
 

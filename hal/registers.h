@@ -107,7 +107,18 @@ struct memaddress final : public valued
 
 struct memaddress_byte_ref final : public valued
 {
+    memaddress_byte_ref() = default;
+    explicit memaddress_byte_ref(numeric_t address, std::function<void(numeric_t, uint8_t)> setter, std::function<uint8_t(numeric_t)> getter) : m_address(address), m_getter(std::move(getter)), m_setter(std::move(setter)) {}
 
+    void set_value(numeric_t v) override
+    {
+        m_setter(m_address, static_cast<uint8_t>(v));
+    }
+    numeric_t value() const override { return m_getter(m_address); }
+
+    numeric_t m_address = -1;
+    std::function<uint8_t(numeric_t)> m_getter;
+    std::function<void(numeric_t, uint8_t)> m_setter;
 };
 
 /* This class represents a sub byte of a register */

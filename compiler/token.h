@@ -61,6 +61,8 @@ public:
     // will create a register from this token for easier compilation
     reg create_register() const;
     numeric_t to_number() const;
+
+    bool is_register() const;
 public:
 
     // Gets the type of a character
