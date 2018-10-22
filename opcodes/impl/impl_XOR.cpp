@@ -9,7 +9,7 @@ bool impl_XOR(vm* v)
     valued* src  = v->fetch();
 
     *dest ^= *src;
-
+    v->flag() = (dest->value() != 0);
     return true;
 }
 

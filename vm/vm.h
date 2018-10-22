@@ -33,7 +33,7 @@ public:
     void set_mem_byte(size_t address, uint8_t b);
     uint8_t get_mem_byte(size_t address);
 
-    // access function for the given regstser. You can use this to modify it though for faster access
+    // access function for the given register. You can use this to modify it though for faster access
     reg& r(uint8_t i)             { return m_r[i];}
     const reg& r(uint8_t i) const { return m_r[i];}
 
@@ -64,6 +64,10 @@ public:
 
     valued* fetch();
 
+    // the flag of the last operation
+    bool flag() const {return m_lbo;}
+    bool& flag() {return m_lbo;}
+
 private:
 
     struct executor
@@ -83,6 +87,7 @@ private:
     memaddress ma[2];
     int mb_i = 0;
     int ma_i = 0;
+    bool m_lbo = false; // the last operations' result. This is set to false if the result was 0
 
 
 };

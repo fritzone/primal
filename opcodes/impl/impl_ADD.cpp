@@ -10,6 +10,8 @@ bool impl_ADD(vm* v)
 
     *dest += *src;
 
+    v->flag() = (dest->value() != 0);
+
     return true;
 }
 
