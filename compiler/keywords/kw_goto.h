@@ -5,21 +5,24 @@
 #include "keywords.h"
 #include "label.h"
 
-class kw_goto : public sequence, public keyword
+namespace primate
 {
-public:
-    static constexpr const char* N= "GOTO";
+    class kw_goto : public sequence, public keyword
+    {
+    public:
+        static constexpr const char* N= "GOTO";
 
-    explicit kw_goto(source& src) : sequence(src), m_label(src) {}
+        explicit kw_goto(source& src) : sequence(src), m_label(src) {}
 
-    sequence::prepared_type prepare(std::vector<token>& tokens) override;
-    bool compile(compiler* c) override;
+        sequence::prepared_type prepare(std::vector<token>& tokens) override;
+        bool compile(compiler* c) override;
 
-    std::string name() override { return N; }
+        std::string name() override { return N; }
 
-private:
+    private:
 
-    label m_label;
-};
+        label m_label;
+    };
+}
 
 #endif

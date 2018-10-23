@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-bool impl_GT(vm* v)
+bool primate::impl_GT(primate::vm* v)
 {
     std::cout << "GT" << std::endl;
     return false;

@@ -1,6 +1,8 @@
 #include "source.h"
 #include "util.h"
 
+using namespace primate;
+
 source::source(const char* src) : m_ss(src)
 {
 }

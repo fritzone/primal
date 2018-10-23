@@ -5,9 +5,10 @@
 #include "registers.h"
 #include "compiler.h"
 
-using namespace opcodes;
-
 #include <iostream>
+
+using namespace primate;
+using namespace primate::opcodes;
 
 sequence::prepared_type kw_let::prepare(std::vector<token> &tokens)
 {

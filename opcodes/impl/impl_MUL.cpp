@@ -3,10 +3,10 @@
 
 #include <iostream>
 
-bool impl_MUL(vm* v)
+bool primate::impl_MUL(primate::vm* v)
 {
-    valued* dest = v->fetch();
-    valued* src  = v->fetch();
+    primate::valued* dest = v->fetch();
+    primate::valued* src  = v->fetch();
 
     *dest *= *src;
     v->flag() = (dest->value() != 0);

@@ -10,24 +10,28 @@
 #include <memory>
 #include <iostream>
 
-class keyword
+namespace primate
 {
-public:
-    static std::map<std::string, std::function<std::shared_ptr<sequence>(source&)>> store;
+    class keyword
+    {
+    public:
+        static std::map<std::string, std::function<std::shared_ptr<sequence>(source&)>> store;
 
 
-public:
+    public:
 
-    keyword() = default;
-    virtual ~keyword() = default;
-    virtual std::string name() = 0;
-};
+        keyword() = default;
+        virtual ~keyword() = default;
+        virtual std::string name() = 0;
+    };
+
+}
 
 /* This method will create a lambda for the specific type to create the required keyword */
 template<class T> bool register_keyword()
 {
-    auto l = [&](source& s) {return std::shared_ptr<T>(new T(s));};
-    keyword::store[T::N] = l;
+    auto l = [&](primate::source& s) {return std::shared_ptr<T>(new T(s));};
+    primate::keyword::store[T::N] = l;
     return true;
 }
 

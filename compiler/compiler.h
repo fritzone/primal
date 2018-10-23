@@ -5,26 +5,31 @@
 #include <vector>
 #include "source.h"
 
-class generate;
-
-class compiler
+namespace primate
 {
-public:
+    class generate;
 
-    static std::shared_ptr<compiler> initalize();
+    /* The wrapper of the compilers' notion */
+    class compiler
+    {
+    public:
 
-    compiler() = default;
-    virtual ~compiler();
+        static std::shared_ptr<compiler> initalize();
 
-    bool compile(const std::string& s);
-    std::vector<uint8_t> bytecode() const;
-    std::shared_ptr<generate> gen_code();
-    source& get_source();
+        compiler() = default;
+        virtual ~compiler();
 
-private:
+        bool compile(const std::string& s);
+        std::vector<uint8_t> bytecode() const;
+        std::shared_ptr<generate> gen_code();
+        source& get_source();
 
-    source m_src;
-};
+    private:
+
+        source m_src;
+    };
+
+}
 
 #endif
 

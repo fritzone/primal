@@ -10,6 +10,8 @@
 
 #include <all_keywords.h>
 
+using namespace primate;
+
 std::shared_ptr<compiler> compiler::initalize()
 {
     register_all_keywords();

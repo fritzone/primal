@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-bool impl_LT(vm* v)
+bool primate::impl_LT(primate::vm* v)
 {
     std::cout << "LT" << std::endl;
     return false;

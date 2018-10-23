@@ -3,9 +3,9 @@
 
 #include <iostream>
 
-bool impl_NOT(vm* v)
+bool primate::impl_NOT(primate::vm* v)
 {
-    valued* dest = v->fetch();
+    primate::valued* dest = v->fetch();
     dest->set_value(!dest->value());
     v->flag() = (dest->value() != 0);
     return true;

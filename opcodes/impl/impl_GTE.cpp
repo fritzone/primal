@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-bool impl_GTE(vm* v)
+bool primate::impl_GTE(primate::vm* v)
 {
     std::cout << "GTE" << std::endl;
     return false;

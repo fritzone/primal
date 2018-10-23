@@ -4,21 +4,26 @@
 #include "sequence.h"
 #include "keywords.h"
 
-class kw_asm : public sequence, public keyword
+namespace primate
 {
-public:
-    static constexpr const char* N= "ASM";
+    class kw_asm : public sequence, public keyword
+    {
+    public:
+        static constexpr const char* N= "ASM";
 
-    explicit kw_asm(source& src) : sequence(src) {}
+        explicit kw_asm(source& src) : sequence(src) {}
 
-    sequence::prepared_type prepare(std::vector<token>& tokens) override;
-    bool compile(compiler* c) override;
+        sequence::prepared_type prepare(std::vector<token>& tokens) override;
+        bool compile(compiler* c) override;
 
-    std::string name() override { return N; }
+        std::string name() override { return N; }
 
-private:
+    private:
 
-    std::vector<uint8_t> m_precompiled;
-};
+        std::vector<uint8_t> m_precompiled;
+    };
+
+}
+
 
 #endif

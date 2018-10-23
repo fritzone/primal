@@ -81,7 +81,7 @@ foreach(keyword ${registered_keywords})
     list(APPEND ${project}-sources ${CMAKE_CURRENT_SOURCE_DIR}/keywords/kw_${keyword}.cpp)
 
     file(APPEND ${KEYWH} "#include \"keywords/kw_${keyword}.h\"\n")
-    file(APPEND ${KEYWCPP} "REGISTER_KEYWORD(kw_${keyword});\n")
+    file(APPEND ${KEYWCPP} "REGISTER_KEYWORD(primate::kw_${keyword});\n")
 endforeach()
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR})

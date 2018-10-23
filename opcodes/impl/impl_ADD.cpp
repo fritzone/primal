@@ -3,10 +3,10 @@
 
 #include <iostream>
 
-bool impl_ADD(vm* v)
+bool primate::impl_ADD(primate::vm* v)
 {
-    valued* dest = v->fetch();
-    valued* src  = v->fetch();
+    primate::valued* dest = v->fetch();
+    primate::valued* src  = v->fetch();
 
     *dest += *src;
 

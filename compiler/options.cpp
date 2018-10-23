@@ -1,5 +1,6 @@
 #include "options.h"
 
+using namespace primate;
 
 options &options::instance()
 {

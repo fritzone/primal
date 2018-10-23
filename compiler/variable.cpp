@@ -2,6 +2,8 @@
 
 #include <memory>
 
+using namespace primate;
+
 std::map<std::string, std::shared_ptr<variable>> variable::variables;
 
 variable::variable(const std::string & name) : m_name(name)

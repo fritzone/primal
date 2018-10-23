@@ -2,6 +2,8 @@
 #include "util.h"
 #include "variable.h"
 
+using namespace primate;
+
 std::vector<token> lexer::tokenize()
 {
     std::vector<token> result;

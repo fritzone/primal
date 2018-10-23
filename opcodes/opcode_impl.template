@@ -3,9 +3,13 @@
 
 #include <iostream>
 
-bool impl_@OPCODE@(vm* v)
+namespace primate
 {
-    std::cout << "@OPCODE@" << std::endl;
-    return false;
-}
 
+    bool impl_@OPCODE@(vm* v)
+    {
+        std::cout << "@OPCODE@" << std::endl;
+        return false;
+    }
+
+}

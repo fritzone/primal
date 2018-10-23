@@ -6,18 +6,26 @@
 
 #include "token.h"
 
-class lexer
+namespace primate
 {
-public:
+    /* This class is the lexer ofthe compiler */
+    class lexer
+    {
+    public:
 
-    explicit lexer(std::string s) : m_sequence(std::move(s)) {}
+        /* Constructor */
+        explicit lexer(std::string s) : m_sequence(std::move(s)) {}
 
-    std::vector<token> tokenize();
+        /* Will create a vector of tokens */
+        std::vector<token> tokenize();
 
-private:
+    private:
 
-    std::string m_sequence;
-};
+        // the code sequence on which we work
+        std::string m_sequence;
+    };
+
+}
 
 #endif // LEXER_H
 

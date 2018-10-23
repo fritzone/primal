@@ -5,7 +5,8 @@
 #include <compiler.h>
 #include <util.h>
 
-using namespace opcodes;
+using namespace primate;
+using namespace primate::opcodes;
 
 sequence::prepared_type kw_goto::prepare(std::vector<token>& tokens)
 {

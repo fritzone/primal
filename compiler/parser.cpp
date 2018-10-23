@@ -12,6 +12,8 @@
 #include <memory>
 #include <sstream>
 
+using namespace primate;
+
 std::vector<token> parser::shuntyard(const std::vector<token>& tokens)
 {
     std::vector<token> result;

@@ -5,6 +5,8 @@
 #include <cstdint>
 #include <sstream>
 
+using namespace primate;
+
 uint32_t label::label_counter = 0;
 
 label::label(source& s) : sequence(s)

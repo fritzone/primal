@@ -1,15 +1,6 @@
 #ifndef CODE_STREAM_H
 #define CODE_STREAM_H
 
-namespace opcodes { struct opcode; }
-
-class variable;
-struct reg;
-class token;
-class label;
-class declare_label;
-class compiler;
-
 #include <memory>
 #include <vector>
 #include <map>
@@ -17,68 +8,80 @@ class compiler;
 #include <opcodes.h>
 #include <types.h>
 
-class compiled_code final
+namespace opcodes { struct opcode; }
+
+namespace primate
 {
-public:
-    static compiled_code& instance(compiler*);
+    class variable;
+    struct reg;
+    class token;
+    class label;
+    class declare_label;
+    class compiler;
 
-    explicit compiled_code(compiler* c) : m_compiler(c) {}
 
-    compiled_code() = default;
-    ~compiled_code() = default;
-
-    void append(uint8_t b);
-    void append_number(numeric_t v);
-
-    void encountered(const label&);
-    void declare_label(const label&);
-
-    numeric_t location() const
+    class compiled_code final
     {
-        return bytes.size();
-    }
+    public:
+        static compiled_code& instance(compiler*);
 
-    /* This will place all the prelimary labels to the correct value */
-    void finalize();
+        explicit compiled_code(compiler* c) : m_compiler(c) {}
 
-    const std::vector<uint8_t>& bytecode() const { return bytes; }
+        compiled_code() = default;
+        ~compiled_code() = default;
 
-    /* Removes the instance of the compiler from the internals of the system, since it was destructed */
-    void destroy();
+        void append(uint8_t b);
+        void append_number(numeric_t v);
 
-private:
-    std::vector<uint8_t> bytes;
+        void encountered(const label&);
+        void declare_label(const label&);
 
-    /* holds the map where a specific label was encountered in the code, such as jmp _label_2*/
-    std::map<std::string, std::vector<uint32_t>> label_encounters;
+        numeric_t location() const
+        {
+            return bytes.size();
+        }
 
-    /* holds the map where a specific label was declared in the code, such as :_label_2*/
-    std::map<std::string, numeric_t> label_declarations;
+        /* This will place all the prelimary labels to the correct value */
+        void finalize();
 
-    static std::map<const compiler*, std::shared_ptr<compiled_code>> compilers_codes;
-    compiler* m_compiler = nullptr;
-};
+        const std::vector<uint8_t>& bytecode() const { return bytes; }
 
-class generate final
-{
-public:
+        /* Removes the instance of the compiler from the internals of the system, since it was destructed */
+        void destroy();
 
-    generate(compiler*);
-    ~generate();
+    private:
+        std::vector<uint8_t> bytes;
 
-    generate& operator << (opcodes::opcode&& opc);
-    generate& operator << (std::shared_ptr<opcodes::opcode> opc);
-    generate& operator << (variable&& var);
-    generate& operator << (std::shared_ptr<variable> var);
-    generate& operator << (reg&& r);
-    generate& operator << (const token& tok);
-    generate& operator << (const label& l);
-    generate& operator << (declare_label&& dl);
-    //generate& operator << (type_destination td);
+        /* holds the map where a specific label was encountered in the code, such as jmp _label_2*/
+        std::map<std::string, std::vector<uint32_t>> label_encounters;
 
-private:
-    compiler* m_compiler;
-};
+        /* holds the map where a specific label was declared in the code, such as :_label_2*/
+        std::map<std::string, numeric_t> label_declarations;
 
+        static std::map<const compiler*, std::shared_ptr<compiled_code>> compilers_codes;
+        compiler* m_compiler = nullptr;
+    };
+
+    class generate final
+    {
+    public:
+
+        generate(compiler*);
+        ~generate();
+
+        generate& operator << (opcodes::opcode&& opc);
+        generate& operator << (std::shared_ptr<opcodes::opcode> opc);
+        generate& operator << (variable&& var);
+        generate& operator << (std::shared_ptr<variable> var);
+        generate& operator << (reg&& r);
+        generate& operator << (const token& tok);
+        generate& operator << (const label& l);
+        generate& operator << (declare_label&& dl);
+        //generate& operator << (type_destination td);
+
+    private:
+        compiler* m_compiler;
+    };
+}
 
 #endif //PRIMITIVE_CODE_STREAM_H

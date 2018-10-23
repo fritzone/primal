@@ -6,19 +6,18 @@
 #include <functional>
 #include <map>
 
-class vm;
-
-namespace opcodes
+namespace primate
 {
-
-    struct opcode
+    namespace opcodes
     {
-        virtual ~opcode() = default;
-        virtual uint8_t bin() const = 0;
-        virtual std::string name() const = 0;
-        virtual size_t paramcount() const = 0;
-    };
-
+        struct opcode
+        {
+            virtual ~opcode() = default;
+            virtual uint8_t bin() const = 0;
+            virtual std::string name() const = 0;
+            virtual size_t paramcount() const = 0;
+        };
+    }
 }
 
 #endif //PRIMITIVE_OPCODE_H

@@ -9,6 +9,8 @@
 #include <memory>
 #include <cstring>
 
+using namespace primate;
+
 std::map<uint8_t, vm::executor> vm::vm_runner;
 
 vm::vm()

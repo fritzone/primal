@@ -1,6 +1,8 @@
 #include "token.h"
 #include "util.h"
 
+using namespace primate;
+
 token::token(const std::string &s, token::type t) : m_data(s), m_type(t)
 {
 }

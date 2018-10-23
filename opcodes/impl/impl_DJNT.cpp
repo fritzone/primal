@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-bool impl_DJNT(vm* v)
+bool primate::impl_DJNT(primate::vm* v)
 {
     std::cout << "DJNT" << std::endl;
     return false;

@@ -15,10 +15,11 @@
 
 #include <iostream>
 
+using namespace primate;
+using namespace primate::opcodes;
 
 std::map<std::string, std::function<std::shared_ptr<sequence>(source&)>> keyword::store;
 
-using namespace opcodes;
 
 bool sequence::compile(compiler* c)
 {

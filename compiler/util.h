@@ -8,17 +8,20 @@
 #include <functional>
 #include <map>
 
-class syntax_error : public std::runtime_error
+namespace primate
 {
-public:
-    explicit syntax_error(const std::string& s) : std::runtime_error(s), m_message("[syntax error] " + s)  {}
-    const char* what() const noexcept override
+    class syntax_error : public std::runtime_error
     {
-        return m_message.c_str();
-    }
-private:
-    std::string m_message;
-};
+    public:
+        explicit syntax_error(const std::string& s) : std::runtime_error(s), m_message("[syntax error] " + s)  {}
+        const char* what() const noexcept override
+        {
+            return m_message.c_str();
+        }
+    private:
+        std::string m_message;
+    };
+}
 
 namespace util
 {

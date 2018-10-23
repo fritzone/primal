@@ -13,54 +13,56 @@
 #include <util.h>
 #include <token.h>
 
-std::vector<uint8_t> compile_@OPCODE@(std::vector<token>& tokens)
+namespace primate
 {
-    opcodes::@OPCODE@ opc;
-    auto work_tokens = token::identify_assembly_parameters(tokens, opc);
-    if(opc.paramcount() == 2)
+
+    std::vector<uint8_t> compile_@OPCODE@(std::vector<token>& tokens)
     {
-        if(tokens[0].get_type() == token::type::TT_NUMBER)
+        opcodes::@OPCODE@ opc;
+        auto work_tokens = token::identify_assembly_parameters(tokens, opc);
+        if(opc.paramcount() == 2)
         {
-            throw syntax_error(opc.name() + " cannot complete this operation");
+            if(tokens[0].get_type() == token::type::TT_NUMBER)
+            {
+                throw syntax_error(opc.name() + " cannot complete this operation");
+            }
         }
+
+        if(options::instance().generate_assembly())
+        {
+            std::cout << "@OPCODE@ ";
+            for(const auto& t : work_tokens)
+            {
+                if(t.get_type() == token::type::TT_ASM_MEMORY_ADDRESS)
+                {
+                    std::cout << "[";
+                }
+
+                std::cout << t.data();
+
+                if(t.get_type() == token::type::TT_ASM_REG_SUBBYTE)
+                {
+                    std::cout << "@" << t.get_extra_info();
+                }
+                if(t.get_type() == token::type::TT_ASM_MEMORY_ADDRESS)
+                {
+                    std::cout << "]";
+                }
+
+                std::cout << " ";
+            }
+            std::cout << std::endl;
+        }
+
+        std::vector<uint8_t> result;
+
+        // the opcode for @OPCODE@
+        result.push_back(opc.bin());
+
+        // solve the generation
+        asm_compiler::generate_assembly_code(work_tokens, result);
+
+        return result;
     }
 
-    if(options::instance().generate_assembly())
-    {
-        std::cout << "@OPCODE@ ";
-        for(const auto& t : work_tokens)
-        {
-            if(t.get_type() == token::type::TT_ASM_MEMORY_ADDRESS)
-            {
-                std::cout << "[";
-            }
-
-            std::cout << t.data();
-
-            if(t.get_type() == token::type::TT_ASM_REG_SUBBYTE)
-            {
-                std::cout << "@" << t.get_extra_info();
-            }
-            if(t.get_type() == token::type::TT_ASM_MEMORY_ADDRESS)
-            {
-                std::cout << "]";
-            }
-
-            std::cout << " ";
-        }
-        std::cout << std::endl;
-    }
-
-    std::vector<uint8_t> result;
-
-    // the opcode for @OPCODE@
-    result.push_back(opc.bin());
-
-    // solve the generation
-    asm_compiler::generate_assembly_code(work_tokens, result);
-
-    return result;
 }
-
-
-

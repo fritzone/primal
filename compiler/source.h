@@ -4,28 +4,40 @@
 #include <string>
 #include <sstream>
 
-class source
+namespace primate
 {
-public:
-    source() = default;
-    explicit source(const char* src);
-    explicit source(const std::string& src);
-
-    source& operator = (const source& oth)
+/* This class represents a source object the compiler uses to hold code in */
+    class source
     {
-        m_ss << oth.m_ss.str();
-        m_empty = oth.m_empty;
-        return *this;
-    }
+    public:
+        /*Constructors*/
+        source() = default;
+        explicit source(const char* src);
+        explicit source(const std::string& src);
 
-    virtual ~source() = default;
+        /*Assignment OP*/
+        source& operator = (const source& oth)
+        {
+            m_ss << oth.m_ss.str();
+            m_empty = oth.m_empty;
+            return *this;
+        }
 
-    bool empty();
-    std::string next();
+        /* Destructor */
+        ~source() = default;
 
-private:
-    std::stringstream m_ss;
-    bool m_empty = false;
-};
+        /* Tells us if we have reached the end of the source */
+        bool empty();
+
+        /* Gets the next string from the source code */
+        std::string next();
+
+    private:
+
+        std::stringstream m_ss;
+        bool m_empty = false;
+    };
+
+}
 
 #endif

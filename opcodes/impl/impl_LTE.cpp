@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-bool impl_LTE(vm* v)
+bool primate::impl_LTE(primate::vm* v)
 {
     std::cout << "LTE" << std::endl;
     return false;

@@ -9,20 +9,25 @@
 #include "token.h"
 
 #include <vector>
-class vm;
 
-namespace opcodes
+namespace primate
 {
-    struct @OPCODE@ final : public opcode
+    class vm;
+
+    namespace opcodes
     {
-        uint8_t bin() const override {return @OPCODE_CODE@; }
-        std::string name() const override {return "@OPCODE@";}
-        size_t paramcount() const override { return @PARAMCOUNT@; }
+        struct @OPCODE@ final : public opcode
+        {
+            uint8_t bin() const override {return @OPCODE_CODE@; }
+            std::string name() const override {return "@OPCODE@";}
+            size_t paramcount() const override { return @PARAMCOUNT@; }
 
-    };
+        };
+    }
+
+    bool impl_@OPCODE@(vm*);
+    std::vector<uint8_t> compile_@OPCODE@(std::vector<primate::token>&);
+
 }
-
-bool impl_@OPCODE@(vm*);
-std::vector<uint8_t> compile_@OPCODE@(std::vector<token>&);
 
 #endif
