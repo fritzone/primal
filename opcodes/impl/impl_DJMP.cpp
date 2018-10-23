@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-bool primate::impl_DJMP(primate::vm* v)
+bool primal::impl_DJMP(primal::vm* v)
 {
     std::cout << "DJMP" << std::endl;
     return false;

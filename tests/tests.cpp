@@ -6,7 +6,7 @@
 
 TEST_CASE("ASM compiler - Reg byte mem access", "[asm-compiler]")
 {
-    auto c = primate::compiler::initalize();
+    auto c = primal::compiler::initalize();
     c->compile(R"code(
                       asm MOV [@$r1] 20
                       asm MOV $r2 3
@@ -15,7 +15,7 @@ TEST_CASE("ASM compiler - Reg byte mem access", "[asm-compiler]")
                 )code"
     );
 
-    auto vm = primate::vm::create();
+    auto vm = primal::vm::create();
     REQUIRE(vm->run(c->bytecode()));
     REQUIRE(vm->get_mem_byte(0) == 20);
     REQUIRE(vm->get_mem_byte(1) == 0);
@@ -26,7 +26,7 @@ TEST_CASE("ASM compiler - Reg byte mem access", "[asm-compiler]")
 
 TEST_CASE("ASM compiler - Reg Indexed mem access", "[asm-compiler]")
 {
-    auto c = primate::compiler::initalize();
+    auto c = primal::compiler::initalize();
     c->compile(R"code(
                       asm MOV [$r1] 20
                       asm MOV $r2 [$r1]
@@ -34,7 +34,7 @@ TEST_CASE("ASM compiler - Reg Indexed mem access", "[asm-compiler]")
                 )code"
     );
 
-    auto vm = primate::vm::create();
+    auto vm = primal::vm::create();
     REQUIRE(vm->run(c->bytecode()));
     REQUIRE(vm->get_mem(0) == 20);
     REQUIRE(vm->r(2).value() == 20);
@@ -46,14 +46,14 @@ TEST_CASE("ASM compiler - Reg Indexed mem access", "[asm-compiler]")
 
 TEST_CASE("Script compiler - NOT operations", "[script-compiler]")
 {
-    auto c = primate::compiler::initalize();
+    auto c = primal::compiler::initalize();
     c->compile(R"code(
                       let x = !1
                       let y = !0
                       let z = !(1+0)
                 )code"
     );
-    auto vm = primate::vm::create();
+    auto vm = primal::vm::create();
     REQUIRE(vm->run(c->bytecode()));
     REQUIRE(vm->get_mem(0) == 0);
     REQUIRE(vm->get_mem(4) == 1);
@@ -71,7 +71,7 @@ TEST_CASE("Compiler compiles", "[compiler]")
 
 TEST_CASE("ASM compiler - basic operations", "[asm-compiler]")
 {
-    auto c = primate::compiler::initalize();
+    auto c = primal::compiler::initalize();
     c->compile(R"code(
                       asm MOV $r1 20
                       asm MOV $r2 $r1
@@ -95,7 +95,7 @@ TEST_CASE("ASM compiler - basic operations", "[asm-compiler]")
                 )code"
               );
 
-    auto vm = primate::vm::create();
+    auto vm = primal::vm::create();
     REQUIRE(vm->run(c->bytecode()));
 
     REQUIRE(vm->r(1) == 20);
@@ -111,26 +111,26 @@ TEST_CASE("ASM compiler - basic operations", "[asm-compiler]")
 
 TEST_CASE("Script compiler - XOR operations", "[script-compiler]")
 {
-    auto c = primate::compiler::initalize();
+    auto c = primal::compiler::initalize();
     c->compile(R"code(
                       let x = 20
                       let x = x ^ 10
                 )code"
     );
-    auto vm = primate::vm::create();
+    auto vm = primal::vm::create();
     REQUIRE(vm->run(c->bytecode()));
     REQUIRE(vm->get_mem(0) == 30);
 }
 
 TEST_CASE("Script compiler - Basic memory access", "[script-compiler]")
 {
-    auto c = primate::compiler::initalize();
+    auto c = primal::compiler::initalize();
     c->compile(R"code(
                       let x = 40
                 )code"
     );
 
-    auto vm = primate::vm::create();
+    auto vm = primal::vm::create();
     REQUIRE(vm->run(c->bytecode()));
     REQUIRE(vm->get_mem(0) == 40);
 }

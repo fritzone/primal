@@ -7,7 +7,7 @@
 #include <string>
 #include <opcode.h>
 
-namespace primate
+namespace primal
 {
 /* This class represents a token */
     class token final

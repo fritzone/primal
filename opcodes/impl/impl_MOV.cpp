@@ -2,9 +2,9 @@
 #include <vm.h>
 #include <types.h>
 
-using namespace primate;
+using namespace primal;
 
-bool primate::impl_MOV(primate::vm* v)
+bool primal::impl_MOV(primal::vm* v)
 {
     auto* dest = v->fetch();
     auto* src  = v->fetch();

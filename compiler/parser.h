@@ -11,7 +11,7 @@
 #include <vector>
 #include <memory>
 
-namespace primate
+namespace primal
 {
 /* Represents the parsing phase of the compiler, ie. the one which creates the AST for one
    expression at a time */

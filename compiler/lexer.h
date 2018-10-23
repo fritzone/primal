@@ -6,7 +6,7 @@
 
 #include "token.h"
 
-namespace primate
+namespace primal
 {
     /* This class is the lexer ofthe compiler */
     class lexer

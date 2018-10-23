@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-bool primate::impl_EQ(primate::vm* v)
+bool primal::impl_EQ(primal::vm* v)
 {
     std::cout << "EQ" << std::endl;
     return false;

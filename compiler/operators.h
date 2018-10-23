@@ -7,7 +7,7 @@
 #include <map>
 #include <memory>
 
-namespace primate
+namespace primal
 {
 // All the operators in the system
     static std::map<std::string, std::unique_ptr<ops>> operators = util::create_map<std::string, std::unique_ptr<ops>>

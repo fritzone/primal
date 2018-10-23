@@ -4,7 +4,7 @@
 #include "sequence.h"
 #include "keywords.h"
 
-namespace primate
+namespace primal
 {
 /* Class representing the IF keyword */
     class kw_if : public sequence, public keyword

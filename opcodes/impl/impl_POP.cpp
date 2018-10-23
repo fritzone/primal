@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-bool primate::impl_POP(primate::vm* v)
+bool primal::impl_POP(primal::vm* v)
 {
     std::cout << "POP" << std::endl;
     return false;

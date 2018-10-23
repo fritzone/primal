@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-bool primate::impl_LT(primate::vm* v)
+bool primal::impl_LT(primal::vm* v)
 {
     std::cout << "LT" << std::endl;
     return false;

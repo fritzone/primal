@@ -1,7 +1,7 @@
 #include "asm_compiler.h"
 #include "util.h"
 
-using namespace primate;
+using namespace primal;
 
 void asm_compiler::generate_assembly_code(const std::vector<token>& tokens, std::vector<uint8_t>& result)
 {

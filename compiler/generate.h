@@ -10,7 +10,7 @@
 
 namespace opcodes { struct opcode; }
 
-namespace primate
+namespace primal
 {
     class variable;
     struct reg;

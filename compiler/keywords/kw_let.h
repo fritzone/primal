@@ -8,7 +8,7 @@
 #include <vector>
 #include <memory>
 
-namespace primate
+namespace primal
 {
     class variable;
 

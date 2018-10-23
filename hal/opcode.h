@@ -6,7 +6,7 @@
 #include <functional>
 #include <map>
 
-namespace primate
+namespace primal
 {
     namespace opcodes
     {

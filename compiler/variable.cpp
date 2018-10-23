@@ -2,7 +2,7 @@
 
 #include <memory>
 
-using namespace primate;
+using namespace primal;
 
 std::map<std::string, std::shared_ptr<variable>> variable::variables;
 

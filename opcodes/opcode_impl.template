@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-namespace primate
+namespace primal
 {
 
     bool impl_@OPCODE@(vm* v)

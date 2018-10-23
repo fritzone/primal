@@ -1,7 +1,7 @@
 #ifndef OPTIONS_H
 #define OPTIONS_H
 
-namespace primate
+namespace primal
 {
     /*Class representing some options*/
     class options

@@ -12,7 +12,7 @@
 #include <memory>
 #include <sstream>
 
-using namespace primate;
+using namespace primal;
 
 std::vector<token> parser::shuntyard(const std::vector<token>& tokens)
 {

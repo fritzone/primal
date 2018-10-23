@@ -8,7 +8,7 @@
 #include <functional>
 #include <memory>
 
-namespace primate
+namespace primal
 {
     class vm final
     {

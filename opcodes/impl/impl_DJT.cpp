@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-bool primate::impl_DJT(primate::vm* v)
+bool primal::impl_DJT(primal::vm* v)
 {
     std::cout << "DJT" << std::endl;
     return false;

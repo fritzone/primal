@@ -7,7 +7,7 @@
 
 #include "token.h"
 
-namespace primate
+namespace primal
 {
 // The abstract syntax tree
     class ast

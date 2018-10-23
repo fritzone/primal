@@ -1,6 +1,6 @@
 #include "kw_endif.h"
 
-using namespace primate;
+using namespace primal;
 
 sequence::prepared_type kw_endif::prepare(std::vector<token>&)
 {

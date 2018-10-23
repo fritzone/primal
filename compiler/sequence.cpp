@@ -15,8 +15,8 @@
 
 #include <iostream>
 
-using namespace primate;
-using namespace primate::opcodes;
+using namespace primal;
+using namespace primal::opcodes;
 
 std::map<std::string, std::function<std::shared_ptr<sequence>(source&)>> keyword::store;
 

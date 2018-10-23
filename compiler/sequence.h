@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-namespace primate
+namespace primal
 {
     class source;
     class ast;

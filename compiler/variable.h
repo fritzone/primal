@@ -7,7 +7,7 @@
 #include <memory>
 #include <map>
 
-namespace primate
+namespace primal
 {
 /* This class will hold the variables and their associated memory adresses */
     class variable

@@ -9,7 +9,7 @@
 #include <vector>
 #include <set>
 
-namespace primate
+namespace primal
 {
     class opcode_compiler_store
     {

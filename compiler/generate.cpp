@@ -14,7 +14,7 @@
 #include <cstring>
 #include <map>
 
-using namespace primate;
+using namespace primal;
 
 std::map<const compiler*, std::shared_ptr<compiled_code>> compiled_code::compilers_codes;
 
@@ -28,7 +28,7 @@ generate::~generate()
     if(options::instance().generate_assembly()) { std::cout << std::endl; }
 }
 
-generate &generate::operator<<(primate::opcodes::opcode &&opc)
+generate &generate::operator<<(primal::opcodes::opcode &&opc)
 {
     if(options::instance().generate_assembly()) { std::cout << opc.name() << " "; }
 

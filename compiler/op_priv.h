@@ -7,7 +7,7 @@ static constexpr int PRIO_30 = 30;   // and
 static constexpr int PRIO_40 = 40;   // or
 static constexpr int PRIO_50 = 50;   // comparison
 
-namespace primate
+namespace primal
 {
 /* A structure holding an operator */
     struct ops

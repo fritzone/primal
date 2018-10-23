@@ -4,7 +4,7 @@
 #include "sequence.h"
 #include "keywords.h"
 
-namespace primate
+namespace primal
 {
     class kw_endif : public sequence, public keyword
     {

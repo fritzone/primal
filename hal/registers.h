@@ -8,7 +8,7 @@
 #include <functional>
 #include <array>
 
-namespace primate
+namespace primal
 {
     static constexpr std::array< std::pair<uint32_t, uint8_t> , 4> masks = {std::make_pair(0x000000FF, 0),
                                                                             std::make_pair(0x0000FF00, 8),

@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-bool primate::impl_COPY(primate::vm* v)
+bool primal::impl_COPY(primal::vm* v)
 {
     auto* dest = v->fetch();
     auto* src  = v->fetch();

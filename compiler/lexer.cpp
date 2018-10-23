@@ -2,7 +2,7 @@
 #include "util.h"
 #include "variable.h"
 
-using namespace primate;
+using namespace primal;
 
 std::vector<token> lexer::tokenize()
 {

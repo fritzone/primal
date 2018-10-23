@@ -3,10 +3,10 @@
 
 #include <iostream>
 
-bool primate::impl_AND(primate::vm* v)
+bool primal::impl_AND(primal::vm* v)
 {
-    primate::valued* dest = v->fetch();
-    primate::valued* src  = v->fetch();
+    primal::valued* dest = v->fetch();
+    primal::valued* src  = v->fetch();
 
     *dest &= *src;
     v->flag() = (dest->value() != 0);

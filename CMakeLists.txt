@@ -1,6 +1,6 @@
 cmake_minimum_required (VERSION 2.8.11)
 
-project(primitive)
+project(primal)
 include (TestBigEndian)
 
 if(NOT ${TEST_ENDIAN} EQUAL 1)
@@ -71,4 +71,4 @@ add_subdirectory(vm)
 add_subdirectory(tests)
 enable_testing()
 
-add_test(NAME primitive_test COMMAND primitive_test)
+add_test(NAME primal_test COMMAND primal_test)

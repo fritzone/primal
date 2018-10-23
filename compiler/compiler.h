@@ -5,7 +5,7 @@
 #include <vector>
 #include "source.h"
 
-namespace primate
+namespace primal
 {
     class generate;
 

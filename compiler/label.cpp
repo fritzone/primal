@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <sstream>
 
-using namespace primate;
+using namespace primal;
 
 uint32_t label::label_counter = 0;
 

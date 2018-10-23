@@ -1,7 +1,7 @@
 #include "source.h"
 #include "util.h"
 
-using namespace primate;
+using namespace primal;
 
 source::source(const char* src) : m_ss(src)
 {

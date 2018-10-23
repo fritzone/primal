@@ -1,7 +1,7 @@
 #include "ast.h"
 #include <sstream>
 
-void primate::ast::build_ast(std::vector<token>& output, std::shared_ptr<ast>& croot)
+void primal::ast::build_ast(std::vector<token>& output, std::shared_ptr<ast>& croot)
 {
     if (output.empty())
     {

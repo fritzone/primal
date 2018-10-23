@@ -8,7 +8,7 @@
 #include <functional>
 #include <map>
 
-namespace primate
+namespace primal
 {
     class syntax_error : public std::runtime_error
     {

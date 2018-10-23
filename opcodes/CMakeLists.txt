@@ -84,7 +84,7 @@ file(APPEND ${OPIC} "#include <vm.h>\n\n")
 file(APPEND ${OPIC} "void register_opcodes() {\n")
 foreach(opcode ${registered_opcodes})
     set(VOPCODE ${opcode})
-    string(CONFIGURE "\tprimate::vm::register_opcode(primate::opcodes::${VOPCODE}(), [&](primate::vm* v) -> bool { return primate::impl_${VOPCODE}(v); });" conf_line @ONLY)
+    string(CONFIGURE "\tprimal::vm::register_opcode(primal::opcodes::${VOPCODE}(), [&](primal::vm* v) -> bool { return primal::impl_${VOPCODE}(v); });" conf_line @ONLY)
     file(APPEND ${OPIC} "${conf_line}\n")
 
     # and here add the cpp file to the project sources
@@ -105,7 +105,7 @@ file(APPEND ${OPCC} "#include <opcodes.h>\n")
 file(APPEND ${OPCC} "void register_opcode_compilers() {\n")
 foreach(opcode ${registered_opcodes})
     set(VOPCODE ${opcode})
-    string(CONFIGURE "\tprimate::opcode_compiler_store::instance().register_opcode(primate::opcodes::${VOPCODE}(), [&](std::vector<primate::token>& t) -> std::vector<uint8_t> { return primate::compile_${VOPCODE}(t); });" conf_line @ONLY)
+    string(CONFIGURE "\tprimal::opcode_compiler_store::instance().register_opcode(primal::opcodes::${VOPCODE}(), [&](std::vector<primal::token>& t) -> std::vector<uint8_t> { return primal::compile_${VOPCODE}(t); });" conf_line @ONLY)
     file(APPEND ${OPCC} "${conf_line}\n")
     # and here add the cpp file to the project sources
     list(APPEND opcode-compiler-sources ${CMAKE_CURRENT_BINARY_DIR}/compile_${opcode}.cpp)

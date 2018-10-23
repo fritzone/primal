@@ -10,7 +10,7 @@
 #include <memory>
 #include <iostream>
 
-namespace primate
+namespace primal
 {
     class keyword
     {
@@ -30,8 +30,8 @@ namespace primate
 /* This method will create a lambda for the specific type to create the required keyword */
 template<class T> bool register_keyword()
 {
-    auto l = [&](primate::source& s) {return std::shared_ptr<T>(new T(s));};
-    primate::keyword::store[T::N] = l;
+    auto l = [&](primal::source& s) {return std::shared_ptr<T>(new T(s));};
+    primal::keyword::store[T::N] = l;
     return true;
 }
 

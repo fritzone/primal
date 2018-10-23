@@ -13,7 +13,7 @@
 #include <util.h>
 #include <token.h>
 
-namespace primate
+namespace primal
 {
 
     std::vector<uint8_t> compile_@OPCODE@(std::vector<token>& tokens)

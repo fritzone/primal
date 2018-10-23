@@ -4,7 +4,7 @@
 #include <string>
 #include <sstream>
 
-namespace primate
+namespace primal
 {
 /* This class represents a source object the compiler uses to hold code in */
     class source

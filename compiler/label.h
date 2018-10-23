@@ -5,7 +5,7 @@
 
 #include <string>
 
-namespace primate
+namespace primal
 {
 /* Simple class to represent a label in the assembly output */
     class label : public sequence

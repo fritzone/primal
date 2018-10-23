@@ -10,8 +10,8 @@
 
 #include <iostream>
 
-using namespace primate;
-using namespace primate::opcodes;
+using namespace primal;
+using namespace primal::opcodes;
 
 sequence::prepared_type kw_if::prepare(std::vector<token> &tokens)
 {

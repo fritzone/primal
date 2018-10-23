@@ -2,7 +2,7 @@
 #include "asm_compiler.h"
 #include "generate.h"
 
-using namespace primate;
+using namespace primal;
 
 sequence::prepared_type kw_asm::prepare(std::vector<token> &tokens)
 {

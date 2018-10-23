@@ -10,7 +10,7 @@
 
 #include <all_keywords.h>
 
-using namespace primate;
+using namespace primal;
 
 std::shared_ptr<compiler> compiler::initalize()
 {

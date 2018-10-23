@@ -5,7 +5,7 @@
 #include "keywords.h"
 #include "label.h"
 
-namespace primate
+namespace primal
 {
     class kw_goto : public sequence, public keyword
     {

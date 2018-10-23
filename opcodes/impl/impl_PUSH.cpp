@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-bool primate::impl_PUSH(primate::vm* v)
+bool primal::impl_PUSH(primal::vm* v)
 {
     std::cout << "PUSH" << std::endl;
     return false;
