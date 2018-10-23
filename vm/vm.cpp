@@ -1,5 +1,6 @@
 #include "vm.h"
 
+#include <exceptions.h>
 #include <opcodes.h>
 #include <hal.h>
 #include <types.h>
@@ -54,7 +55,6 @@ bool vm::run(const std::vector<uint8_t> &app)
         }
     }
     panic();
-    return false;
 }
 
 std::shared_ptr<vm> vm::create()
@@ -72,8 +72,7 @@ type_destination vm::fetch_type_dest()
 
 void vm::panic()
 {
-    std::cout << "PANIC!" << std::endl;
-    exit(2);
+    throw primal::vm_panic("PANIC");
 }
 
 uint8_t vm::fetch_register_index()
@@ -88,7 +87,7 @@ numeric_t vm::fetch_immediate()
     return retv;
 }
 
-void vm::set_mem(size_t address, numeric_t new_value)
+void vm::set_mem(numeric_t address, numeric_t new_value)
 {
     if(address > VM_MEM_SEGMENT_SIZE)
     {
@@ -98,7 +97,7 @@ void vm::set_mem(size_t address, numeric_t new_value)
     std::memcpy( &ms[0] + address, &new_value, sizeof(new_value));
 }
 
-numeric_t vm::get_mem(size_t address)
+numeric_t vm::get_mem(numeric_t address)
 {
     if(address > VM_MEM_SEGMENT_SIZE)
     {
@@ -110,7 +109,7 @@ numeric_t vm::get_mem(size_t address)
     return v;
 }
 
-void vm::set_mem_byte(size_t address, uint8_t b)
+void vm::set_mem_byte(numeric_t address, uint8_t b)
 {
     if(address > VM_MEM_SEGMENT_SIZE)
     {
@@ -119,7 +118,7 @@ void vm::set_mem_byte(size_t address, uint8_t b)
     ms[address] = b;
 }
 
-uint8_t vm::get_mem_byte(size_t address)
+uint8_t vm::get_mem_byte(numeric_t address)
 {
     if(address > VM_MEM_SEGMENT_SIZE)
     {
@@ -155,13 +154,13 @@ memaddress* vm::mem(numeric_t address)
 
 memaddress_byte_ref* vm::mem_byte(numeric_t address)
 {
-    auto setter = [&](numeric_t a, numeric_t v) -> void
+    auto setter = [&](numeric_t a, uint8_t v) -> void
     {
-        set_mem(a,v);
+        set_mem_byte(a,v);
     };
-    auto getter = [&](numeric_t a) -> numeric_t
+    auto getter = [&](numeric_t a) -> uint8_t
     {
-        return get_mem(a);
+        return get_mem_byte(a);
     };
 
     mb_i = !mb_i;

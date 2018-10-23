@@ -9,7 +9,6 @@ source::source(const char* src) : m_ss(src)
 
 source::source(const std::string& src) : source(src.c_str())
 {
-
 }
 
 bool source::empty()

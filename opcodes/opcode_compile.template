@@ -7,6 +7,7 @@
 #include <token.h>
 #include <asm_compiler.h>
 #include <options.h>
+#include <exceptions.h>
 
 #include <iostream>
 #include <vector>

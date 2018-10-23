@@ -33,7 +33,7 @@ sequence::prepared_type label::prepare(std::vector<token>&)
 
 bool label::compile(compiler* c)
 {
-    (*c->gen_code()) << declare_label(*this);
+    (*c->generator()) << declare_label(*this);
     return true;
 }
 

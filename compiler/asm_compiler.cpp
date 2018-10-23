@@ -1,5 +1,6 @@
 #include "asm_compiler.h"
 #include "util.h"
+#include "exceptions.h"
 
 using namespace primal;
 

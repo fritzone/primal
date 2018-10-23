@@ -1,5 +1,6 @@
 #include "token.h"
 #include "util.h"
+#include "exceptions.h"
 
 using namespace primal;
 

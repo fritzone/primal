@@ -43,6 +43,6 @@ sequence::prepared_type kw_let::prepare(std::vector<token> &tokens)
 bool kw_let::compile(compiler* c)
 {
     sequence::compile(c);
-    (*c->gen_code()) << MOV() << m_variable << reg(0);
+    (*c->generator()) << MOV() << m_variable << reg(0);
     return false;
 }

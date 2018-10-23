@@ -6,6 +6,7 @@
 #include "source.h"
 #include "sequence.h"
 #include "ast.h"
+#include "exceptions.h"
 
 #include <string>
 #include <vector>

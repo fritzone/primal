@@ -50,15 +50,15 @@ bool kw_if::compile(compiler* c)
     label lbl_after_if = label::create(c->get_source());
     label lbl_if_body = label::create(c->get_source());
 
-    (*c->gen_code()) << (dynamic_cast<comp*>(operators[m_root->data.data()].get()))->jump << lbl_if_body;
-    (*c->gen_code()) << JMP() << lbl_after_if;
+    (*c->generator()) << (dynamic_cast<comp*>(operators[m_root->data.data()].get()))->jump << lbl_if_body;
+    (*c->generator()) << JMP() << lbl_after_if;
 
-    (*c->gen_code()) << declare_label(lbl_if_body);
+    (*c->generator()) << declare_label(lbl_if_body);
     for(const auto& seq : m_if_body)
     {
         seq->compile(c);
     }
-    (*c->gen_code()) << declare_label(lbl_after_if);
+    (*c->generator()) << declare_label(lbl_after_if);
 
     return false;
 

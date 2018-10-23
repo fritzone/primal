@@ -1,27 +1,11 @@
 #pragma once
 
 #include <string>
-#include <stdexcept>
 #include <cctype>
 #include <memory>
 #include <algorithm>
 #include <functional>
 #include <map>
-
-namespace primal
-{
-    class syntax_error : public std::runtime_error
-    {
-    public:
-        explicit syntax_error(const std::string& s) : std::runtime_error(s), m_message("[syntax error] " + s)  {}
-        const char* what() const noexcept override
-        {
-            return m_message.c_str();
-        }
-    private:
-        std::string m_message;
-    };
-}
 
 namespace util
 {

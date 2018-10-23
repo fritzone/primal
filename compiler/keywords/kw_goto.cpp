@@ -21,7 +21,7 @@ sequence::prepared_type kw_goto::prepare(std::vector<token>& tokens)
 
 bool kw_goto::compile(compiler* c)
 {
-    (*c->gen_code()) << JMP() << m_label;
+    (*c->generator()) << JMP() << m_label;
 
     return true;
 }

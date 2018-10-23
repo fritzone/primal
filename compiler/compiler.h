@@ -14,14 +14,24 @@ namespace primal
     {
     public:
 
-        static std::shared_ptr<compiler> initalize();
+        /* this needs to be called before you want to compile */
+        static std::shared_ptr<compiler> create();
+
+    public:
 
         compiler() = default;
         virtual ~compiler();
 
+        /* Will compile the given instructions, each of the mmust be newline separated */
         bool compile(const std::string& s);
+
+        /* Will retrieve the bytecode of the latest compilation. */
         std::vector<uint8_t> bytecode() const;
-        std::shared_ptr<generate> gen_code();
+
+        /* Will yield the code generator assigned to this compiler */
+        std::shared_ptr<generate> generator();
+
+        /* Will return the source on which this compiler operates */
         source& get_source();
 
     private:

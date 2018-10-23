@@ -12,7 +12,7 @@
 
 using namespace primal;
 
-std::shared_ptr<compiler> compiler::initalize()
+std::shared_ptr<compiler> compiler::create()
 {
     register_all_keywords();
     register_opcode_compilers();
@@ -39,7 +39,7 @@ std::vector<uint8_t> compiler::bytecode() const
     return compiled_code::instance(const_cast<compiler*>(this)).bytecode();
 }
 
-std::shared_ptr<generate> compiler::gen_code()
+std::shared_ptr<generate> compiler::generator()
 {
     return std::make_shared<generate>(this);
 }
