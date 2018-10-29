@@ -7,6 +7,7 @@
 #include <map>
 #include <functional>
 #include <memory>
+#include <array>
 
 namespace primal
 {
@@ -23,8 +24,8 @@ namespace primal
         bool run(const std::vector<uint8_t>& app);
 
         // access function for the IP. You can use this to modify it though for faster access
-        std::size_t& ip()      {return m_ip;}
-        std::size_t ip() const {return m_ip;}
+        numeric_t& ip()      {return m_ip;}
+        numeric_t ip() const {return m_ip;}
 
         // will set the memory at the given addres to the new value
         void set_mem(numeric_t address, numeric_t new_value);
@@ -78,17 +79,18 @@ namespace primal
         static std::map<uint8_t, executor> vm_runner;
 
         reg m_r[VM_REG_COUNT];              // the registers of the machine
-        std::size_t m_ip = 0;               // the instructions pointer
+        numeric_t m_ip = 0;               // the instructions pointer
         std::unique_ptr<uint8_t[]> ms;      // the memory segment
 
         reg_subbyte t1 {&this->r(0), 0};
-        immediate imv {-1};
+        std::array<immediate, 3> imv = { immediate{-1}, immediate{-1}, immediate{-1}} ;
         memaddress_byte_ref mb[2];
         memaddress ma[2];
         int mb_i = 0;
         int ma_i = 0;
+        int mi_i = 0;
         bool m_lbo = false; // the last operations' result. This is set to false if the result was 0
-
+        numeric_t app_size = -1;
 
     };
 

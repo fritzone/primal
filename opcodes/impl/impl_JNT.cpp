@@ -5,7 +5,8 @@
 
 bool primal::impl_JNT(primal::vm* v)
 {
-    std::cout << "JNT" << std::endl;
-    return false;
+    auto* loc = v->fetch();
+    if(!v->flag()) v->ip() = loc->value();
+    return true;
 }
 

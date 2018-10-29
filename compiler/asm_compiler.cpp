@@ -1,11 +1,21 @@
 #include "asm_compiler.h"
 #include "util.h"
 #include "exceptions.h"
+#include "opcode.h"
+#include "options.h"
+
+#include <opcodes.h>
+
+#include <iostream>
+#include <iomanip>
 
 using namespace primal;
 
-void asm_compiler::generate_assembly_code(const std::vector<token>& tokens, std::vector<uint8_t>& result)
+void asm_compiler::generate_assembly_code(const primal::opcodes::opcode& opc, const std::vector<token>& tokens, std::vector<uint8_t>& result)
 {
+
+    // the opcode for COPY
+    result.push_back(opc.bin());
 
     for(const token &t : tokens)
     {
@@ -96,8 +106,25 @@ void asm_compiler::generate_assembly_code(const std::vector<token>& tokens, std:
             }
 
             default:
-                throw syntax_error("Invalid assembly command parameter");
+            if(opc.family() == primal::opcodes::opcode_family::OF_JUMP)
+            {
+                throw syntax_error("Jump commands cannot jump to labels. Use goto for that purpose.");
+            }
+            else
+            {
+                throw syntax_error("Invalid assembly command parameter: " + t.data());
+            }
         }
 
+    }
+
+    if(options::instance().generate_assembly())
+    {
+        std::cout << "[";
+        for(auto b : result)
+        {
+            std::cout << " " << std::setfill('0') << std::setw(2) << std::hex << std::uppercase  << static_cast<int>(b) ;
+        }
+        std::cout << " ]";
     }
 }

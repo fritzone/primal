@@ -1,4 +1,4 @@
-set(project primitive_test)
+set(project primal_test)
 
 add_executable(${project} tests.cpp catch_main.cpp)
 

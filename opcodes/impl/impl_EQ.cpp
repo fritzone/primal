@@ -5,7 +5,11 @@
 
 bool primal::impl_EQ(primal::vm* v)
 {
-    std::cout << "EQ" << std::endl;
-    return false;
+    primal::valued* first = v->fetch();
+    primal::valued* second = v->fetch();
+
+    v->flag() = first->value() == second->value();
+
+    return true;
 }
 

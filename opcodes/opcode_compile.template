@@ -52,16 +52,17 @@ namespace primal
 
                 std::cout << " ";
             }
-            std::cout << std::endl;
         }
 
         std::vector<uint8_t> result;
 
-        // the opcode for @OPCODE@
-        result.push_back(opc.bin());
-
         // solve the generation
-        asm_compiler::generate_assembly_code(work_tokens, result);
+        asm_compiler::generate_assembly_code(opc, work_tokens, result);
+
+        if(options::instance().generate_assembly())
+        {
+            std::cout << std::endl;
+        }
 
         return result;
     }

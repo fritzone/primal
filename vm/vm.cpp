@@ -5,7 +5,9 @@
 #include <hal.h>
 #include <types.h>
 
+#include <algorithm>
 #include <iostream>
+#include <iomanip>
 #include <algorithm>
 #include <memory>
 #include <cstring>
@@ -27,8 +29,9 @@ bool vm::run(const std::vector<uint8_t> &app)
 {
 
     // firstly set up the memory segment for this machine and initialize it to 0xFF
-    ms = std::make_unique<uint8_t[]>(app.size() + VM_MEM_SEGMENT_SIZE);
-    std::fill(ms.get(), ms.get() + VM_MEM_SEGMENT_SIZE + app.size(), 0xFF);
+    app_size = app.size();
+    ms = std::make_unique<uint8_t[]>(app_size + VM_MEM_SEGMENT_SIZE);
+    std::fill(ms.get(), ms.get() + VM_MEM_SEGMENT_SIZE + app_size, 0xFF);
 
     // then copy over the data from app to the end of the memory segment
     std::copy(app.begin(), app.end(), ms.get() + VM_MEM_SEGMENT_SIZE);
@@ -72,6 +75,25 @@ type_destination vm::fetch_type_dest()
 
 void vm::panic()
 {
+    std::cout << "VM PANIC ☹ - instruction dump:\n---------------------------------------------------\n";
+    for(numeric_t i = std::max(VM_MEM_SEGMENT_SIZE, m_ip - 64); i < m_ip + std::min(64, app_size); i++)
+    {
+        if(i == m_ip)
+        {
+            std::cout << " >";
+        }
+        else
+        {
+            std::cout << " ";
+        }
+        std::cout << std::setfill('0') << std::setw(2) << std::hex << std::uppercase  << static_cast<int>(ms[i]) ;
+        if(i == m_ip)
+        {
+            std::cout << "<";
+        }
+
+    }
+    std::cout << std::endl;
     throw primal::vm_panic("PANIC");
 }
 
@@ -173,8 +195,10 @@ memaddress_byte_ref* vm::mem_byte(numeric_t address)
 
 immediate *vm::imm(numeric_t v)
 {
-    imv.m_value = v;
-    return &imv;
+    mi_i++; if(mi_i == 3) mi_i = 1;
+
+    imv[mi_i].m_value = v;
+    return &imv[mi_i];
 }
 
 valued *vm::fetch()
@@ -235,10 +259,10 @@ valued *vm::fetch()
 
 bool vm::copy(numeric_t dest, numeric_t src, numeric_t cnt)
 {
-    if(dest + cnt > VM_MEM_SEGMENT_SIZE)
+    if(dest + cnt > VM_MEM_SEGMENT_SIZE || src < 0 || dest < 0 || src > VM_MEM_SEGMENT_SIZE)
     {
         return false;
     }
     std::memmove(&ms[dest], &ms[src], cnt);
-    return false;
+    return true;
 }

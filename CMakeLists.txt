@@ -10,6 +10,7 @@ endif()
 
 option(coverage-build "gcov/lcov test coverage analysis (make coverage_test)" OFF)
 
+set( CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 

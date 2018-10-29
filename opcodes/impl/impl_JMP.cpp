@@ -5,7 +5,8 @@
 
 bool primal::impl_JMP(primal::vm* v)
 {
-    std::cout << "JMP" << std::endl;
-    return false;
+    auto* loc = v->fetch();
+    v->ip() = loc->value();
+    return true;
 }
 

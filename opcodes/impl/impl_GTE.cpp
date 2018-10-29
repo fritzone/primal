@@ -5,7 +5,11 @@
 
 bool primal::impl_GTE(primal::vm* v)
 {
-    std::cout << "GTE" << std::endl;
-    return false;
+    primal::valued* first = v->fetch();
+    primal::valued* second = v->fetch();
+
+    v->flag() = first->value() >= second->value();
+
+    return true;
 }
 

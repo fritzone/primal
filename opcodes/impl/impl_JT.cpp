@@ -5,7 +5,8 @@
 
 bool primal::impl_JT(primal::vm* v)
 {
-    std::cout << "JT" << std::endl;
-    return false;
+    auto* loc = v->fetch();
+    if(v->flag()) v->ip() = loc->value();
+    return true;
 }
 

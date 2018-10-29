@@ -44,5 +44,4 @@ namespace primal
 
 }
 
-
 #endif //PRIMITIVE_LABEL_H
