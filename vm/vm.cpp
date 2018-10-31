@@ -27,7 +27,6 @@ vm::vm()
 
 bool vm::run(const std::vector<uint8_t> &app)
 {
-
     // firstly set up the memory segment for this machine and initialize it to 0xFF
     app_size = app.size();
     ms = std::make_unique<uint8_t[]>(app_size + VM_MEM_SEGMENT_SIZE);
@@ -36,8 +35,9 @@ bool vm::run(const std::vector<uint8_t> &app)
     // then copy over the data from app to the end of the memory segment
     std::copy(app.begin(), app.end(), ms.get() + VM_MEM_SEGMENT_SIZE);
 
-    // set the IP to point to the correct location
-    m_ip = VM_MEM_SEGMENT_SIZE;
+    // set the IP and SP to point to the correct location
+    m_ip = VM_MEM_SEGMENT_SIZE;     // will grow upwards
+    r(255) = VM_MEM_SEGMENT_SIZE;   // will grow downwards
 
     // then start running it
     while(vm_runner.count(ms[m_ip]))
@@ -264,5 +264,16 @@ bool vm::copy(numeric_t dest, numeric_t src, numeric_t cnt)
         return false;
     }
     std::memmove(&ms[dest], &ms[src], cnt);
+    return true;
+}
+
+bool vm::push(numeric_t v)
+{
+    set_mem(r(255).value() - 4, v);
+    r(255) -= 4;
+    if(r(255).value() < 0)
+    {
+        panic();
+    }
     return true;
 }

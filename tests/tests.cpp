@@ -181,3 +181,20 @@ TEST_CASE("Asm compiler - EQ/JT test", "[asm-compiler]")
     REQUIRE(vm->r(1).value() == 42);
     REQUIRE(vm->flag() == true);
 }
+
+TEST_CASE("Asm compiler - stack operatons", "[asm-compiler")
+{
+    // ASM code below will jump over the MOV $r1, 43
+    std::shared_ptr<primal::compiler> c = primal::compiler::create();
+    c->compile(R"code(
+                      asm MOV $r1 42
+                      asm PUSH $r1
+                      asm POP $r2
+                      asm EQ $r2 42
+                )code");
+
+    std::shared_ptr<primal::vm> vm = primal::vm::create();
+    REQUIRE(vm->run(c->bytecode()));
+    REQUIRE(vm->r(2).value() == 42);
+    REQUIRE(vm->flag() == true);
+}

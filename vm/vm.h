@@ -52,6 +52,8 @@ namespace primal
 
         bool copy(numeric_t dest, numeric_t src, numeric_t cnt);
 
+        bool push(numeric_t v);
+
         template<class OPC, class EXECUTOR>
         static void register_opcode(OPC&& o, EXECUTOR&& ex)
         {
@@ -88,7 +90,7 @@ namespace primal
         memaddress ma[2];
         int mb_i = 0;
         int ma_i = 0;
-        int mi_i = 0;
+        std::size_t mi_i = 0;
         bool m_lbo = false; // the last operations' result. This is set to false if the result was 0
         numeric_t app_size = -1;
 

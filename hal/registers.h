@@ -32,6 +32,9 @@ namespace primal
 
         bool operator == (numeric_t v) const { return m_value == v; }
 
+        bool operator >= (numeric_t v) const { return m_value >= v; }
+        bool operator >= (const valued& v) const { return m_value >= v.m_value; }
+
         valued& operator += (numeric_t v) { m_value += v; return *this; }
         valued& operator += (const valued& v) { m_value += v.value(); return *this; }
 

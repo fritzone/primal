@@ -8,7 +8,7 @@ namespace primal
 
     bool impl_@OPCODE@(vm* v)
     {
-        std::cout << "@OPCODE@" << std::endl;
+        options::instance().asm_stream() << "@OPCODE@" << std::endl;
         return false;
     }
 

@@ -5,7 +5,10 @@
 
 bool primal::impl_PUSH(primal::vm* v)
 {
-    std::cout << "PUSH" << std::endl;
+    auto* t = v->fetch();
+
+    v->push(t->value());
+
     return false;
 }
 

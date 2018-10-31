@@ -115,16 +115,15 @@ void asm_compiler::generate_assembly_code(const primal::opcodes::opcode& opc, co
                 throw syntax_error("Invalid assembly command parameter: " + t.data());
             }
         }
-
     }
 
     if(options::instance().generate_assembly())
     {
-        std::cout << "[";
+        options::instance().asm_stream() << std::setfill(' ') << std::right << std::setw(20) << "# " << "L:" << result.size() << " [";
         for(auto b : result)
         {
-            std::cout << " " << std::setfill('0') << std::setw(2) << std::hex << std::uppercase  << static_cast<int>(b) ;
+            options::instance().asm_stream() << " " << std::setfill('0') << std::setw(2) << std::hex << std::uppercase  << static_cast<int>(b) ;
         }
-        std::cout << " ]";
+        options::instance().asm_stream() << " ]";
     }
 }

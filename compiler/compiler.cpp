@@ -5,6 +5,7 @@
 #include "sequence.h"
 #include "generate.h"
 #include "keywords.h"
+#include "options.h"
 
 #include <opcodes.h>
 
@@ -51,5 +52,13 @@ source &compiler::get_source()
 
 compiler::~compiler()
 {
+    if(options::instance().generate_assembly())
+    {
+        std::string s = options::instance().asm_stream().str();
+        std::cout << "-------------------------------------------------" << std::endl << s << std::endl;
+        options::instance().asm_stream().clear();
+        options::instance().asm_stream().str(std::string());
+    }
+
     compiled_code::instance(this).destroy();
 }

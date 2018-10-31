@@ -20,17 +20,17 @@ std::map<const compiler*, std::shared_ptr<compiled_code>> compiled_code::compile
 
 generate::generate(compiler* c) : m_compiler(c)
 {
-    if(options::instance().generate_assembly()) { std::cout << compiled_code::instance(m_compiler).location() << ": "; }
+    if(options::instance().generate_assembly()) { options::instance().asm_stream() << compiled_code::instance(m_compiler).location() << ": "; }
 }
 
 generate::~generate()
 {
-    if(options::instance().generate_assembly()) { std::cout << std::endl; }
+    if(options::instance().generate_assembly()) { options::instance().asm_stream() << std::endl; }
 }
 
 generate &generate::operator<<(primal::opcodes::opcode &&opc)
 {
-    if(options::instance().generate_assembly()) { std::cout << opc.name() << " "; }
+    if(options::instance().generate_assembly()) { options::instance().asm_stream() << opc.name() << " "; }
 
     compiled_code::instance(m_compiler).append(opc.bin());
 
@@ -42,7 +42,7 @@ generate &generate::operator<<(variable &&var)
     numeric_t a = var.location() * sizeof(numeric_t);
     auto address = htovm(a);
 
-    if(options::instance().generate_assembly()) { std::cout << "[" << address << "]" << " "; }
+    if(options::instance().generate_assembly()) { options::instance().asm_stream() << "[" << address << "]" << " "; }
 
     // firstly we tell the VM the type of the data
     compiled_code::instance(m_compiler).append(static_cast<uint8_t>(util::to_integral(type_destination ::TYPE_MOD_MEM_IMM)));
@@ -59,7 +59,7 @@ generate &generate::operator<<(std::shared_ptr<variable> var)
 
 generate &generate::operator<<(reg &&r)
 {
-    if(options::instance().generate_assembly()) { std::cout << "r" << static_cast<int>(r.idx()) << " "; }
+    if(options::instance().generate_assembly()) { options::instance().asm_stream() << "$r" << static_cast<int>(r.idx()) << " "; }
 
     // firstly we tell the VM the type of the data
     compiled_code::instance(m_compiler).append(static_cast<uint8_t>(util::to_integral(type_destination::TYPE_MOD_REG)));
@@ -77,7 +77,7 @@ generate &generate::operator<<(std::shared_ptr<opcodes::opcode> opc)
 
 generate &generate::operator<<(const token &tok)
 {
-    if(options::instance().generate_assembly()) { std::cout << tok.data() << " "; }
+    if(options::instance().generate_assembly()) { options::instance().asm_stream() << tok.data() << " "; }
 
     switch(tok.get_type())
     {
@@ -101,7 +101,7 @@ generate &generate::operator<<(const token &tok)
 
 generate &generate::operator<<(const label& l)
 {
-    if(options::instance().generate_assembly()) { std::cout << l.name(); }
+    if(options::instance().generate_assembly()) { options::instance().asm_stream() << l.name(); }
 
     /* For the label encounters of this label we add a new value, being the current location of the code */
     compiled_code::instance(m_compiler).encountered(l);
@@ -118,7 +118,7 @@ generate &generate::operator<<(const label& l)
 
 generate &generate::operator<<(declare_label &&dl)
 {
-    if(options::instance().generate_assembly()) { std::cout << ":" << dl.get_label().name(); }
+    if(options::instance().generate_assembly()) { options::instance().asm_stream() << ":" << dl.get_label().name(); }
     compiled_code::instance(m_compiler).declare_label(dl.get_label());
     return *this;
 }
@@ -173,7 +173,7 @@ void compiled_code::finalize()
             auto vm_ord = htovm(dist_diff);
             memcpy( &bytes[0] + lref, &vm_ord, sizeof(vm_ord));
 
-            std::cout << "decl:" << ldecl.first << "(@" << ldecl.second << ") " << " ref found at " << lref << " patching to:" << vm_ord << std::endl;
+            options::instance().asm_stream() << "decl:" << ldecl.first << "(@" << ldecl.second << ") " << " ref found at " << lref << " patching to:" << vm_ord << std::endl;
 
         }
     }
