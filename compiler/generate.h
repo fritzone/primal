@@ -81,6 +81,9 @@ namespace primal
 
     private:
         compiler* m_compiler;
+        size_t m_current_binseq_start = static_cast<size_t>(-1);
+        size_t m_current_binseq_end = static_cast<size_t>(-1);
+        int params_sent = 0;
     };
 }
 

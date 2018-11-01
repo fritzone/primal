@@ -23,6 +23,7 @@ set(${project}-sources
         ${CMAKE_CURRENT_SOURCE_DIR}/compiler.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/label.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/options.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/function_call.cpp
 )
 
 set(${project}-headers

@@ -20,62 +20,75 @@ std::vector<token> lexer::tokenize()
         token current_token {m_sequence[i], token::identify_type(m_sequence[i]) };
 
         i++;
-        while (i < m_sequence.length() && !util::is_whitespace(m_sequence[i]) )
+
+        if(current_token.get_type() == token::type::TT_STRING)  // just read in the string
         {
-            if(result.empty())
+            while(i < l)
             {
-                if (current_token.is_allowed_to_combine_token(m_sequence[i]))
-                {
-                    current_token.extend(m_sequence[i]);
-                    i++;
-                }
-                else
-                {
-                    break;
-                }
+                current_token.extend(m_sequence[i]);
+                if(m_sequence[i] == '"') break;
+                i++;
             }
-            else
+            i++; // i points to the closing " move it forward
+        }
+        else
+        {
+            while (i < m_sequence.length() && !util::is_whitespace(m_sequence[i]) )
             {
-                // see if this is an unary operation on a number
-                if (current_token.is_allowed_to_combine_token(m_sequence[i], result.back()))
+                if(result.empty())
                 {
-                    current_token.extend(m_sequence[i]);
-
-                    auto new_type = token::identify_type(m_sequence[i]);
-
-                    if(
-                            (!(current_token.get_type() == token::type::TT_IDENTIFIER && new_type == token::type::TT_NUMBER))
-                         && (!(current_token.get_type() == token::type::TT_REGISTER))
-                      )
+                    if (current_token.is_allowed_to_combine_token(m_sequence[i]))
                     {
-                        current_token.set_type(new_type);    // this might change later
+                        current_token.extend(m_sequence[i]);
+                        i++;
                     }
-
-                    i++;
+                    else
+                    {
+                        break;
+                    }
                 }
                 else
                 {
-                    break;
+                    // see if this is an unary operation on a number
+                    if (current_token.is_allowed_to_combine_token(m_sequence[i], result.back()))
+                    {
+                        current_token.extend(m_sequence[i]);
+
+                        auto new_type = token::identify_type(m_sequence[i]);
+
+                        if(
+                                (!(current_token.get_type() == token::type::TT_IDENTIFIER && new_type == token::type::TT_NUMBER))
+                             && (!(current_token.get_type() == token::type::TT_REGISTER))
+                          )
+                        {
+                            current_token.set_type(new_type);    // this might change later
+                        }
+
+                        i++;
+                    }
+                    else
+                    {
+                        break;
+                    }
                 }
             }
-        }
 
-        auto s = current_token.data();
+            auto s = current_token.data();
 
-        // now see if this current token is a variable or not
-        if(variable::has_variable(s))
-        {
-            current_token.set_type(token::type::TT_VARIABLE);
+            // now see if this current token is a variable or not
+            if(variable::has_variable(s))
+            {
+                current_token.set_type(token::type::TT_VARIABLE);
+            }
+            if(util::is_comparison(s))
+            {
+                current_token.set_type(token::type::TT_COMPARISON);
+            }
         }
-        if(util::is_comparison(s))
-        {
-            current_token.set_type(token::type::TT_COMPARISON);
-        }
-
         result.push_back(current_token);
         if(current_token.get_type() == token::type::TT_COMMENT_LINE) break;
-
     }
+
     return result;
 }
 

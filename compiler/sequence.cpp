@@ -13,6 +13,7 @@
 #include "compiler.h"
 #include "label.h"
 #include "exceptions.h"
+#include "function_call.h"
 
 #include <iostream>
 
@@ -53,6 +54,13 @@ std::shared_ptr<sequence> sequence::create(std::vector<token> & tokens, source& 
         if(keyword::store.count(keyword))
         {
             return keyword::store[keyword](src);
+        }
+
+        // Now go through the tokens and see if one of them looks like a function call (func name, followed by a parenthesis)
+        // if yes return a function call sequence
+        if(tokens[0].data() == "write")
+        {
+            return std::shared_ptr<function_call>(new function_call(tokens, src));
         }
 
         return std::shared_ptr<sequence>();

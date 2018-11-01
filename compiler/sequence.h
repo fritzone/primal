@@ -20,10 +20,11 @@ namespace primal
 
         enum class prepared_type
         {
-            PT_NORMAL = 1,
-            PT_PRECOMPILED = 2,
-            PT_CONSUMED = 3,
-            PT_INVALID = 255
+            PT_NORMAL           = 1,
+            PT_PRECOMPILED      = 2,
+            PT_CONSUMED         = 3,
+            PT_FUNCTION_CALL    = 4,
+            PT_INVALID          = 255
         };
 
         virtual ~sequence() = default;

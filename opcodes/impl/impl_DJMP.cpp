@@ -5,7 +5,8 @@
 
 bool primal::impl_DJMP(primal::vm* v)
 {
-    std::cout << "DJMP" << std::endl;
-    return false;
+    auto* delta = v->fetch();
+    v->ip() += delta->value();
+    return true;
 }
 

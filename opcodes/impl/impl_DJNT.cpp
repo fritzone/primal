@@ -5,7 +5,9 @@
 
 bool primal::impl_DJNT(primal::vm* v)
 {
-    std::cout << "DJNT" << std::endl;
-    return false;
+    auto* delta = v->fetch();
+    if(!v->flag()) v->ip() += delta->value();
+    v->flag()= false;
+    return true;
 }
 

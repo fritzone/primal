@@ -54,6 +54,8 @@ namespace primal
 
         bool push(numeric_t v);
 
+        numeric_t pop();
+
         template<class OPC, class EXECUTOR>
         static void register_opcode(OPC&& o, EXECUTOR&& ex)
         {

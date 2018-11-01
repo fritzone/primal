@@ -76,6 +76,8 @@ token::type token::identify_type(char c)
     if (c == '$') return token::type::TT_REGISTER;
     if (c == ':') return token::type::TT_LABEL;
     if (c == '#') return token::type::TT_COMMENT_LINE;
+    if (c == '"') return token::type::TT_STRING;
+    if (c == ',') return token::type::TT_COMMA;
 
     return token::type::TT_UNKNOWN;
 }

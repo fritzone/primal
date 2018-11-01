@@ -67,13 +67,20 @@ namespace primal
                     throw syntax_error(next_seq);
                 }
 
-                if(prep_t != sequence::prepared_type::PT_CONSUMED)
+                if(prep_t == sequence::prepared_type::PT_FUNCTION_CALL)
                 {
-                    // create the RPN for the expression
-                    std::vector<token> output = shuntyard(tokens);
+                    // for each parameter create an AST
+                }
+                else
+                {
+                    if(prep_t != sequence::prepared_type::PT_CONSUMED)
+                    {
+                        // create the RPN for the expression
+                        std::vector<token> output = shuntyard(tokens);
 
-                    // build the abstract syntax tree for the result of the shuntyard
-                    ast::build_ast(output, seq->root());
+                        // build the abstract syntax tree for the result of the shuntyard
+                        ast::build_ast(output, seq->root());
+                    }
                 }
                 result.push_back(seq);
             }

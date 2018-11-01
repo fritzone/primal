@@ -5,7 +5,9 @@
 
 bool primal::impl_DJT(primal::vm* v)
 {
-    std::cout << "DJT" << std::endl;
-    return false;
+    auto* delta = v->fetch();
+    if(v->flag()) v->ip() += delta->value();
+    v->flag()= false;
+    return true;
 }
 

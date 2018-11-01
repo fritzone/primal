@@ -2,11 +2,58 @@
 
 #include <vm.h>
 #include <compiler.h>
+#include <options.h>
 #include <iostream>
+
+TEST_CASE("Compiler compiles, Simple write", "[compiler]")
+{
+    auto c = primal::compiler::create();
+
+    c->compile(R"code(
+                   write ("some", 2+3)
+               )code"
+             );
+
+    auto vm = primal::vm::create();
+    REQUIRE(vm->run(c->bytecode()));
+    REQUIRE(vm->get_mem(0) == 3);
+}
+/*
+TEST_CASE("Compiler compiles, IF test", "[compiler]")
+{
+    auto c = primal::compiler::create();
+
+    c->compile(R"code(
+                   let x = 1
+                   if x == 1 then
+                      let x = 3
+                   endif
+               )code"
+             );
+
+    auto vm = primal::vm::create();
+    REQUIRE(vm->run(c->bytecode()));
+    REQUIRE(vm->get_mem(0) == 3);
+}
+
+TEST_CASE("Script compiler - 1 NOT operation", "[script-compiler]")
+{
+    auto c = primal::compiler::create();
+    c->compile(R"code(
+                      let x = !1
+                      let y = !0
+                      let z = !(1+0)
+                )code"
+    );
+    auto vm = primal::vm::create();
+    REQUIRE(vm->run(c->bytecode()));
+    REQUIRE(vm->get_mem(0) == 0);
+}
 
 TEST_CASE("ASM compiler - Reg byte mem access", "[asm-compiler]")
 {
     auto c = primal::compiler::create();
+
     c->compile(R"code(
                       asm MOV [@$r1] 20
                       asm MOV $r2 3
@@ -56,15 +103,6 @@ TEST_CASE("Script compiler - NOT operations", "[script-compiler]")
     REQUIRE(vm->get_mem(4) == 1);
     REQUIRE(vm->get_mem(8) == 0);
 }
-
-/*
-TEST_CASE("Compiler compiles", "[compiler]")
-{
-    auto c = compiler::create();
-    c->compile(":a_label\nlet x = -2\nlet y = 5\n if x != 3 then\n let x = y + 3 \ngoto a_label\nendif\nlet x=5\ngoto a_label");
-    auto vm = vm::create();
-    vm->run(c->bytecode());
-}*/
 
 TEST_CASE("ASM compiler - basic operations", "[asm-compiler]")
 {
@@ -168,7 +206,6 @@ TEST_CASE("Asm compiler - JUMP test", "[asm-compiler]")
 
 TEST_CASE("Asm compiler - EQ/JT test", "[asm-compiler]")
 {
-    // ASM code below will jump over the MOV $r1, 43
     std::shared_ptr<primal::compiler> c = primal::compiler::create();
     c->compile(R"code(
                       asm MOV $r1 42
@@ -184,7 +221,6 @@ TEST_CASE("Asm compiler - EQ/JT test", "[asm-compiler]")
 
 TEST_CASE("Asm compiler - stack operatons", "[asm-compiler")
 {
-    // ASM code below will jump over the MOV $r1, 43
     std::shared_ptr<primal::compiler> c = primal::compiler::create();
     c->compile(R"code(
                       asm MOV $r1 42
@@ -198,3 +234,4 @@ TEST_CASE("Asm compiler - stack operatons", "[asm-compiler")
     REQUIRE(vm->r(2).value() == 42);
     REQUIRE(vm->flag() == true);
 }
+/**/

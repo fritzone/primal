@@ -76,23 +76,44 @@ type_destination vm::fetch_type_dest()
 void vm::panic()
 {
     std::cout << "VM PANIC ☹ - instruction dump:\n---------------------------------------------------\n";
-    for(numeric_t i = std::max(VM_MEM_SEGMENT_SIZE, m_ip - 64); i < m_ip + std::min(64, app_size); i++)
+    std::stringstream ss;
+    numeric_t start = std::max(VM_MEM_SEGMENT_SIZE, m_ip - 64);
+    bool insert_addr = true;
+    for(numeric_t i = start; i < m_ip + std::min(64, app_size); i++)
     {
+        if(insert_addr)
+        {
+            ss << std::setfill(' ') << std::setw(9) << std::dec << std::right <<  i << "[:" << std::setw(3) << i - VM_MEM_SEGMENT_SIZE << "]";
+            insert_addr = false;
+        }
         if(i == m_ip)
         {
-            std::cout << " >";
+            ss << ">";
         }
         else
         {
-            std::cout << " ";
+            ss << " ";
         }
-        std::cout << std::setfill('0') << std::setw(2) << std::hex << std::uppercase  << static_cast<int>(ms[i]) ;
+        ss << std::setfill('0') << std::setw(2) << std::hex << std::uppercase  << static_cast<int>(ms[i]) ;
         if(i == m_ip)
         {
-            std::cout << "<";
+            ss << "<";
         }
-
+        else
+        {
+            ss << " ";
+        }
+        if(ss.str().length() > 80)
+        {
+            std::cout << ss.str() << std::endl;
+            ss.clear();
+            ss.str(std::string());
+            insert_addr = true;
+        }
     }
+    std::cout << ss.str() << std::endl;
+    std::cout << "IP=" << std::dec << m_ip << "[:" << m_ip - VM_MEM_SEGMENT_SIZE << "] (" << std::hex << m_ip << ")" << std::endl;
+    std::cout << "SP=" << std::dec << r(255).value() << " (" << std::hex << r(255).value() << ")" << std::endl;
     std::cout << std::endl;
     throw primal::vm_panic("PANIC");
 }
@@ -276,4 +297,15 @@ bool vm::push(numeric_t v)
         panic();
     }
     return true;
+}
+
+numeric_t vm::pop()
+{
+    numeric_t v = get_mem(r(255).value());
+    r(255) += 4;
+    if(r(255).value() > VM_MEM_SEGMENT_SIZE)
+    {
+        panic();
+    }
+    return v;
 }

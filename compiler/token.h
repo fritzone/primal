@@ -33,6 +33,8 @@ namespace primal
             TT_ASM_MEMORY_ADDRESS   = 12,
             TT_ASM_REG_SUBBYTE      = 13,
             TT_COMMENT_LINE         = 14,
+            TT_STRING               = 15,
+            TT_COMMA                = 16,
             TT_UNKNOWN              = 255
         };
 

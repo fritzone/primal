@@ -30,39 +30,57 @@ namespace primal
         explicit valued(numeric_t v) : m_value(v) {}
         ~valued() = default;
 
-        bool operator == (numeric_t v) const { return m_value == v; }
+        valued(const valued&o) { set_value(o.value()); }
 
-        bool operator >= (numeric_t v) const { return m_value >= v; }
-        bool operator >= (const valued& v) const { return m_value >= v.m_value; }
+        valued& operator = (numeric_t v) { set_value(v); return *this;}
+        valued& operator = (const valued& o) { set_value(o.value()); return *this;}
 
-        valued& operator += (numeric_t v) { m_value += v; return *this; }
-        valued& operator += (const valued& v) { m_value += v.value(); return *this; }
+        bool operator == (numeric_t v) const { return value() == v; }
+        bool operator == (const valued& v) const { return value() == v.value(); }
 
-        valued& operator -= (numeric_t v) { m_value -= v; return *this; }
-        valued& operator -= (const valued& v) { m_value -= v.value(); return *this; }
+        bool operator != (numeric_t v) const { return value() != v; }
+        bool operator != (const valued& v) const { return value() != v.value(); }
 
-        valued& operator /= (numeric_t v) { m_value /= v; return *this; }
-        valued& operator /= (const valued& v) { m_value /= v.value(); return *this; }
+        bool operator >= (numeric_t v) const { return value() >= v; }
+        bool operator >= (const valued& v) const { return value() >= v.value(); }
 
-        valued& operator *= (numeric_t v) { m_value *= v; return *this; }
-        valued& operator *= (const valued& v) { m_value *= v.value(); return *this; }
+        bool operator <= (numeric_t v) const { return value() <= v; }
+        bool operator <= (const valued& v) const { return value() <= v.value(); }
 
-        valued& operator %= (numeric_t v) { m_value %= v; return *this; }
-        valued& operator %= (const valued& v) { m_value %= v.value(); return *this; }
+        bool operator > (numeric_t v) const { return value() > v; }
+        bool operator > (const valued& v) const { return value() > v.value(); }
 
-        valued& operator &= (numeric_t v) { m_value &= v; return *this; }
-        valued& operator &= (const valued& v) { m_value &= v.value(); return *this; }
+        bool operator < (numeric_t v) const { return value() > v; }
+        bool operator < (const valued& v) const { return value() > v.value(); }
 
-        valued& operator |= (numeric_t v) { m_value |= v; return *this; }
-        valued& operator |= (const valued& v) { m_value |= v.value(); return *this; }
+        valued& operator += (numeric_t v) { set_value(value() + v); return *this; }
+        valued& operator += (const valued& v) { set_value(value() + v.value()); return *this; }
 
-        valued& operator ^= (numeric_t v) { m_value ^= v; return *this; }
-        valued& operator ^= (const valued& v) { m_value ^= v.value(); return *this; }
+        valued& operator -= (numeric_t v) { set_value(value() - v); return *this; }
+        valued& operator -= (const valued& v) { set_value(value() - v.value()); return *this; }
 
-        valued& operator ++ () { m_value ++; return *this; }
+        valued& operator /= (numeric_t v) {set_value(value() / v); return *this; }
+        valued& operator /= (const valued& v) { set_value(value() / v.value()); return *this; }
+
+        valued& operator *= (numeric_t v) { set_value(value() * v); return *this; }
+        valued& operator *= (const valued& v) { set_value(value() * v.value()); return *this; }
+
+        valued& operator %= (numeric_t v) { set_value(value() % v); return *this; }
+        valued& operator %= (const valued& v) { set_value(value() % v.value()); return *this; }
+
+        valued& operator &= (numeric_t v) { set_value(value() & v); return *this; }
+        valued& operator &= (const valued& v) { set_value(value() & v.value()); return *this; }
+
+        valued& operator |= (numeric_t v) { set_value(value() | v); return *this; }
+        valued& operator |= (const valued& v) { set_value(value() | v.value()); return *this; }
+
+        valued& operator ^= (numeric_t v) { set_value(value() ^ v); return *this; }
+        valued& operator ^= (const valued& v) { set_value(value() ^ v.value()); return *this; }
+
+        valued& operator ++ () { auto cv = value(); cv  ++; set_value(cv); return *this; }
         const valued operator ++ (int) { valued ret(*this); ++(*this); return ret;}
 
-        valued& operator -- () { m_value --; return *this; }
+        valued& operator -- () { auto cv = value(); cv --; set_value(cv);; return *this; }
         const valued operator -- (int) { valued ret(*this); --(*this); return ret;}
 
         virtual numeric_t value() const {return m_value;}

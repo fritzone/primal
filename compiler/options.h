@@ -13,6 +13,7 @@ namespace primal
         static options& instance();
 
         bool generate_assembly() const;
+        void generate_assembly(bool);
 
         std::stringstream& asm_stream() { return m_asm_stream; }
 
@@ -21,7 +22,7 @@ namespace primal
         options() = default;
 
         // whether the compilation phase will also show the generated assembly
-        bool m_generate_assembly = true;
+        bool m_generate_assembly = false;
 
         std::stringstream m_asm_stream;
     };

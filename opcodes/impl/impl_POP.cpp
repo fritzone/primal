@@ -5,7 +5,9 @@
 
 bool primal::impl_POP(primal::vm* v)
 {
-    std::cout << "POP" << std::endl;
-    return false;
+    auto* t = v->fetch();
+    numeric_t p = v->pop();
+    t->set_value(p);
+    return true;
 }
 
