@@ -7,6 +7,7 @@
 #include "sequence.h"
 #include "ast.h"
 #include "exceptions.h"
+#include "function_call.h"
 
 #include <string>
 #include <vector>
@@ -70,6 +71,16 @@ namespace primal
                 if(prep_t == sequence::prepared_type::PT_FUNCTION_CALL)
                 {
                     // for each parameter create an AST
+                    primal::function_call* fc = dynamic_cast<primal::function_call*>(seq.get()) ;
+                    for(auto& p : fc->params())
+                    {
+                        std::vector<token> parIoutput = shuntyard(p.tokens());
+                        ast::build_ast(parIoutput, p.root());
+                    }
+                    fc->root().reset(new ast());
+                    token t;
+                    t.set_type(token::type::TT_FUNCTION_CALL);
+                    fc->root()->data = t;
                 }
                 else
                 {

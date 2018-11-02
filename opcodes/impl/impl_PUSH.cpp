@@ -6,6 +6,6 @@
 bool primal::impl_PUSH(primal::vm* v)
 {
     auto* t = v->fetch();
-    return v->push(t->value());
+    return v->push(t);
 }
 

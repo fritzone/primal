@@ -35,6 +35,7 @@ namespace primal
             TT_COMMENT_LINE         = 14,
             TT_STRING               = 15,
             TT_COMMA                = 16,
+            TT_FUNCTION_CALL        = 17,
             TT_UNKNOWN              = 255
         };
 

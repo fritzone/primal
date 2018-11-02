@@ -23,7 +23,7 @@ std::vector<token> parser::shuntyard(const std::vector<token>& tokens)
     {
         std::string s = t.data();
         token::type tt = t.get_type();
-        if (tt == token::type::TT_NUMBER || tt == token::type::TT_VARIABLE)
+        if (tt == token::type::TT_NUMBER || tt == token::type::TT_VARIABLE || tt == token::type::TT_STRING)
         {
             result.insert(result.begin(), t);
         }

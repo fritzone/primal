@@ -4,6 +4,14 @@
 primal::sequence::prepared_type primal::function_call::prepare(std::vector<primal::token>&)
 {
 
+    if(m_tokens.empty())
+    {
+        return prepared_type::PT_INVALID;
+    }
+
+    m_function_name = m_tokens[0].data();
+    m_tokens.erase(m_tokens.begin());
+
     // firstly, find the open parenthesis:
     size_t i = 0;
     while(i < m_tokens.size() && m_tokens[i].get_type() != primal::token::type::TT_OPEN_PARENTHESES) i++;
@@ -22,8 +30,14 @@ primal::sequence::prepared_type primal::function_call::prepare(std::vector<prima
         }
 
         i++;
-        m_params_tokens.push_back(current_par_toks);
+        parameter p(current_par_toks);
+        m_params.push_back(p);
     }
 
     return prepared_type::PT_FUNCTION_CALL;
+}
+
+bool primal::function_call::compile(primal::compiler *c)
+{
+    return true;
 }
