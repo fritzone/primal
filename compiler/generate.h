@@ -8,10 +8,10 @@
 #include <opcodes.h>
 #include <types.h>
 
-namespace opcodes { struct opcode; }
-
 namespace primal
 {
+    namespace opcodes { struct opcode; }
+
     class variable;
     struct reg;
     class token;

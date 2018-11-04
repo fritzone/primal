@@ -94,7 +94,7 @@ endforeach()
 file(APPEND ${OPIC} "}\n")
 
 add_library(opcode-impl ${opcode-impl-sources} ${OPIC})
-
+TARGET_LINK_LIBRARIES(opcode-impl util)
 
 set(opcode-compiler-sources "")
 
@@ -118,4 +118,4 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 set(${project}-sources ${OPCH} ${OPCC} ${opcode-sources})
 add_library(opcode-compilers ${opcode-compiler-sources} ${OPCC})
 
-target_link_libraries(opcode-compilers compiler)
+target_link_libraries(opcode-compilers compiler util)

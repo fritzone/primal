@@ -4,6 +4,7 @@
 #include <opcodes.h>
 #include <hal.h>
 #include <types.h>
+#include <util.h>
 
 #include <algorithm>
 #include <iostream>
@@ -11,6 +12,7 @@
 #include <algorithm>
 #include <memory>
 #include <cstring>
+#include <sstream>
 
 using namespace primal;
 
@@ -232,6 +234,12 @@ valued *vm::fetch()
             return imm(fetch_immediate());
         }
 
+        case type_destination::TYPE_MOD_REG_BYTE:
+        {
+            uint8_t ridx = fetch_register_index();
+            return rsb(ridx, 0);
+        }
+
         case type_destination::TYPE_MOD_REG_BYTE0:  // [[fallthrough]]
         case type_destination::TYPE_MOD_REG_BYTE1:
         case type_destination::TYPE_MOD_REG_BYTE2:
@@ -288,14 +296,21 @@ bool vm::copy(numeric_t dest, numeric_t src, numeric_t cnt)
     return true;
 }
 
-bool vm::push(numeric_t v)
+bool vm::push(const valued* v)
 {
-    set_mem(r(255).value() - 4, v);
+    set_mem(r(255).value() - 4, v->value());
     r(255) -= 4;
     if(r(255).value() < 0)
     {
         panic();
     }
+    set_mem_byte(r(255).value() - 1, util::to_integral(v->get_type()));
+    r(255) -= 1;
+    if (r(255).value() < 0)
+    {
+        panic();
+    }
+
     return true;
 }
 

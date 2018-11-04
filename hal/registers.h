@@ -77,15 +77,11 @@ namespace primal
         valued& operator ^= (numeric_t v) { set_value(value() ^ v); return *this; }
         valued& operator ^= (const valued& v) { set_value(value() ^ v.value()); return *this; }
 
-        valued& operator ++ () { auto cv = value(); cv  ++; set_value(cv); return *this; }
-        const valued operator ++ (int) { valued ret(*this); ++(*this); return ret;}
-
-        valued& operator -- () { auto cv = value(); cv --; set_value(cv);; return *this; }
-        const valued operator -- (int) { valued ret(*this); --(*this); return ret;}
-
         virtual numeric_t value() const {return m_value;}
 
         virtual void set_value(numeric_t v) {m_value = v;}
+
+        virtual type_destination get_type() const = 0;
 
         numeric_t m_value = 0;
     };
@@ -108,6 +104,8 @@ namespace primal
         uint8_t idx() const {return m_reg_idx;}
         void set_idx(uint8_t i) { m_reg_idx = i; }
 
+        type_destination get_type() const override { return type_destination::TYPE_MOD_REG; }
+
         uint8_t m_reg_idx;
     };
 
@@ -122,6 +120,8 @@ namespace primal
             m_setter(m_address, v);
         }
         numeric_t value() const override { return m_getter(m_address); }
+
+        type_destination get_type() const override { return type_destination::TYPE_MOD_MEM_REG_IDX; }
 
         numeric_t m_address = -1;
         std::function<numeric_t(numeric_t)> m_getter;
@@ -138,6 +138,7 @@ namespace primal
             m_setter(m_address, static_cast<uint8_t>(v));
         }
         numeric_t value() const override { return m_getter(m_address); }
+        type_destination get_type() const override { return type_destination::TYPE_MOD_MEM_REG_BYTE; }
 
         numeric_t m_address = -1;
         std::function<uint8_t(numeric_t)> m_getter;
@@ -153,6 +154,8 @@ namespace primal
             m_r->set_value( m_r->value() | (((v << masks[m_bidx].second) & masks[m_bidx].first) | !(masks[m_bidx].first)));
         }
 
+        type_destination get_type() const override { return type_destination::TYPE_MOD_REG_BYTE; }
+
         reg* m_r;
         uint8_t m_bidx;
     };
@@ -167,6 +170,9 @@ namespace primal
         {
             throw "cannot do this";
         }
+
+        type_destination get_type() const override { return type_destination::TYPE_MOD_IMM; }
+
     };
 
 }

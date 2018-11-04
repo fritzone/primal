@@ -15,7 +15,6 @@ set(${project}-sources
         ${CMAKE_CURRENT_SOURCE_DIR}/parser.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/token.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/lexer.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/util.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/source.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/sequence.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/variable.cpp
@@ -33,7 +32,6 @@ set(${project}-headers
         ${CMAKE_CURRENT_SOURCE_DIR}/token.h
         ${CMAKE_CURRENT_SOURCE_DIR}/operators.h
         ${CMAKE_CURRENT_SOURCE_DIR}/lexer.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/util.h
         ${CMAKE_CURRENT_SOURCE_DIR}/source.h
         ${CMAKE_CURRENT_SOURCE_DIR}/sequence.h
         ${CMAKE_CURRENT_SOURCE_DIR}/variable.h
@@ -93,9 +91,10 @@ file(APPEND ${KEYWH} "#endif\n")
 file(APPEND ${KEYWCPP} "}\n")
 
 add_library(${project}
+        STATIC
         ${${project}-sources}
         ${${project}-headers}
         ${CMAKE_CURRENT_BINARY_DIR}/all_keywords.cpp
 )
 
-target_link_libraries(${project} opcode-compilers)
+target_link_libraries(${project} util opcode-compilers)

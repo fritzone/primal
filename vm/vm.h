@@ -52,7 +52,7 @@ namespace primal
 
         bool copy(numeric_t dest, numeric_t src, numeric_t cnt);
 
-        bool push(numeric_t v);
+        bool push(const valued* v);
 
         numeric_t pop();
 
