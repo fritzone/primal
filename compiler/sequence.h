@@ -47,7 +47,7 @@ namespace primal
         /* Factory method to create a sequence for the given keyword */
         static std::shared_ptr<sequence> create(std::vector<token> &tokens, source& src);
 
-    private:
+    protected:
 
         virtual void traverse_ast(uint8_t level, const std::shared_ptr<ast>& croot, compiler* c);
 

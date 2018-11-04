@@ -45,14 +45,14 @@ include_directories(${ROOT_DIR}/compiler)
 include_directories(${ROOT_DIR}/vm)
 include_directories(${ROOT_DIR}/util)
 
-add_subdirectory(util)
-
 # Firstly this, to create the opcode headers
 add_subdirectory(opcodes)
 add_subdirectory(hal)
 
 # Need this to have the opcode headers in the include path
 include_directories(${CMAKE_BINARY_DIR}/opcodes)
+
+add_subdirectory(util)
 
 if(coverage-build)
     set(CMAKE_BUILD_TYPE Debug)

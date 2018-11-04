@@ -39,5 +39,10 @@ primal::sequence::prepared_type primal::function_call::prepare(std::vector<prima
 
 bool primal::function_call::compile(primal::compiler *c)
 {
+    // firstly: compile the parameters
+    for(auto& p : m_params)
+    {
+        sequence::traverse_ast(0, p.root(), c);
+    }
     return true;
 }

@@ -7,10 +7,11 @@
 
 TEST_CASE("Compiler compiles, Simple write", "[compiler]")
 {
+    primal::options::instance().generate_assembly(true);
     auto c = primal::compiler::create();
 
     c->compile(R"code(
-                   write ("some", 2+3)
+                   write (6, 2+3)
                )code"
              );
 

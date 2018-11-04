@@ -304,7 +304,7 @@ bool vm::push(const valued* v)
     {
         panic();
     }
-    set_mem_byte(r(255).value() - 1, util::to_integral(v->get_type()));
+    set_mem_byte(r(255).value() - 1, util::to_integral(type_destination::TYPE_MOD_IMM));
     r(255) -= 1;
     if (r(255).value() < 0)
     {
@@ -316,6 +316,8 @@ bool vm::push(const valued* v)
 
 numeric_t vm::pop()
 {
+    uint8_t type = get_mem_byte(r(255).value());
+    r(255) += 1;
     numeric_t v = get_mem(r(255).value());
     r(255) += 4;
     if(r(255).value() > VM_MEM_SEGMENT_SIZE)
