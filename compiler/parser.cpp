@@ -5,6 +5,7 @@
 #include "sequence.h"
 #include "lexer.h"
 #include "ast.h"
+#include "stringtable.h"
 
 #include <iostream>
 #include <map>
@@ -14,18 +15,23 @@
 
 using namespace primal;
 
-std::vector<token> parser::shuntyard(const std::vector<token>& tokens)
+std::vector<token> parser::shuntyard(std::vector<token>& tokens)
 {
     std::vector<token> result;
     std::stack<token> stck;
 
-    for (token t : tokens)
+    for (token& t : tokens)
     {
         std::string s = t.data();
         token::type tt = t.get_type();
         if (tt == token::type::TT_NUMBER || tt == token::type::TT_VARIABLE || tt == token::type::TT_STRING)
         {
             result.insert(result.begin(), t);
+            if(tt == token::type::TT_STRING)
+            {
+                numeric_t idx = stringtable::instance().add(s);
+                t.set_extra_info(idx);
+            }
         }
         else
         {

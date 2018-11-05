@@ -26,13 +26,16 @@ namespace primal
         /*Creates a variable with the given name (if it does not exist) */
         static std::shared_ptr<variable> create(const std::string& name);
 
+        /* the map of the variable with name and value */
         static std::map<std::string, std::shared_ptr<variable>> variables;
+
+        static numeric_t last_location();
 
     private:
 
         std::string m_name;
         numeric_t m_location;
-
+        static numeric_t location_counter;
     };
 
 }

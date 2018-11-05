@@ -22,9 +22,12 @@ namespace primal
     public:
 
         template<class CH>
-        std::vector<std::shared_ptr<sequence>> parse(source& input, CH checker, std::string& last_read)
+        std::tuple<std::vector<std::shared_ptr<sequence>>, std::vector<std::shared_ptr<sequence>>>
+        parse(source& input, CH checker, std::string& last_read)
         {
-            std::vector<std::shared_ptr<sequence>> result;
+            std::vector<std::shared_ptr<sequence>> result_operations;
+            std::vector<std::shared_ptr<sequence>> result_func_decl;
+
             while (!input.empty())
             {
                 std::string next_seq = input.next();
@@ -68,41 +71,47 @@ namespace primal
                     throw syntax_error(next_seq);
                 }
 
-                if(prep_t == sequence::prepared_type::PT_FUNCTION_CALL)
+                if(prep_t == sequence::prepared_type::PT_FUNCTION_DECL)
                 {
-                    // for each parameter create an AST
-                    primal::function_call* fc = dynamic_cast<primal::function_call*>(seq.get()) ;
-                    for(auto& p : fc->params())
-                    {
-                        std::vector<token> parIoutput = shuntyard(p.tokens());
-                        ast::build_ast(parIoutput, p.root());
-                    }
-                    fc->root().reset(new ast());
-                    token t;
-                    t.set_type(token::type::TT_FUNCTION_CALL);
-                    fc->root()->data = t;
+                    result_func_decl.push_back(seq);
                 }
                 else
                 {
-                    if(prep_t != sequence::prepared_type::PT_CONSUMED)
+                    if(prep_t == sequence::prepared_type::PT_FUNCTION_CALL)
                     {
-                        // create the RPN for the expression
-                        std::vector<token> output = shuntyard(tokens);
-
-                        // build the abstract syntax tree for the result of the shuntyard
-                        ast::build_ast(output, seq->root());
+                        // for each parameter create an AST
+                        primal::function_call* fc = dynamic_cast<primal::function_call*>(seq.get()) ;
+                        for(auto& p : fc->params())
+                        {
+                            std::vector<token> parIoutput = shuntyard(p.tokens());
+                            ast::build_ast(parIoutput, p.root());
+                        }
+                        fc->root().reset(new ast());
+                        token t;
+                        t.set_type(token::type::TT_FUNCTION_CALL);
+                        fc->root()->data = t;
                     }
-                }
-                result.push_back(seq);
-            }
+                    else
+                    {
+                        if(prep_t != sequence::prepared_type::PT_CONSUMED)
+                        {
+                            // create the RPN for the expression
+                            std::vector<token> output = shuntyard(tokens);
 
-            return result;
+                            // build the abstract syntax tree for the result of the shuntyard
+                            ast::build_ast(output, seq->root());
+                        }
+                    }
+                    result_operations.push_back(seq);
+                }
+            }
+            return {result_operations, result_func_decl};
 
         }
     private:
 
         /* Creates the Reverse Polish Notation of the given tokens */
-        std::vector<token> shuntyard(const std::vector<token> &tokens);
+        std::vector<token> shuntyard(std::vector<token> &tokens);
 
     };
 

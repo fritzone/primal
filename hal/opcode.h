@@ -13,13 +13,14 @@ namespace primal
         /* The class which this opcode takes part from */
         enum class opcode_family : uint8_t
         {
-            OF_JUMP = 0,
-            OF_ARITH = 1,
-            OF_BIN = 2,
-            OF_STACK = 3,
-            OF_COMP = 4,
-            OF_MEM = 5,
-            OF_OTHER = 6
+            OF_JUMP = 0,            // jump family
+            OF_ARITH = 1,           // arithmetic family
+            OF_BIN = 2,             // binary operations
+            OF_STACK = 3,           // stack manipulation
+            OF_COMP = 4,            // comparison
+            OF_MEM = 5,             // memory operations
+            OF_CONTROLFLOW = 6,     // control flow alteration which is not jump
+            OF_OTHER = 7            // other unspecified
         };
 
         struct opcode

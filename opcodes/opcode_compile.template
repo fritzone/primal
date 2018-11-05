@@ -32,7 +32,7 @@ namespace primal
 
         if(options::instance().generate_assembly())
         {
-            options::instance().asm_stream() << std::setfill(' ') << std::left << std::setw(5) << "@OPCODE@ ";
+            options::instance().asm_stream() << "(" << std::hex << static_cast<int>(opc.bin()) << ") " << std::setfill(' ') << std::left << std::setw(5) << "@OPCODE@ ";
             std::stringstream ss;
             for(const auto& t : work_tokens)
             {

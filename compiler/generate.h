@@ -19,7 +19,6 @@ namespace primal
     class declare_label;
     class compiler;
 
-
     class compiled_code final
     {
     public:
@@ -35,6 +34,8 @@ namespace primal
 
         void encountered(const label&);
         void declare_label(const label&);
+
+        void string_encountered(int strtbl_idx);
 
         numeric_t location() const
         {
@@ -54,6 +55,9 @@ namespace primal
 
         /* holds the map where a specific label was encountered in the code, such as jmp _label_2*/
         std::map<std::string, std::vector<uint32_t>> label_encounters;
+
+        /* holds the locations where a specific string was encountered in the code */
+        std::map<int, std::vector<uint32_t>> string_encounters;
 
         /* holds the map where a specific label was declared in the code, such as :_label_2*/
         std::map<std::string, numeric_t> label_declarations;
@@ -77,7 +81,8 @@ namespace primal
         generate& operator << (const token& tok);
         generate& operator << (const label& l);
         generate& operator << (declare_label&& dl);
-        //generate& operator << (type_destination td);
+        generate& operator << (type_destination td);
+        generate& operator << (numeric_t v);
 
     private:
         compiler* m_compiler;

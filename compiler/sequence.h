@@ -24,6 +24,7 @@ namespace primal
             PT_PRECOMPILED      = 2,
             PT_CONSUMED         = 3,
             PT_FUNCTION_CALL    = 4,
+            PT_FUNCTION_DECL    = 5,
             PT_INVALID          = 255
         };
 

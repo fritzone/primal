@@ -11,7 +11,11 @@ TEST_CASE("Compiler compiles, Simple write", "[compiler]")
     auto c = primal::compiler::create();
 
     c->compile(R"code(
-                   write (6, 2+3)
+                   fun write(...)
+                   endf
+
+                   let x = 12
+                   write ("ABC", 2+3)
                )code"
              );
 

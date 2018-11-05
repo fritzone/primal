@@ -15,10 +15,18 @@ namespace primal
     class parameter final
     {
     public:
+
+        enum class param_type
+        {
+            PT_NUMERIC = 0,
+            PT_STRING = 1,
+            PT_UNKNOWN = 255
+        };
+
         explicit parameter(const std::vector<token>& t) : m_params_tokens(t) {}
 
-        const std::vector<token>& tokens() const {return m_params_tokens; }
-        std::shared_ptr<ast>& root() {return m_param_tree; };
+        std::vector<token>& tokens() {return m_params_tokens; }
+        std::shared_ptr<ast>& root() {return m_param_tree; }
 
     private:
         std::vector<token> m_params_tokens;
@@ -31,7 +39,7 @@ namespace primal
     class function_call : public sequence
     {
     public:
-        ~function_call() = default;
+        ~function_call() override = default;
 
         function_call(const std::vector<primal::token>& tokens, source& src) : sequence(src), m_tokens(tokens)
         {}

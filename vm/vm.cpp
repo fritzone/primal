@@ -38,8 +38,10 @@ bool vm::run(const std::vector<uint8_t> &app)
     std::copy(app.begin(), app.end(), ms.get() + VM_MEM_SEGMENT_SIZE);
 
     // set the IP and SP to point to the correct location
-    m_ip = VM_MEM_SEGMENT_SIZE;     // will grow upwards
+    m_ip = VM_MEM_SEGMENT_SIZE + 8; // will grow upwards, will skip .P10 and the stringtable loc entry
     r(255) = VM_MEM_SEGMENT_SIZE;   // will grow downwards
+
+    bindump(m_ip - 8, m_ip + app_size, true);
 
     // then start running it
     while(vm_runner.count(ms[m_ip]))
@@ -47,8 +49,19 @@ bool vm::run(const std::vector<uint8_t> &app)
         // read in an opcode
         uint8_t opc = ms[m_ip ++];
 
-        // is there a registered opcode runner for the given opcode?
-        if(!vm_runner[ opc ].opcode_runner(this))
+        try
+        {
+            // is there a registered opcode runner for the given opcode?
+            if(!vm_runner[ opc ].opcode_runner(this))
+            {
+                panic();
+            }
+        }
+        catch (const primal::vm_panic&)
+        {
+            throw;
+        }
+        catch(...)
         {
             panic();
         }
@@ -75,13 +88,12 @@ type_destination vm::fetch_type_dest()
     return static_cast<type_destination>(ms[m_ip ++]) ;
 }
 
-void vm::panic()
+std::stringstream vm::bindump(numeric_t start, numeric_t end, bool insert_addr)
 {
-    std::cout << "VM PANIC ☹ - instruction dump:\n---------------------------------------------------\n";
     std::stringstream ss;
-    numeric_t start = std::max(VM_MEM_SEGMENT_SIZE, m_ip - 64);
-    bool insert_addr = true;
-    for(numeric_t i = start; i < m_ip + std::min(64, app_size); i++)
+    std::string s;
+
+    for(numeric_t i = start; i < end; i++)
     {
         if(insert_addr)
         {
@@ -97,6 +109,16 @@ void vm::panic()
             ss << " ";
         }
         ss << std::setfill('0') << std::setw(2) << std::hex << std::uppercase  << static_cast<int>(ms[i]) ;
+
+        if(ms[i] > 32 && ms[i] < 255)
+        {
+            s += ms[i];
+        }
+        else
+        {
+            s += '.';
+        }
+
         if(i == m_ip)
         {
             ss << "<";
@@ -107,12 +129,22 @@ void vm::panic()
         }
         if(ss.str().length() > 80)
         {
-            std::cout << ss.str() << std::endl;
+            std::cout << ss.str() << " | " << s << std::endl;
+            s = "";
             ss.clear();
             ss.str(std::string());
             insert_addr = true;
         }
     }
+    return ss;
+}
+
+void vm::panic()
+{
+    std::cout << "VM PANIC ☹ - instruction dump:\n---------------------------------------------------\n";
+    numeric_t start = std::max(VM_MEM_SEGMENT_SIZE, m_ip - 64);
+    numeric_t end = m_ip + std::min(64, app_size);
+    std::stringstream ss = bindump(start, end, true);
     std::cout << ss.str() << std::endl;
     std::cout << "IP=" << std::dec << m_ip << "[:" << m_ip - VM_MEM_SEGMENT_SIZE << "] (" << std::hex << m_ip << ")" << std::endl;
     std::cout << "SP=" << std::dec << r(255).value() << " (" << std::hex << r(255).value() << ")" << std::endl;
@@ -282,7 +314,7 @@ valued *vm::fetch()
         }
     }
 
-    return nullptr;
+    panic();
 
 }
 
@@ -298,6 +330,7 @@ bool vm::copy(numeric_t dest, numeric_t src, numeric_t cnt)
 
 bool vm::push(const valued* v)
 {
+    if(!v) return false;
     set_mem(r(255).value() - 4, v->value());
     r(255) -= 4;
     if(r(255).value() < 0)
@@ -312,6 +345,12 @@ bool vm::push(const valued* v)
     }
 
     return true;
+}
+
+bool vm::push(const numeric_t v)
+{
+    immediate i(m_ip);
+    return push(&i);
 }
 
 numeric_t vm::pop()

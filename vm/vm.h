@@ -53,6 +53,7 @@ namespace primal
         bool copy(numeric_t dest, numeric_t src, numeric_t cnt);
 
         bool push(const valued* v);
+        bool push(const numeric_t v);
 
         numeric_t pop();
 
@@ -73,6 +74,8 @@ namespace primal
         bool flag() const {return m_lbo;}
         bool& flag() {return m_lbo;}
 
+        std::stringstream bindump(numeric_t start, numeric_t end, bool insert_addr);
+        
     private:
 
         struct executor

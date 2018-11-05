@@ -8,6 +8,7 @@
 #include "options.h"
 #include "util.h"
 #include "types.h"
+#include "stringtable.h"
 
 #include <iostream>
 #include <limits>
@@ -16,6 +17,8 @@
 #include <map>
 
 using namespace primal;
+
+const size_t PRIMAL_HEADER_SIZE = 8;
 
 std::map<const compiler*, std::shared_ptr<compiled_code>> compiled_code::compilers_codes;
 
@@ -46,7 +49,7 @@ generate::~generate()
 
 generate &generate::operator<<(primal::opcodes::opcode &&opc)
 {
-    if(options::instance().generate_assembly()) { options::instance().asm_stream() << std::setfill(' ') << std::left << std::setw(10) << opc.name() << " "; }
+    if(options::instance().generate_assembly()) { options::instance().asm_stream() << "(" << std::hex << static_cast<int>(opc.bin()) << ") " << std::setfill(' ') << std::left << std::setw(10) << opc.name() << " "; }
 
     compiled_code::instance(m_compiler).append(opc.bin());
 
@@ -157,6 +160,20 @@ generate &generate::operator<<(declare_label &&dl)
     return *this;
 }
 
+generate &generate::operator <<(type_destination td)
+{
+    compiled_code::instance(m_compiler).append(static_cast<uint8_t>(util::to_integral(td)));
+    return *this;
+}
+
+generate &generate::operator <<(numeric_t v)
+{
+    if(options::instance().generate_assembly()) { options::instance().asm_stream() << v; }
+
+    numeric_t vm_v = htovm(v);
+    compiled_code::instance(m_compiler).append_number(vm_v);
+}
+
 compiled_code &compiled_code::instance(compiler* c)
 {
     if(compilers_codes.count(c))
@@ -196,8 +213,29 @@ void compiled_code::declare_label(const label& l)
     label_declarations[l.name()] = static_cast<uint32_t>(bytes.size());
 }
 
+void compiled_code::string_encountered(int strtbl_idx)
+{
+    if(string_encounters.count(strtbl_idx) > 0)
+    {
+        string_encounters[strtbl_idx].push_back(static_cast<uint32_t>(bytes.size()));
+    }
+    else
+    {
+        string_encounters[strtbl_idx] = { static_cast<uint32_t>(bytes.size()) };
+    }
+}
+
 void compiled_code::finalize()
 {
+    // insert the offset of the string table bytes
+    for(size_t i=0; i<sizeof(numeric_t); i++)
+    {
+        bytes.insert(bytes.begin(), 0xFF);
+    }
+
+    // insert the version 1.0 and .P to mark it as a primal compiled script
+    bytes.insert(bytes.begin(), '0');bytes.insert(bytes.begin(), '1');bytes.insert(bytes.begin(), 'P');bytes.insert(bytes.begin(), '.');
+
     // finalize the labels
     for(const auto& ldecl : label_declarations)
     {
@@ -217,6 +255,38 @@ void compiled_code::finalize()
 
     // push a halt instruction at the end.
     bytes.push_back(0xFF);
+
+    // fix the string table offset
+    numeric_t l = bytes.size();
+    numeric_t vm_l = htovm(l);
+    memcpy( &bytes[4], &vm_l, sizeof(vm_l));
+
+    // finalize the stringtable
+    numeric_t strtblcnt = stringtable::instance().count();
+    for(auto i = 0; i<strtblcnt; i++)
+    {
+        auto& e = stringtable::instance().e(i);
+        uint8_t l = static_cast<uint8_t>(e.the_string.length());
+        e.location = static_cast<numeric_t>(bytes.size());
+        bytes.push_back(l);
+        for(const auto& c : e.the_string)
+        {
+            bytes.push_back(static_cast<uint8_t>(c));
+        }
+    }
+
+    for(const auto& s_e : string_encounters)
+    {
+        numeric_t i = s_e.first;
+        auto& entry = stringtable::instance().e(i);
+        numeric_t vm_loc = htovm(entry.location);
+        for(const auto& e : s_e.second)
+        {
+            memcpy(&bytes[0] + e + PRIMAL_HEADER_SIZE, &vm_loc, sizeof(vm_loc));
+        }
+    }
+
+    // all done theoretically
 }
 
 void compiled_code::append_number(numeric_t v)

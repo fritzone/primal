@@ -29,7 +29,15 @@ bool compiler::compile(const std::string &s)
     m_src = source(trimmed);
     std::string last;
     auto seqs = p.parse(m_src, [&](std::string) {return false;}, last);
-    for(const auto& seq : seqs) seq->compile(this);
+
+    // now compile the main namespace or whatever I will call it later
+    for(const auto& seq : std::get<0>(seqs))
+    {
+        seq->compile(this);
+    }
+
+    // and now compile the functions in
+
     compiled_code::instance(this).finalize();
 
     return true;

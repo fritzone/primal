@@ -34,7 +34,6 @@ enum class type_destination : uint8_t
     TYPE_MOD_REG_BYTE3      = 0x43,     // The 3rd byte of a register
     TYPE_MOD_MEM_IMM        = 0x05,     // what follows is the address of a memory cell, numeric_t value
     TYPE_MOD_MEM_IMM_BYTE   = 0x06,     // what follows is the address of a memory cell, numeric_t value
-    TYPE_MOD_STRINGTBIDX    = 0x07      // what follows is the index of a string, 32 bit value
 };
 
 

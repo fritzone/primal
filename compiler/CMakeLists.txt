@@ -23,6 +23,8 @@ set(${project}-sources
         ${CMAKE_CURRENT_SOURCE_DIR}/label.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/options.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/function_call.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/stringtable.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/function.cpp
 )
 
 set(${project}-headers
@@ -40,6 +42,10 @@ set(${project}-headers
         ${CMAKE_CURRENT_SOURCE_DIR}/compiler.h
         ${CMAKE_CURRENT_SOURCE_DIR}/label.h
         ${CMAKE_CURRENT_SOURCE_DIR}/options.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/function_call.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/stringtable.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/function.h
+
 )
 
 ########################################################################################################################
@@ -56,6 +62,8 @@ register_keyword(endif)
 register_keyword(let)
 register_keyword(asm)
 register_keyword(goto)
+register_keyword(fun)
+register_keyword(endf)
 
 ########################################################################################################################
 #                 Done, no more keywords have to be added after this point in the code                                 #

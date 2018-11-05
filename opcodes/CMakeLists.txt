@@ -58,6 +58,8 @@ register_opcode("DJNT" 0x55 2 OF_JUMP)
 register_opcode("DJMP" 0x56 2 OF_JUMP)
 register_opcode("XOR" 0x57 2 OF_BIN)
 register_opcode("NOT" 0x58 1 OF_BIN)
+register_opcode("CALL" 0x59 1 OF_JUMP)
+register_opcode("RET" 0x60 0 OF_JUMP)
 
 ########################################################################################################################
 #                 Done, no more opcodes have to be added after this point in the code                                  #

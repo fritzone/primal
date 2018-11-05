@@ -30,13 +30,13 @@ sequence::prepared_type kw_if::prepare(std::vector<token> &tokens)
 
     parser p;
     std::string last;
-    m_if_body = p.parse(m_src,
+    auto seqs = p.parse(m_src,
             [&](std::string s)
             {
                 return util::to_upper(s) == kw_endif::N;
             },
     last);
-
+    m_if_body = std::get<0>(seqs);
 
     return sequence::prepared_type::PT_NORMAL;
 }
