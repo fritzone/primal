@@ -27,7 +27,7 @@ generate::generate(compiler* c) : m_compiler(c)
     m_current_binseq_start = compiled_code::instance(m_compiler).location();
     if(options::instance().generate_assembly())
     {
-        options::instance().asm_stream() << std::setfill(' ') << std::right << std::setw(5) << std::dec << compiled_code::instance(m_compiler).location() << ": ";
+        options::instance().asm_stream() << std::setfill(' ') << std::right << std::setw(5) << std::dec << compiled_code::instance(m_compiler).location() + PRIMAL_HEADER_SIZE << ": ";
     }
 }
 
@@ -141,7 +141,7 @@ generate &generate::operator<<(const label& l)
     compiled_code::instance(m_compiler).append(static_cast<uint8_t>(util::to_integral(type_destination::TYPE_MOD_IMM)));
 
     /* For the label encounters of this label we add a new value, being the current location of the code */
-    compiled_code::instance(m_compiler).encountered(l);
+    compiled_code::instance(m_compiler).encountered(l, l.absolute());
 
     /* For now the label will go out in the code asa numeric value since if it was not declared yet
      * there is no way for us to know the location itself */
@@ -172,6 +172,7 @@ generate &generate::operator <<(numeric_t v)
 
     numeric_t vm_v = htovm(v);
     compiled_code::instance(m_compiler).append_number(vm_v);
+    return *this;
 }
 
 compiled_code &compiled_code::instance(compiler* c)
@@ -191,20 +192,25 @@ void compiled_code::append(uint8_t b)
     bytes.push_back(b);
 }
 
-void compiled_code::encountered(const label& l)
+void compiled_code::encountered(const label& l, bool absolute)
+{
+    encountered(l.name(), absolute);
+}
+
+void compiled_code::encountered(const std::string &s, bool absolute)
 {
     if(bytes.size() > std::numeric_limits<uint32_t>::max())
     {
         throw "sorry mate, this application is too complex for me to compile";
     }
 
-    if(label_encounters.count(l.name()) > 0)
+    if(label_encounters.count(s) > 0)
     {
-        label_encounters[l.name()].push_back(static_cast<uint32_t>(bytes.size()));
+        label_encounters[s].push_back( {absolute, static_cast<uint32_t>(bytes.size()) } );
     }
     else
     {
-        label_encounters[l.name()] = { static_cast<uint32_t>(bytes.size()) };
+        label_encounters[s] = { {absolute, static_cast<uint32_t>(bytes.size())} };
     }
 }
 
@@ -217,11 +223,11 @@ void compiled_code::string_encountered(int strtbl_idx)
 {
     if(string_encounters.count(strtbl_idx) > 0)
     {
-        string_encounters[strtbl_idx].push_back(static_cast<uint32_t>(bytes.size()));
+        string_encounters[strtbl_idx].push_back(static_cast<numeric_t>(bytes.size()));
     }
     else
     {
-        string_encounters[strtbl_idx] = { static_cast<uint32_t>(bytes.size()) };
+        string_encounters[strtbl_idx] = { static_cast<numeric_t>(bytes.size()) };
     }
 }
 
@@ -241,20 +247,27 @@ void compiled_code::finalize()
     {
         for(const auto& lref : label_encounters[ldecl.first])
         {
-            numeric_t dist_diff = ldecl.second - lref;
-            // substract the size of a labels' address, as added in the generate to get the correct location
-            numeric_t vm_ord = htovm(dist_diff) - sizeof(numeric_t);
-            memcpy( &bytes[0] + lref, &vm_ord, sizeof(vm_ord));
+            numeric_t vm_ord = -1;
+            if(lref.first)  // means: absolute reference to the address of the label
+            {
+                vm_ord = htovm(ldecl.second) + PRIMAL_HEADER_SIZE;
+            }
+            else    // relative reference to the address of the label
+            {
+                numeric_t dist_diff = ldecl.second - lref.second;
+                // substract the size of a labels' address, as added in the generate to get the correct location
+                vm_ord = htovm(dist_diff) - static_cast<numeric_t>(sizeof(numeric_t));
+            }
 
             if(options::instance().generate_assembly())
             {
-                options::instance().asm_stream() << "decl:" << ldecl.first << "(@" << ldecl.second << ") " << " ref found at " << lref << " patching to:" << vm_ord << std::endl;
+                options::instance().asm_stream() << std::dec << "decl:" << ldecl.first << "(@" << ldecl.second << ") " << " ref found at " << lref.second << " patching to:" << vm_ord << std::endl;
             }
+
+            memcpy( &bytes[0] + lref.second + PRIMAL_HEADER_SIZE, &vm_ord, sizeof(vm_ord));
+
         }
     }
-
-    // push a halt instruction at the end.
-    bytes.push_back(0xFF);
 
     // fix the string table offset
     numeric_t l = bytes.size();

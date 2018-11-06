@@ -32,7 +32,8 @@ namespace primal
         void append(uint8_t b);
         void append_number(numeric_t v);
 
-        void encountered(const label&);
+        void encountered(const label&, bool absolute);
+        void encountered(const std::string&, bool absolute);
         void declare_label(const label&);
 
         void string_encountered(int strtbl_idx);
@@ -54,10 +55,10 @@ namespace primal
         std::vector<uint8_t> bytes;
 
         /* holds the map where a specific label was encountered in the code, such as jmp _label_2*/
-        std::map<std::string, std::vector<uint32_t>> label_encounters;
+        std::map<std::string, std::vector< std::pair<bool,numeric_t>>> label_encounters;
 
         /* holds the locations where a specific string was encountered in the code */
-        std::map<int, std::vector<uint32_t>> string_encounters;
+        std::map<int, std::vector<numeric_t>> string_encounters;
 
         /* holds the map where a specific label was declared in the code, such as :_label_2*/
         std::map<std::string, numeric_t> label_declarations;
@@ -86,8 +87,8 @@ namespace primal
 
     private:
         compiler* m_compiler;
-        size_t m_current_binseq_start = static_cast<size_t>(-1);
-        size_t m_current_binseq_end = static_cast<size_t>(-1);
+        numeric_t m_current_binseq_start = -1;
+        numeric_t m_current_binseq_end = -1;
         int params_sent = 0;
     };
 }

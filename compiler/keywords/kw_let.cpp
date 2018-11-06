@@ -17,18 +17,9 @@ sequence::prepared_type kw_let::prepare(std::vector<token> &tokens)
         return sequence::prepared_type::PT_INVALID;
     }
     // fetching the name of the token, see if it's a valid identifier or not
-    std::string name = tokens[0].data();
+    m_name = tokens[0].data();
     tokens.erase(tokens.begin());
-
-    // now add the variable name into the variables
-    if (!variable::has_variable(name))
-    {
-        m_variable = variable::create(name);
-    }
-    else
-    {
-        m_variable = variable::variables[name];
-    }
+    variable::introduce_name(m_name);
 
     // erasing the equality sign, check for error
     tokens.erase(tokens.begin());
@@ -42,6 +33,17 @@ sequence::prepared_type kw_let::prepare(std::vector<token> &tokens)
 
 bool kw_let::compile(compiler* c)
 {
+
+    // now add the variable name into the variables
+    if (!c->has_variable(m_name))
+    {
+        m_variable = c->create_variable(m_name);
+    }
+    else
+    {
+        m_variable = c->get_variable(m_name);
+    }
+
     sequence::compile(c);
     (*c->generator()) << MOV() << m_variable << reg(0);
     return false;

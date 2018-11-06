@@ -9,6 +9,7 @@ namespace primal
     {
     public:
         explicit syntax_error(const std::string& s) : std::runtime_error(s), m_message("[syntax error] " + s)  {}
+        ~syntax_error() override = default;
         const char* what() const noexcept override
         {
             return m_message.c_str();

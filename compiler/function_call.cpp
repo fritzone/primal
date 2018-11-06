@@ -5,6 +5,8 @@
 #include "stringtable.h"
 #include "util.h"
 #include "function.h"
+#include "options.h"
+#include "label.h"
 
 #include <opcodes.h>
 
@@ -48,7 +50,7 @@ primal::sequence::prepared_type primal::function_call::prepare(std::vector<prima
 
 bool primal::function_call::compile(primal::compiler *c)
 {
-    const primal::fun* f = primal::fun::get(m_function_name);
+    auto f = primal::fun::get(m_function_name);
     if(!f)
     {
         return false;
@@ -99,7 +101,15 @@ bool primal::function_call::compile(primal::compiler *c)
     }
 
     // and now actually call the function
-    (*c->generator()) << opcodes::CALL();
+    (*c->generator()) << opcodes::CALL() << label(c->get_source(), f->name());
+
+    // compiled_code::instance(c).encountered(f->name(), true);
+    // put out a bogus location, will be fixed in the finalize stage
+    /*for(size_t i=0; i<sizeof(numeric_t); i++)
+    {
+        compiled_code::instance(c).append (0xFF);
+    }*/
+
 
     return true;
 }

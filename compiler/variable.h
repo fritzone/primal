@@ -5,16 +5,19 @@
 
 #include <string>
 #include <memory>
-#include <map>
+#include <vector>
 
 namespace primal
 {
-/* This class will hold the variables and their associated memory adresses */
+
+    class compiler;
+
+    /* This class will hold the variables and their associated memory adresses */
     class variable
     {
     public:
 
-        explicit variable(const std::string& name);
+        variable(compiler* c, const std::string& name);
 
         numeric_t location() const;
 
@@ -23,19 +26,14 @@ namespace primal
         /* Tells us if the variable with the given name was created or not */
         static bool has_variable(const std::string& name);
 
-        /*Creates a variable with the given name (if it does not exist) */
-        static std::shared_ptr<variable> create(const std::string& name);
-
-        /* the map of the variable with name and value */
-        static std::map<std::string, std::shared_ptr<variable>> variables;
-
-        static numeric_t last_location();
-
+        /* when done with the current compilation shut it down */
+        static void reset();
+        static void introduce_name(const std::string& name);
     private:
 
         std::string m_name;
         numeric_t m_location;
-        static numeric_t location_counter;
+        static std::vector<std::string> variables;
     };
 
 }

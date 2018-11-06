@@ -2,6 +2,7 @@
 #include <vm.h>
 
 #include <iostream>
+#include <sstream>
 
 bool primal::impl_CALL(primal::vm* v)
 {
@@ -9,7 +10,5 @@ bool primal::impl_CALL(primal::vm* v)
     // now push the current IP
     v->push( v->ip() );
     // and now just go to the address where the dest points
-    v->ip() = dest->value();
-    return true;
+    return v->call(dest->value());
 }
-

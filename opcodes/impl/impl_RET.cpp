@@ -5,7 +5,8 @@
 
 bool primal::impl_RET(primal::vm* v)
 {
-    primal::valued* dest = v->fetch();
+    numeric_t dest = v->pop();
+    v->ip() = dest;
     return true;
 }
 

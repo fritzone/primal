@@ -3,11 +3,15 @@
 
 #include <memory>
 #include <vector>
+#include <map>
+
 #include "source.h"
 
 namespace primal
 {
     class generate;
+    class fun;
+    class variable;
 
     /* The wrapper of the compilers' notion */
     class compiler
@@ -22,7 +26,7 @@ namespace primal
         compiler() = default;
         virtual ~compiler();
 
-        /* Will compile the given instructions, each of the mmust be newline separated */
+        /* Will compile the given instructions, each of them must be newline separated */
         bool compile(const std::string& s);
 
         /* Will retrieve the bytecode of the latest compilation. */
@@ -34,12 +38,24 @@ namespace primal
         /* Will return the source on which this compiler operates */
         source& get_source();
 
+        /* will return the number assigned to the next variable */
+        int next_varcount(fun* holder);
+        void add_variable(std::string name, std::shared_ptr<variable> v);
+        bool has_variable(const std::string & name);
+        std::shared_ptr<variable> get_variable(const std::string & name);
+        std::shared_ptr<variable> create_variable(const std::string& name);
+
+        /* sets the current working frame */
+        void set_frame(fun* f);
+        fun* frame() const { return m_current_frame; }
+
     private:
 
         source m_src;
+        std::map<fun*, int> m_varcounters;
+        std::map<std::string, std::shared_ptr<variable>> variables;
+        fun* m_current_frame = nullptr;
     };
-
 }
 
 #endif
-

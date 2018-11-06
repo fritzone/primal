@@ -91,7 +91,7 @@ foreach(keyword ${registered_keywords})
     file(APPEND ${KEYWCPP} "REGISTER_KEYWORD(primal::kw_${keyword});\n")
 endforeach()
 
-include_directories(${CMAKE_CURRENT_BINARY_DIR})
+include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/keywords)
 
 file(APPEND ${KEYWH} "void register_all_keywords();\n")
 

@@ -26,6 +26,11 @@ vm::vm()
     }
 }
 
+vm::~vm()
+{
+    std::fill(ms.get(), ms.get() + VM_MEM_SEGMENT_SIZE + app_size, 0xFF);
+}
+
 
 bool vm::run(const std::vector<uint8_t> &app)
 {
@@ -67,6 +72,10 @@ bool vm::run(const std::vector<uint8_t> &app)
         }
 
         // is the opcode after the current one 0xFF meaning: halt the machine?
+        if(m_ip < 0)
+        {
+            panic();
+        }
         if(ms[m_ip] == 0xFF)
         {
             return true;
@@ -90,10 +99,13 @@ type_destination vm::fetch_type_dest()
 
 std::stringstream vm::bindump(numeric_t start, numeric_t end, bool insert_addr)
 {
+    if(start == -1) start = VM_MEM_SEGMENT_SIZE;
+    if(end == -1) end = start + app_size;
+
     std::stringstream ss;
     std::string s;
 
-    for(numeric_t i = start; i < end; i++)
+    for(numeric_t i = start; i < std::min(end, VM_MEM_SEGMENT_SIZE + app_size); i++)
     {
         if(insert_addr)
         {
@@ -136,6 +148,7 @@ std::stringstream vm::bindump(numeric_t start, numeric_t end, bool insert_addr)
             insert_addr = true;
         }
     }
+    ss << std::endl;
     return ss;
 }
 
@@ -316,6 +329,17 @@ valued *vm::fetch()
 
     panic();
 
+}
+
+bool vm::call(numeric_t v)
+{
+    std::cout << "++++++++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
+    bindump();
+    m_ip = VM_MEM_SEGMENT_SIZE + v;
+    std::cout << "++++++++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
+    bindump();
+
+    return m_ip < VM_MEM_SEGMENT_SIZE + app_size;
 }
 
 bool vm::copy(numeric_t dest, numeric_t src, numeric_t cnt)

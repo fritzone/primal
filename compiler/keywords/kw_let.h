@@ -28,6 +28,7 @@ namespace primal
 
     private:
         std::shared_ptr<variable> m_variable;
+        std::string m_name;
     };
 
 

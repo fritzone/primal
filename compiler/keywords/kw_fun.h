@@ -3,6 +3,7 @@
 
 #include "sequence.h"
 #include "keywords.h"
+#include "function.h"
 
 namespace primal
 {
@@ -18,10 +19,11 @@ namespace primal
         bool compile(compiler* c) override;
 
         std::string name() override { return N; }
-
+        std::shared_ptr<fun> function() { return m_function; }
     private:
 
-        std::vector<std::shared_ptr<sequence>> m_body;
+        // this is the associated function
+        std::shared_ptr<fun> m_function;
     };
 }
 

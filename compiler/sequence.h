@@ -12,6 +12,7 @@ namespace primal
     class source;
     class ast;
     class compiler;
+    class function;
 
     /* A sequence represents a keyword and its attached expressions */
     class sequence
@@ -37,7 +38,7 @@ namespace primal
         virtual prepared_type prepare(std::vector<token>& tokens) = 0;
 
         /* This compiles the expression that remained after prepare. Overrides of this method
-        should call this first. This leaves the result in R0 */
+        should call this first. This leaves the result in $r0 */
         virtual bool compile(compiler* c);
 
         /* Returns the root of the abstract syntax tree */

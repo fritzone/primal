@@ -13,12 +13,14 @@ namespace primal
     public:
 
         explicit label(source&);
+        explicit label(source& src, const std::string& s) : sequence(src), lblname(s), m_absolute(true) {}
 
         static void reset_counter();
 
         static label create(source&);
         std::string name() const;
         void set_name(const std::string& name) { lblname = name; }
+        bool absolute() const {return m_absolute; }
 
         prepared_type prepare(std::vector<token>& tokens) override;
         bool compile(compiler*) override;
@@ -28,6 +30,7 @@ namespace primal
 
     private:
         std::string lblname = "";
+        bool m_absolute = false;
     };
 
 /* This represents the declaration of a label in the code */

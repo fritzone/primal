@@ -98,6 +98,6 @@ void sequence::traverse_ast(uint8_t level, const std::shared_ptr<ast>& croot, co
 
     if (tt == token::type::TT_VARIABLE)
     {
-        (*c->generator()) << MOV() << reg(level) << variable::variables[croot->data.data()];
+        (*c->generator()) << MOV() << reg(level) << c->get_variable(croot->data.data());
     }
 }

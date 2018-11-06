@@ -17,6 +17,7 @@ namespace primal
     public:
 
         vm();
+        ~vm();
 
         static std::shared_ptr<vm> create();
 
@@ -74,7 +75,9 @@ namespace primal
         bool flag() const {return m_lbo;}
         bool& flag() {return m_lbo;}
 
-        std::stringstream bindump(numeric_t start, numeric_t end, bool insert_addr);
+        bool call(numeric_t v);
+
+        std::stringstream bindump(numeric_t start = -1, numeric_t end = -1, bool insert_addr = true);
         
     private:
 
