@@ -107,14 +107,26 @@ int compiler::last_varcount(fun *holder)
 
 bool compiler::has_variable(const std::string &name)
 {
-    return variables[m_current_frame].count(name) != 0;
+    if (variables[m_current_frame].count(name) == 0)
+    {
+        // is it a global variable?
+        return (variables[nullptr].count(name) != 0);
+    }
+    else
+    {
+        return true;
+    }
 }
 
 std::shared_ptr<variable> compiler::get_variable(const std::string &name)
 {
-    if(!has_variable(name))
+    if(variables[m_current_frame].count(name) == 0)
     {
-        return std::shared_ptr<variable>();
+        if(variables[nullptr].count(name) == 0)
+        {
+            return std::shared_ptr<variable>();
+        }
+        return variables[nullptr][name];
     }
     return variables[m_current_frame][name];
 }

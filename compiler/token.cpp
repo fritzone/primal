@@ -34,9 +34,12 @@ bool token::is_allowed_to_combine_token(char next)
 
     token::type t2 = identify_type(next);
 
-    return ( (m_type == token::type::TT_IDENTIFIER && t2 == token::type::TT_NUMBER)
+    return (    (m_type == token::type::TT_IDENTIFIER && t2 == token::type::TT_NUMBER)
              || (m_type == token::type::TT_IDENTIFIER && t2 == token::type::TT_IDENTIFIER)
              || (m_type == token::type::TT_NUMBER && t2 == token::type::TT_NUMBER)
+             || (m_type == token::type::TT_DOT && t2 == token::type::TT_DOT)
+             || (m_type == token::type::TT_DOT && t2 == token::type::TT_NUMBER)
+             || (m_type == token::type::TT_NUMBER && t2 == token::type::TT_DOT)
              || (m_type == token::type::TT_ASSIGNMENT && t2 == token::type::TT_ASSIGNMENT)
              || (m_type == token::type::TT_EXCLAMATION && t2 == token::type::TT_ASSIGNMENT)
              || (m_type == token::type::TT_REGISTER && (next == 'r' || ::isdigit(next)))
@@ -78,6 +81,7 @@ token::type token::identify_type(char c)
     if (c == '#') return token::type::TT_COMMENT_LINE;
     if (c == '"') return token::type::TT_STRING;
     if (c == ',') return token::type::TT_COMMA;
+    if (c == '.') return token::type::TT_DOT;
 
     return token::type::TT_UNKNOWN;
 }

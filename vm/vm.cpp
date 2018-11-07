@@ -77,6 +77,7 @@ bool vm::run(const std::vector<uint8_t> &app)
         }
         if(ms[static_cast<size_t>(m_ip)] == 0xFF)
         {
+            bindump();
             return true;
         }
     }

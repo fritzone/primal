@@ -11,12 +11,13 @@ TEST_CASE("Compiler compiles, functions 1", "[compiler]")
     auto c = primal::compiler::create();
 
     c->compile(R"code(
+                   var a,t
+                   let a = 5
                    fun some(...)
-                       let y = 2
+                       var z
                        let z = 53
+                       let a = 44
                    endf
-                   let x = 12
-                   let z = 55
                    some (4)
                    let t = 66
                )code"
@@ -24,11 +25,10 @@ TEST_CASE("Compiler compiles, functions 1", "[compiler]")
 
     auto vm = primal::vm::create();
     REQUIRE(vm->run(c->bytecode()));
-    REQUIRE(vm->get_mem(0) == 12);
-    REQUIRE(vm->get_mem(4) == 55);
-    REQUIRE(vm->get_mem(8) == 66);
+    REQUIRE(vm->get_mem(0) == 44);
+    REQUIRE(vm->get_mem(4) == 66);
 }
-
+/*
 TEST_CASE("ASM compiler - Reg byte mem access", "[asm-compiler]")
 {
     auto c = primal::compiler::create();

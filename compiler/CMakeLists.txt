@@ -64,6 +64,7 @@ register_keyword(asm)
 register_keyword(goto)
 register_keyword(fun)
 register_keyword(endf)
+register_keyword(var)
 
 ########################################################################################################################
 #                 Done, no more keywords have to be added after this point in the code                                 #

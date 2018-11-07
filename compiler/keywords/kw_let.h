@@ -5,7 +5,6 @@
 #include "keywords.h"
 
 #include <string>
-#include <vector>
 #include <memory>
 
 namespace primal
