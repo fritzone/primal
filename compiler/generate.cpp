@@ -9,6 +9,7 @@
 #include "util.h"
 #include "types.h"
 #include "stringtable.h"
+#include "compiler.h"
 
 #include <iostream>
 #include <limits>
@@ -18,7 +19,7 @@
 
 using namespace primal;
 
-const size_t PRIMAL_HEADER_SIZE = 8;
+const size_t PRIMAL_HEADER_SIZE = 16;
 
 std::map<const compiler*, std::shared_ptr<compiled_code>> compiled_code::compilers_codes;
 
@@ -37,9 +38,9 @@ generate::~generate()
     if(options::instance().generate_assembly())
     {
         options::instance().asm_stream() << std::setfill(' ') << std::right << std::setw(30 - 10 * params_sent) << "# " << "L:" << (m_current_binseq_end - m_current_binseq_start) << " [";
-        for(size_t i = m_current_binseq_start; i< m_current_binseq_end; i++)
+        for(numeric_t i = m_current_binseq_start; i< m_current_binseq_end; i++)
         {
-            uint8_t b = compiled_code::instance(m_compiler).bytecode().at(i);
+            uint8_t b = compiled_code::instance(m_compiler).bytecode().at(static_cast<size_t>(i));
             options::instance().asm_stream() << " " << std::setfill('0') << std::setw(2) << std::hex << std::uppercase  << static_cast<int>(b) ;
         }
         options::instance().asm_stream() << " ]";
@@ -58,20 +59,29 @@ generate &generate::operator<<(primal::opcodes::opcode &&opc)
 
 generate &generate::operator<<(variable &&var)
 {
-    numeric_t a = var.location() * sizeof(numeric_t);
+    numeric_t a = var.location() * num_t_size;
     auto address = htovm(a);
 
     if(options::instance().generate_assembly()) {
+
         std::stringstream ss;
-        ss << "[" << address << "]";
+        ss << "[" << (var.frame() ? "$r254+" : "") << address << "]";
         options::instance().asm_stream() << std::setfill(' ') << std::left << std::setw(10) << ss.str();
         params_sent ++;
     }
 
-    // firstly we tell the VM the type of the data
-    compiled_code::instance(m_compiler).append(static_cast<uint8_t>(util::to_integral(type_destination ::TYPE_MOD_MEM_IMM)));
-
-    compiled_code::instance(m_compiler).append_number(address);
+    if(var.frame()) // if this variable is in a function make some address calculations
+    {
+        // at the entry point reg 254 is set up to pointto the first element after the SP, ie. the first local variable
+        compiled_code::instance(m_compiler).append(static_cast<uint8_t>(util::to_integral(type_destination ::TYPE_MOD_MEM_REG_IDX_OFFS)));
+        compiled_code::instance(m_compiler).append(254);
+        compiled_code::instance(m_compiler).append_number(address);
+    }
+    else            // this is a global
+    {
+        compiled_code::instance(m_compiler).append(static_cast<uint8_t>(util::to_integral(type_destination ::TYPE_MOD_MEM_IMM)));
+        compiled_code::instance(m_compiler).append_number(address);
+    }
 
     return *this;
 }
@@ -145,7 +155,7 @@ generate &generate::operator<<(const label& l)
 
     /* For now the label will go out in the code asa numeric value since if it was not declared yet
      * there is no way for us to know the location itself */
-    for(size_t i=0; i<sizeof(numeric_t); i++)
+    for(size_t i=0; i<num_t_size; i++)
     {
         compiled_code::instance(m_compiler).append (0xFF);
     }
@@ -234,11 +244,20 @@ void compiled_code::string_encountered(int strtbl_idx)
 void compiled_code::finalize()
 {
     // insert the offset of the string table bytes
-    for(size_t i=0; i<sizeof(numeric_t); i++)
+    for(size_t i=0; i<num_t_size; i++)
     {
         bytes.insert(bytes.begin(), 0xFF);
     }
-
+    // insert the index of thestac segments' start
+    for(size_t i=0; i<num_t_size; i++)
+    {
+        bytes.insert(bytes.begin(), 0xFF);
+    }
+    // insert the reserved bytes
+    for(size_t i=0; i<num_t_size; i++)
+    {
+        bytes.insert(bytes.begin(), 0xFF);
+    }
     // insert the version 1.0 and .P to mark it as a primal compiled script
     bytes.insert(bytes.begin(), '0');bytes.insert(bytes.begin(), '1');bytes.insert(bytes.begin(), 'P');bytes.insert(bytes.begin(), '.');
 
@@ -256,7 +275,7 @@ void compiled_code::finalize()
             {
                 numeric_t dist_diff = ldecl.second - lref.second;
                 // substract the size of a labels' address, as added in the generate to get the correct location
-                vm_ord = htovm(dist_diff) - static_cast<numeric_t>(sizeof(numeric_t));
+                vm_ord = htovm(dist_diff) - static_cast<numeric_t>(num_t_size);
             }
 
             if(options::instance().generate_assembly())
@@ -270,9 +289,18 @@ void compiled_code::finalize()
     }
 
     // fix the string table offset
+    {
     numeric_t l = bytes.size();
     numeric_t vm_l = htovm(l);
     memcpy( &bytes[4], &vm_l, sizeof(vm_l));
+    }
+
+    // fix the stack start offset
+    {
+    numeric_t l = m_compiler->last_varcount(nullptr);
+    numeric_t vm_l = htovm(l);
+    memcpy( &bytes[8], &vm_l, sizeof(vm_l));
+    }
 
     // finalize the stringtable
     numeric_t strtblcnt = stringtable::instance().count();

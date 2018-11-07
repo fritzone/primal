@@ -11,6 +11,7 @@ namespace primal
 {
 
     class compiler;
+    class fun;
 
     /* This class will hold the variables and their associated memory adresses */
     class variable
@@ -18,8 +19,8 @@ namespace primal
     public:
 
         variable(compiler* c, const std::string& name);
-
         numeric_t location() const;
+        fun* frame() const;
 
     public:
 
@@ -34,6 +35,7 @@ namespace primal
         std::string m_name;
         numeric_t m_location;
         static std::vector<std::string> variables;
+        fun* m_frame;
     };
 
 }

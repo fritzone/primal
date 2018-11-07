@@ -40,7 +40,7 @@ namespace primal
 
         /* will return the number assigned to the next variable */
         int next_varcount(fun* holder);
-        void add_variable(std::string name, std::shared_ptr<variable> v);
+        int last_varcount(fun* holder);
         bool has_variable(const std::string & name);
         std::shared_ptr<variable> get_variable(const std::string & name);
         std::shared_ptr<variable> create_variable(const std::string& name);
@@ -53,7 +53,7 @@ namespace primal
 
         source m_src;
         std::map<fun*, int> m_varcounters;
-        std::map<std::string, std::shared_ptr<variable>> variables;
+        std::map<fun*, std::map<std::string, std::shared_ptr<variable>>> variables;
         fun* m_current_frame = nullptr;
     };
 }

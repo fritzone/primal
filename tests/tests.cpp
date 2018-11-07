@@ -5,9 +5,85 @@
 #include <options.h>
 #include <iostream>
 
+
+TEST_CASE("Compiler compiles, functions 1", "[compiler]")
+{
+    auto c = primal::compiler::create();
+
+    c->compile(R"code(
+                   fun some(...)
+                       let y = 2
+                       let z = 53
+                   endf
+                   let x = 12
+                   let z = 55
+                   some (4)
+                   let t = 66
+               )code"
+             );
+
+    auto vm = primal::vm::create();
+    REQUIRE(vm->run(c->bytecode()));
+    REQUIRE(vm->get_mem(0) == 12);
+    REQUIRE(vm->get_mem(4) == 55);
+    REQUIRE(vm->get_mem(8) == 66);
+}
+
+TEST_CASE("ASM compiler - Reg byte mem access", "[asm-compiler]")
+{
+    auto c = primal::compiler::create();
+
+    c->compile(R"code(
+                      asm MOV [@$r1] 20
+                      asm MOV $r2 3
+                      asm MOV [@$r2] [@$r1]
+                      asm MOV $r3@0 [@0]
+                )code"
+    );
+
+    auto vm = primal::vm::create();
+    REQUIRE(vm->run(c->bytecode()));
+    REQUIRE(vm->get_mem_byte(0) == 20);
+    REQUIRE(static_cast<int>(vm->get_mem_byte(1)) == 0);
+    REQUIRE(static_cast<int>(vm->get_mem_byte(2)) == 0);
+    REQUIRE(vm->get_mem_byte(3) == 20);
+    REQUIRE(vm->r(3).value() == 20);
+}
+
+TEST_CASE("Asm compiler - JUMP test", "[asm-compiler]")
+{
+    // ASM code below will jump over the MOV $r1, 43. Please note, there is added 16 bytes for the header!
+    std::shared_ptr<primal::compiler> c = primal::compiler::create();
+    c->compile(R"code(
+                      asm MOV $r1 42
+                      asm JMP 1048614
+                      asm MOV $r1 43
+                      asm SUB $r1 1
+                )code");
+
+    std::shared_ptr<primal::vm> vm = primal::vm::create();
+    REQUIRE(vm->run(c->bytecode()));
+    REQUIRE(vm->r(1).value() == 41);
+}
+
+TEST_CASE("Asm compiler - stack operatons", "[asm-compiler")
+{
+    std::shared_ptr<primal::compiler> c = primal::compiler::create();
+    c->compile(R"code(
+                      asm MOV $r1 42
+                      asm PUSH $r1
+                      asm POP $r2
+                      asm EQ $r2 42
+                )code");
+
+    std::shared_ptr<primal::vm> vm = primal::vm::create();
+    REQUIRE(vm->run(c->bytecode()));
+    REQUIRE(vm->r(2).value() == 42);
+    REQUIRE(vm->flag() == true);
+}
+
 TEST_CASE("Compiler compiles, Simple write", "[compiler]")
 {
-    primal::options::instance().generate_assembly(true);
     auto c = primal::compiler::create();
 
     c->compile(R"code(
@@ -25,7 +101,7 @@ TEST_CASE("Compiler compiles, Simple write", "[compiler]")
     REQUIRE(vm->run(c->bytecode()));
     REQUIRE(vm->get_mem(0) == 12);
 }
-/*
+
 TEST_CASE("Script compiler - NOT operations", "[script-compiler]")
 {
     auto c = primal::compiler::create();
@@ -41,7 +117,7 @@ TEST_CASE("Script compiler - NOT operations", "[script-compiler]")
     REQUIRE(vm->get_mem(4) == 1);
     REQUIRE(vm->get_mem(8) == 0);
 }
-/*
+
 TEST_CASE("Compiler compiles, IF test", "[compiler]")
 {
     auto c = primal::compiler::create();
@@ -71,27 +147,6 @@ TEST_CASE("Script compiler - 1 NOT operation", "[script-compiler]")
     auto vm = primal::vm::create();
     REQUIRE(vm->run(c->bytecode()));
     REQUIRE(vm->get_mem(0) == 0);
-}
-
-TEST_CASE("ASM compiler - Reg byte mem access", "[asm-compiler]")
-{
-    auto c = primal::compiler::create();
-
-    c->compile(R"code(
-                      asm MOV [@$r1] 20
-                      asm MOV $r2 3
-                      asm MOV [@$r2] [@$r1]
-                      asm MOV $r3@0 [@0]
-                )code"
-    );
-
-    auto vm = primal::vm::create();
-    REQUIRE(vm->run(c->bytecode()));
-    REQUIRE(vm->get_mem_byte(0) == 20);
-    REQUIRE(static_cast<int>(vm->get_mem_byte(1)) == 255);
-    REQUIRE(static_cast<int>(vm->get_mem_byte(2)) == 255);
-    REQUIRE(vm->get_mem_byte(3) == 20);
-    REQUIRE(vm->r(3).value() == 20);
 }
 
 TEST_CASE("ASM compiler - Reg Indexed mem access", "[asm-compiler]")
@@ -195,22 +250,6 @@ TEST_CASE("Asm compiler - COPY test", "[asm-compiler]")
     REQUIRE(vm->r(1).value() == 313249263);
 }
 
-TEST_CASE("Asm compiler - JUMP test", "[asm-compiler]")
-{
-    // ASM code below will jump over the MOV $r1, 43
-    std::shared_ptr<primal::compiler> c = primal::compiler::create();
-    c->compile(R"code(
-                      asm MOV $r1 42
-                      asm JMP 1048606
-                      asm MOV $r1 43
-                      asm SUB $r1 1
-                )code");
-
-    std::shared_ptr<primal::vm> vm = primal::vm::create();
-    REQUIRE(vm->run(c->bytecode()));
-    REQUIRE(vm->r(1).value() == 41);
-}
-
 TEST_CASE("Asm compiler - EQ/JT test", "[asm-compiler]")
 {
     std::shared_ptr<primal::compiler> c = primal::compiler::create();
@@ -226,19 +265,4 @@ TEST_CASE("Asm compiler - EQ/JT test", "[asm-compiler]")
     REQUIRE(vm->flag() == true);
 }
 
-TEST_CASE("Asm compiler - stack operatons", "[asm-compiler")
-{
-    std::shared_ptr<primal::compiler> c = primal::compiler::create();
-    c->compile(R"code(
-                      asm MOV $r1 42
-                      asm PUSH $r1
-                      asm POP $r2
-                      asm EQ $r2 42
-                )code");
-
-    std::shared_ptr<primal::vm> vm = primal::vm::create();
-    REQUIRE(vm->run(c->bytecode()));
-    REQUIRE(vm->r(2).value() == 42);
-    REQUIRE(vm->flag() == true);
-}
 /**/

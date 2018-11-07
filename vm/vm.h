@@ -77,7 +77,7 @@ namespace primal
 
         bool call(numeric_t v);
 
-        std::stringstream bindump(numeric_t start = -1, numeric_t end = -1, bool insert_addr = true);
+        void bindump(numeric_t start = -1, numeric_t end = -1, bool insert_addr = true);
         
     private:
 
@@ -101,7 +101,9 @@ namespace primal
         std::size_t mi_i = 0;
         bool m_lbo = false; // the last operations' result. This is set to false if the result was 0
         numeric_t app_size = -1;
-
+        numeric_t max_used_sp = 0;
+        numeric_t stack_offset = 0;
+        reg& sp;
     };
 
 }

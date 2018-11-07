@@ -56,6 +56,8 @@ bool primal::function_call::compile(primal::compiler *c)
         return false;
     }
 
+    numeric_t pushed_params = 0;
+
     for(auto& p : m_params)
     {
         if(p.root()->data.get_type() != token::type::TT_STRING)
@@ -69,8 +71,10 @@ bool primal::function_call::compile(primal::compiler *c)
                 (*c->generator()) << opcodes::PUSH()
                                   << type_destination ::TYPE_MOD_IMM
                                   << static_cast<numeric_t>(util::to_integral(parameter::param_type::PT_NUMERIC));
+                pushed_params ++;
             }
 
+            pushed_params ++;
             (*c->generator()) << opcodes::PUSH() << reg(0);
         }
         else
@@ -80,32 +84,39 @@ bool primal::function_call::compile(primal::compiler *c)
                 throw "internal compiler error";
             }
 
-            // send out a PUSH with the bogus memory address of the string, which will be fixed in the finalize phase
-            (*c->generator()) << opcodes::PUSH() << type_destination ::TYPE_MOD_MEM_IMM;
-
-            // notify the compiled code we have a future string reference here
-            compiled_code::instance(c).string_encountered(p.tokens()[0].get_extra_info());
-
-            for(size_t i=0; i<sizeof(numeric_t); i++)
-            {
-                compiled_code::instance(c).append (0xFF);
-            }
-
             if(f->has_variadic_parameters())
             {
                 (*c->generator()) << opcodes::PUSH()
                                   << type_destination ::TYPE_MOD_IMM
                                   << static_cast<numeric_t>(util::to_integral(parameter::param_type::PT_STRING));
+                pushed_params ++;
+
             }
+
+            // send out a PUSH with the bogus memory address of the string, which will be fixed in the finalize phase
+            (*c->generator()) << opcodes::PUSH() << type_destination ::TYPE_MOD_MEM_IMM;
+            pushed_params ++;
+
+            // notify the compiled code we have a future string reference here
+            compiled_code::instance(c).string_encountered(p.tokens()[0].get_extra_info());
+
+            for(size_t i=0; i<num_t_size; i++)
+            {
+                compiled_code::instance(c).append (0xFF);
+            }
+
         }
     }
 
     // and now actually call the function
     (*c->generator()) << opcodes::CALL() << label(c->get_source(), f->name());
 
+    // and now actually rermove the pushed elements from the stack
+    (*c->generator()) << opcodes::SUB() << reg(255) << type_destination::TYPE_MOD_IMM << (pushed_params *  static_cast<numeric_t>(num_t_size));
+
     // compiled_code::instance(c).encountered(f->name(), true);
     // put out a bogus location, will be fixed in the finalize stage
-    /*for(size_t i=0; i<sizeof(numeric_t); i++)
+    /*for(size_t i=0; i<num_t_size; i++)
     {
         compiled_code::instance(c).append (0xFF);
     }*/

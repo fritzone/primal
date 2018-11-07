@@ -1,5 +1,6 @@
 #include "variable.h"
 #include "compiler.h"
+#include "options.h"
 
 #include <memory>
 #include <iostream>
@@ -9,16 +10,21 @@ using namespace primal;
 
 std::vector<std::string> variable::variables;
 
-variable::variable(compiler* c, const std::string & name) : m_name(name)
+variable::variable(compiler* c, const std::string & name) : m_name(name), m_frame(c->frame())
 {
     // place this variable into the given location of the VM's stack
     m_location = c->next_varcount(c->frame());
-    std::cout << "create var:" << m_name << "@" << m_location << " - " << (void*)c->frame() << std::endl;
+    if(options::instance().generate_assembly()) { options::instance().asm_stream() << "CV:" << m_name << "@" << m_location << " - " << reinterpret_cast<void*>(c->frame()) << std::endl; }
 }
 
 numeric_t variable::location() const
 {
     return m_location;
+}
+
+fun *variable::frame() const
+{
+    return m_frame;
 }
 
 bool variable::has_variable(const std::string & name)

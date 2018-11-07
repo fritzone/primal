@@ -18,7 +18,7 @@ using namespace primal;
 
 std::map<uint8_t, vm::executor> vm::vm_runner;
 
-vm::vm()
+vm::vm() : sp(r(255))
 {
     for(uint8_t i = 0; i<255; i++)
     {
@@ -35,24 +35,23 @@ vm::~vm()
 bool vm::run(const std::vector<uint8_t> &app)
 {
     // firstly set up the memory segment for this machine and initialize it to 0xFF
-    app_size = app.size();
-    ms = std::make_unique<uint8_t[]>(app_size + VM_MEM_SEGMENT_SIZE);
-    std::fill(ms.get(), ms.get() + VM_MEM_SEGMENT_SIZE + app_size, 0xFF);
+    app_size = static_cast<numeric_t>(app.size());
+    ms = std::make_unique<uint8_t[]>(static_cast<size_t>(app_size + VM_MEM_SEGMENT_SIZE));
+    std::fill(ms.get(), ms.get() + VM_MEM_SEGMENT_SIZE + app_size, 0x00);
 
     // then copy over the data from app to the end of the memory segment
     std::copy(app.begin(), app.end(), ms.get() + VM_MEM_SEGMENT_SIZE);
 
     // set the IP and SP to point to the correct location
-    m_ip = VM_MEM_SEGMENT_SIZE + 8; // will grow upwards, will skip .P10 and the stringtable loc entry
-    r(255) = VM_MEM_SEGMENT_SIZE;   // will grow downwards
-
-    bindump(m_ip - 8, m_ip + app_size, true);
+    m_ip = VM_MEM_SEGMENT_SIZE + 16; // will grow upwards, will skip .P10 and the stringtable loc entry
+    stack_offset = *reinterpret_cast<numeric_t*>(ms.get() + VM_MEM_SEGMENT_SIZE + 8);
+    sp = stack_offset * num_t_size;   // will grow upwards
 
     // then start running it
-    while(vm_runner.count(ms[m_ip]))
+    while(vm_runner.count(ms[static_cast<size_t>(m_ip)]))
     {
         // read in an opcode
-        uint8_t opc = ms[m_ip ++];
+        uint8_t opc = ms[static_cast<size_t>(m_ip++)];
 
         try
         {
@@ -76,7 +75,7 @@ bool vm::run(const std::vector<uint8_t> &app)
         {
             panic();
         }
-        if(ms[m_ip] == 0xFF)
+        if(ms[static_cast<size_t>(m_ip)] == 0xFF)
         {
             return true;
         }
@@ -94,10 +93,10 @@ std::shared_ptr<vm> vm::create()
 
 type_destination vm::fetch_type_dest()
 {
-    return static_cast<type_destination>(ms[m_ip ++]) ;
+    return static_cast<type_destination>(ms[static_cast<size_t>(m_ip ++)]) ;
 }
 
-std::stringstream vm::bindump(numeric_t start, numeric_t end, bool insert_addr)
+void vm::bindump(numeric_t start, numeric_t end, bool insert_addr)
 {
     if(start == -1) start = VM_MEM_SEGMENT_SIZE;
     if(end == -1) end = start + app_size;
@@ -120,11 +119,11 @@ std::stringstream vm::bindump(numeric_t start, numeric_t end, bool insert_addr)
         {
             ss << " ";
         }
-        ss << std::setfill('0') << std::setw(2) << std::hex << std::uppercase  << static_cast<int>(ms[i]) ;
+        ss << std::setfill('0') << std::setw(2) << std::hex << std::uppercase  << static_cast<int>(ms[static_cast<size_t>(i)]) ;
 
-        if(ms[i] > 32 && ms[i] < 255)
+        if(ms[static_cast<size_t>(i)] > 32 && ms[static_cast<size_t>(i)] < 255)
         {
-            s += ms[i];
+            s += static_cast<char>(ms[static_cast<size_t>(i)]);
         }
         else
         {
@@ -148,8 +147,32 @@ std::stringstream vm::bindump(numeric_t start, numeric_t end, bool insert_addr)
             insert_addr = true;
         }
     }
-    ss << std::endl;
-    return ss;
+    std::cout << ss.str() << std::endl;
+    ss.clear();
+    ss.str(std::string());
+
+    // memory dump
+    for(numeric_t i=0; i<stack_offset * num_t_size; i += num_t_size)
+    {
+        ss << std::right << " [" << std::setfill('0') << std::setw(8) << std::dec << i << "] = ";
+        ss << get_mem(i) << std::endl;
+    }
+    ss << "-"; // indicates the stack start
+    for(numeric_t i = stack_offset * num_t_size; i<max_used_sp + 32; i += num_t_size)
+    {
+        if(i == sp.value())
+        {
+            ss <<">" ; // current stack position
+        }
+        else
+        {
+            if (i > stack_offset * num_t_size) ss << " ";
+        }
+
+        ss << std::right << "[" << std::setfill('0') << std::setw(8) << std::dec << i << "] = ";
+        ss << std::setfill('0') << std::setw(8) << std::dec << get_mem(i) << std::endl;
+    }
+    std::cout << ss.str();
 }
 
 void vm::panic()
@@ -157,23 +180,22 @@ void vm::panic()
     std::cout << "VM PANIC ☹ - instruction dump:\n---------------------------------------------------\n";
     numeric_t start = std::max(VM_MEM_SEGMENT_SIZE, m_ip - 64);
     numeric_t end = m_ip + std::min(64, app_size);
-    std::stringstream ss = bindump(start, end, true);
-    std::cout << ss.str() << std::endl;
+    bindump(start, end, true);
     std::cout << "IP=" << std::dec << m_ip << "[:" << m_ip - VM_MEM_SEGMENT_SIZE << "] (" << std::hex << m_ip << ")" << std::endl;
-    std::cout << "SP=" << std::dec << r(255).value() << " (" << std::hex << r(255).value() << ")" << std::endl;
+    std::cout << "SP=" << std::dec << sp.value() << " (" << std::hex << sp.value() << ")" << std::endl;
     std::cout << std::endl;
     throw primal::vm_panic("PANIC");
 }
 
 uint8_t vm::fetch_register_index()
 {
-    return ms[m_ip ++];
+    return ms[static_cast<size_t>(m_ip ++)];
 }
 
 numeric_t vm::fetch_immediate()
 {
     numeric_t retv = htovm(*(reinterpret_cast<numeric_t*>(ms.get() + m_ip)));
-    m_ip += sizeof(numeric_t);
+    m_ip += num_t_size;
     return retv;
 }
 
@@ -205,7 +227,7 @@ void vm::set_mem_byte(numeric_t address, uint8_t b)
     {
         panic();
     }
-    ms[address] = b;
+    ms[static_cast<size_t>(address)] = b;
 }
 
 uint8_t vm::get_mem_byte(numeric_t address)
@@ -214,7 +236,7 @@ uint8_t vm::get_mem_byte(numeric_t address)
     {
         panic();
     }
-    return ms[address];
+    return ms[static_cast<size_t>(address)];
 }
 
 reg_subbyte* vm::rsb(uint8_t ridx, uint8_t bidx)
@@ -325,6 +347,13 @@ valued *vm::fetch()
             numeric_t vaddr = fetch_immediate();
             return mem_byte(vaddr);
         }
+
+        case type_destination::TYPE_MOD_MEM_REG_IDX_OFFS:
+        {
+            uint8_t ridx = fetch_register_index();
+            numeric_t vaddr = fetch_immediate();
+            return mem(r(ridx).value() + vaddr);
+        }
     }
 
     panic();
@@ -333,12 +362,7 @@ valued *vm::fetch()
 
 bool vm::call(numeric_t v)
 {
-    std::cout << "++++++++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
-    bindump();
     m_ip = VM_MEM_SEGMENT_SIZE + v;
-    std::cout << "++++++++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
-    bindump();
-
     return m_ip < VM_MEM_SEGMENT_SIZE + app_size;
 }
 
@@ -348,22 +372,19 @@ bool vm::copy(numeric_t dest, numeric_t src, numeric_t cnt)
     {
         return false;
     }
-    std::memmove(&ms[dest], &ms[src], cnt);
+    std::memmove(&ms[static_cast<size_t>(dest)], &ms[static_cast<size_t>(src)], static_cast<size_t>(cnt));
     return true;
 }
 
 bool vm::push(const valued* v)
 {
     if(!v) return false;
-    set_mem(r(255).value() - 4, v->value());
-    r(255) -= 4;
-    if(r(255).value() < 0)
-    {
-        panic();
-    }
-    set_mem_byte(r(255).value() - 1, util::to_integral(type_destination::TYPE_MOD_IMM));
-    r(255) -= 1;
-    if (r(255).value() < 0)
+
+    // value
+    set_mem(sp.value(), v->value());
+    sp += num_t_size;
+    if(sp > max_used_sp) max_used_sp = sp.value();
+    if(sp.value() > VM_MEM_SEGMENT_SIZE)
     {
         panic();
     }
@@ -373,19 +394,17 @@ bool vm::push(const valued* v)
 
 bool vm::push(const numeric_t v)
 {
-    immediate i(m_ip);
+    immediate i(v);
     return push(&i);
 }
 
 numeric_t vm::pop()
 {
-    uint8_t type = get_mem_byte(r(255).value());
-    r(255) += 1;
-    numeric_t v = get_mem(r(255).value());
-    r(255) += 4;
-    if(r(255).value() > VM_MEM_SEGMENT_SIZE)
+    if(sp.value() - num_t_size < 0)
     {
         panic();
     }
+    numeric_t v = get_mem(sp.value() - num_t_size);
+    sp -= num_t_size;
     return v;
 }

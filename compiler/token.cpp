@@ -162,7 +162,7 @@ std::vector<token> token::identify_assembly_parameters(const std::vector<token> 
                 if (i < tokens.size())
                 {
                     int subbyte_nr = std::stoi(tokens[i].data());
-                    if (subbyte_nr < static_cast<int>(sizeof(numeric_t)))
+                    if (subbyte_nr < static_cast<int>(num_t_size))
                     {
                         l.set_extra_info(subbyte_nr);
                     }

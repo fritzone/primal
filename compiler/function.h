@@ -37,6 +37,8 @@ namespace primal {
             return nullptr;
         }
 
+        static void reset();
+
         fun() = default;
 
         explicit fun(const std::string& s, source& src) : m_name(s), m_src(src)

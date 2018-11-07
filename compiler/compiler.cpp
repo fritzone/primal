@@ -12,6 +12,8 @@
 
 #include <all_keywords.h>
 
+#include <iomanip>
+
 using namespace primal;
 
 std::shared_ptr<compiler> compiler::create()
@@ -39,6 +41,10 @@ bool compiler::compile(const std::string &s)
 
     // and the exit program byte
     compiled_code::instance(this).append(0xFF);
+    if(options::instance().generate_assembly())
+    {
+        options::instance().asm_stream() << std::setfill(' ') << std::right << std::setw(5) << std::dec << compiled_code::instance(this).location() + 16 << ": (FF) EXIT" << std::endl;
+    }
 
     auto fdecls = std::get<1>(seqs);
     for(const auto& seq : fdecls)
@@ -89,9 +95,19 @@ int compiler::next_varcount(fun* holder)
     }
 }
 
+int compiler::last_varcount(fun *holder)
+{
+    if(m_varcounters.count(holder))
+    {
+        int retv = m_varcounters[holder];
+        return retv;
+    }
+    return 0;
+}
+
 bool compiler::has_variable(const std::string &name)
 {
-    return variables.count(name) != 0;
+    return variables[m_current_frame].count(name) != 0;
 }
 
 std::shared_ptr<variable> compiler::get_variable(const std::string &name)
@@ -100,13 +116,13 @@ std::shared_ptr<variable> compiler::get_variable(const std::string &name)
     {
         return std::shared_ptr<variable>();
     }
-    return variables[name];
+    return variables[m_current_frame][name];
 }
 
 std::shared_ptr<variable> compiler::create_variable(const std::string &name)
 {
     auto x = std::make_shared<variable>(this, name);
-    variables[name] = x;
+    variables[m_current_frame][name] = x;
     return x;
 }
 
@@ -127,4 +143,5 @@ compiler::~compiler()
 
     compiled_code::instance(this).destroy();
     variable::reset();
+    fun::reset();
 }
