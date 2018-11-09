@@ -1,7 +1,8 @@
 #ifndef TOKEN_H
 #define TOKEN_H
 
-#include <hal.h>
+#include <numeric_decl.h>
+#include <registers.h>
 
 #include <vector>
 #include <string>
@@ -9,7 +10,8 @@
 
 namespace primal
 {
-/* This class represents a token */
+
+    /* This class represents a token */
     class token final
     {
     public:

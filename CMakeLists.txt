@@ -10,12 +10,16 @@ endif()
 
 option(coverage-build "gcov/lcov test coverage analysis (make coverage_test)" OFF)
 
-set( CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 set(ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
 if(NOT WIN32)
-    add_definitions(-Wall -Wextra -Wcomment -Wformat -Winit-self -Wno-long-long -Wmissing-include-dirs -Wno-unused-parameter -Wno-unused-variable -std=c++14)
+    add_definitions(-Wall -Wextra -Wcomment -Wformat -Winit-self -Wno-long-long -Wmissing-include-dirs -Wno-unused-parameter -Wno-unused-variable)
     option(gprof-build "enable gprof" OFF)
     if(gprof-build)
         add_definitions("-pg")

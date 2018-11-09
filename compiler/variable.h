@@ -1,7 +1,9 @@
 #ifndef VARIABLE_H
 #define VARIABLE_H
 
-#include <types.h>
+#include "types.h"
+
+#include <numeric_decl.h>
 
 #include <string>
 #include <memory>
@@ -29,12 +31,16 @@ namespace primal
 
         /* when done with the current compilation shut it down */
         static void reset();
-        static void introduce_name(const std::string& name);
+        static void introduce_name(const std::string &name, entity_type et, entity_origin eo);
+        static void enter_function(const std::string& function_name);
+        static void leave_function();
+
     private:
 
         std::string m_name;
         numeric_t m_location;
-        static std::vector<std::string> variables;
+        static std::vector<std::tuple<std::string, entity_type, entity_origin>> variables;
+        static std::string working_function;
         fun* m_frame;
     };
 

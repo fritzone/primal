@@ -39,7 +39,7 @@ namespace primal
         source& get_source();
 
         /* will return the number assigned to the next variable */
-        int next_varcount(fun* holder);
+        int next_varcount(fun* holder, const std::string &name);
         int last_varcount(fun* holder);
         bool has_variable(const std::string & name);
         std::shared_ptr<variable> get_variable(const std::string & name);

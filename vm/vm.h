@@ -2,6 +2,8 @@
 #define VM_H
 
 #include <hal.h>
+#include <numeric_decl.h>
+#include <registers.h>
 
 #include <vector>
 #include <map>

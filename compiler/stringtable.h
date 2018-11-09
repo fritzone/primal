@@ -1,7 +1,7 @@
 #ifndef STRINGTABLE_H
 #define STRINGTABLE_H
 
-#include "types.h"
+#include "numeric_decl.h"
 
 #include <string>
 #include <vector>

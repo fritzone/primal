@@ -41,7 +41,7 @@ primal::sequence::prepared_type primal::function_call::prepare(std::vector<prima
         }
 
         i++;
-        parameter p(current_par_toks);
+        parameter_inst p(current_par_toks);
         m_params.push_back(p);
     }
 
@@ -70,7 +70,7 @@ bool primal::function_call::compile(primal::compiler *c)
             {
                 (*c->generator()) << opcodes::PUSH()
                                   << type_destination ::TYPE_MOD_IMM
-                                  << static_cast<numeric_t>(util::to_integral(parameter::param_type::PT_NUMERIC));
+                                  << static_cast<numeric_t>(util::to_integral(entity_type::ET_NUMERIC));
                 pushed_params ++;
             }
 
@@ -88,7 +88,7 @@ bool primal::function_call::compile(primal::compiler *c)
             {
                 (*c->generator()) << opcodes::PUSH()
                                   << type_destination ::TYPE_MOD_IMM
-                                  << static_cast<numeric_t>(util::to_integral(parameter::param_type::PT_STRING));
+                                  << static_cast<numeric_t>(util::to_integral(entity_type::ET_STRING));
                 pushed_params ++;
 
             }

@@ -20,7 +20,7 @@ sequence::prepared_type kw_let::prepare(std::vector<token> &tokens)
     tokens.erase(tokens.begin());
     if(!variable::has_variable(m_name))
     {
-        throw primal::syntax_error("Not found a variable declaration:" + m_name);
+        throw primal::syntax_error("Not found a variable declaration: " + m_name);
     }
 
     // erasing the equality sign, check for error

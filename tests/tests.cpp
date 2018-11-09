@@ -6,6 +6,109 @@
 #include <iostream>
 
 
+
+
+TEST_CASE("Compiler compiles, functions with params - 3rd", "[compiler]")
+{
+
+    primal::options::instance().generate_assembly(true);
+
+    auto c = primal::compiler::create();
+
+    c->compile(R"code(
+                   var a
+                   fun some(integer a)
+                       var b
+                       let b = a
+                   endf
+                   var b
+                   let b = 77
+                   let a = 88
+                   some (b)
+
+               )code"
+             );
+
+    auto vm = primal::vm::create();
+    REQUIRE(vm->run(c->bytecode()));
+    REQUIRE(vm->get_mem(0) == 77);
+    REQUIRE(vm->get_mem(4) == 88);
+}
+
+/*
+TEST_CASE("Compiler compiles, functions with params - 2nd", "[compiler]")
+{
+
+    primal::options::instance().generate_assembly(true);
+
+    auto c = primal::compiler::create();
+
+    c->compile(R"code(
+                   var a
+                   fun some(integer a)
+                       var b
+                       let b = 55
+                       let a = 44
+                   endf
+                   var b
+                   let b = 77
+                   let a = 88
+                   some (b)
+
+               )code"
+             );
+
+    auto vm = primal::vm::create();
+    REQUIRE(vm->run(c->bytecode()));
+    REQUIRE(vm->get_mem(0) == 77);
+    REQUIRE(vm->get_mem(4) == 88);
+}
+
+/*
+
+TEST_CASE("Compiler compiles, functions with params - 1st", "[compiler]")
+{
+
+    primal::options::instance().generate_assembly(true);
+
+    auto c = primal::compiler::create();
+
+    c->compile(R"code(
+                   var a
+                   fun some(integer a)
+                       let a = 44
+                   endf
+                   let a = 88
+                   some (a)
+               )code"
+             );
+
+    auto vm = primal::vm::create();
+    REQUIRE(vm->run(c->bytecode()));
+    REQUIRE(vm->get_mem(0) == 88);
+}
+
+TEST_CASE("Compiler compiles, functions with params", "[compiler]")
+{
+
+    primal::options::instance().generate_assembly(true);
+
+    auto c = primal::compiler::create();
+
+    c->compile(R"code(
+                   fun some(integer a)
+                       var b
+                       let b = 55
+                       let a = 44
+                   endf
+                   some (4)
+               )code"
+             );
+
+    auto vm = primal::vm::create();
+    REQUIRE(vm->run(c->bytecode()));
+}
+
 TEST_CASE("Compiler compiles, functions 1", "[compiler]")
 {
     auto c = primal::compiler::create();
@@ -28,7 +131,7 @@ TEST_CASE("Compiler compiles, functions 1", "[compiler]")
     REQUIRE(vm->get_mem(0) == 44);
     REQUIRE(vm->get_mem(4) == 66);
 }
-/*
+
 TEST_CASE("ASM compiler - Reg byte mem access", "[asm-compiler]")
 {
     auto c = primal::compiler::create();
@@ -88,9 +191,10 @@ TEST_CASE("Compiler compiles, Simple write", "[compiler]")
 
     c->compile(R"code(
                    fun some(...)
+                       var int y
                        let y = 2
                    endf
-
+                   var x,z
                    let x = 12
                    some (4)
                    let z = 55
@@ -106,6 +210,7 @@ TEST_CASE("Script compiler - NOT operations", "[script-compiler]")
 {
     auto c = primal::compiler::create();
     c->compile(R"code(
+                      var x,y,z
                       let x = !1
                       let y = !0
                       let z = !(1+0)
@@ -123,6 +228,7 @@ TEST_CASE("Compiler compiles, IF test", "[compiler]")
     auto c = primal::compiler::create();
 
     c->compile(R"code(
+                   var x
                    let x = 1
                    if x == 1 then
                       let x = 3
@@ -139,6 +245,7 @@ TEST_CASE("Script compiler - 1 NOT operation", "[script-compiler]")
 {
     auto c = primal::compiler::create();
     c->compile(R"code(
+                      var x,y,z
                       let x = !1
                       let y = !0
                       let z = !(1+0)
@@ -210,6 +317,7 @@ TEST_CASE("Script compiler - XOR operations", "[script-compiler]")
 {
     auto c = primal::compiler::create();
     c->compile(R"code(
+                      var integer x
                       let x = 20
                       let x = x ^ 10
                 )code"
@@ -223,6 +331,7 @@ TEST_CASE("Script compiler - Basic memory access", "[script-compiler]")
 {
     std::shared_ptr<primal::compiler> c = primal::compiler::create();
     c->compile(R"code(
+                      var x
                       let x = 40
                 )code"
     );
@@ -236,6 +345,7 @@ TEST_CASE("Asm compiler - COPY test", "[asm-compiler]")
 {
     std::shared_ptr<primal::compiler> c = primal::compiler::create();
     c->compile(R"code(
+                     var x
                      let x = 313249263
                      asm COPY 4 0 4
                      asm MOV $r1@0 [@4]

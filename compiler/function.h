@@ -1,6 +1,8 @@
 #ifndef FUNCTION_H
 #define FUNCTION_H
 
+#include "parameter.h"
+
 #include <string>
 #include <map>
 #include <memory>
@@ -47,13 +49,19 @@ namespace primal {
 
         bool has_variadic_parameters() const
         {
-            return true;
+            return false;
         }
+
+        void identify_parameters(std::vector<token>& t);
 
         std::string name() const;
 
         void parse();
         bool compile(compiler *c);
+        parameter* get_parameter(const std::string& name);
+
+        // returns the parameters' index. Starts from 1.
+        int get_parameter_index(const parameter* p);
 
     private:
 
@@ -63,7 +71,7 @@ namespace primal {
         std::string m_name;
         std::vector<std::shared_ptr<sequence>> m_body;
         source& m_src;
-
+        std::vector<parameter> m_parameters;
     };
 
 }

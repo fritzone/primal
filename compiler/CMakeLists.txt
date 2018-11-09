@@ -25,6 +25,8 @@ set(${project}-sources
         ${CMAKE_CURRENT_SOURCE_DIR}/function_call.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/stringtable.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/function.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/parameter.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/types.cpp
 )
 
 set(${project}-headers
@@ -45,7 +47,8 @@ set(${project}-headers
         ${CMAKE_CURRENT_SOURCE_DIR}/function_call.h
         ${CMAKE_CURRENT_SOURCE_DIR}/stringtable.h
         ${CMAKE_CURRENT_SOURCE_DIR}/function.h
-
+        ${CMAKE_CURRENT_SOURCE_DIR}/parameter.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/types.h
 )
 
 ########################################################################################################################

@@ -7,7 +7,7 @@
 #include "label.h"
 #include "options.h"
 #include "util.h"
-#include "types.h"
+#include "type_destination_decl.h"
 #include "stringtable.h"
 #include "compiler.h"
 
@@ -65,7 +65,7 @@ generate &generate::operator<<(variable &&var)
     if(options::instance().generate_assembly()) {
 
         std::stringstream ss;
-        ss << "[" << (var.frame() ? "$r254+" : "") << address << "]";
+        ss << "[" << (var.frame() ? "$r254" + std::string(address>=0?"+":"") : "") << address << "]";
         options::instance().asm_stream() << std::setfill(' ') << std::left << std::setw(10) << ss.str();
         params_sent ++;
     }

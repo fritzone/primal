@@ -80,8 +80,21 @@ source &compiler::get_source()
     return m_src;
 }
 
-int compiler::next_varcount(fun* holder)
+int compiler::next_varcount(fun* holder, const std::string& name)
 {
+    if(holder)
+    {
+        parameter* p = holder->get_parameter(name);
+        if(p)
+        {
+            int idx = holder->get_parameter_index(p);
+            if(idx > 0)
+            {
+                return - (idx + 2 );   // if it is a parameter substract: BP - 2 * num-t_size - parcount * num-t_size
+            }
+        }
+    }
+
     if(m_varcounters.count(holder))
     {
         int retv = m_varcounters[holder];
@@ -107,9 +120,27 @@ int compiler::last_varcount(fun *holder)
 
 bool compiler::has_variable(const std::string &name)
 {
+    if(variables.count(m_current_frame) == 0)
+    {
+        return false;
+    }
+
+    // is this a paremeter to current frame?
+    if(m_current_frame)
+    {
+        if(m_current_frame->get_parameter(name))
+        {
+            return true;
+        }
+    }
+
     if (variables[m_current_frame].count(name) == 0)
     {
         // is it a global variable?
+        if(variables.count(nullptr) == 0)
+        {
+            return false;
+        }
         return (variables[nullptr].count(name) != 0);
     }
     else
@@ -120,8 +151,26 @@ bool compiler::has_variable(const std::string &name)
 
 std::shared_ptr<variable> compiler::get_variable(const std::string &name)
 {
+    if(variables.count(m_current_frame) == 0)
+    {
+        return std::shared_ptr<variable>();
+    }
+
+    // is this a paremeter to current frame?
+    if(m_current_frame)
+    {
+        if(m_current_frame->get_parameter(name) && variables[m_current_frame].count(name) == 0)
+        {
+            return create_variable(name);
+        }
+    }
+
     if(variables[m_current_frame].count(name) == 0)
     {
+        if(variables.count(nullptr) == 0)
+        {
+            return std::shared_ptr<variable>();
+        }
         if(variables[nullptr].count(name) == 0)
         {
             return std::shared_ptr<variable>();
@@ -133,7 +182,9 @@ std::shared_ptr<variable> compiler::get_variable(const std::string &name)
 
 std::shared_ptr<variable> compiler::create_variable(const std::string &name)
 {
+    std::cout << "CREATING VAR:" << name << std::endl;
     auto x = std::make_shared<variable>(this, name);
+    // this will create BOTH variables[m_current_frame] and also the corresponding name if there is none
     variables[m_current_frame][name] = x;
     return x;
 }
@@ -141,6 +192,8 @@ std::shared_ptr<variable> compiler::create_variable(const std::string &name)
 void compiler::set_frame(fun *f)
 {
     m_current_frame = f;
+    std::cout << "SETTING FRAME:" << f->name() << std::endl;
+
 }
 
 compiler::~compiler()

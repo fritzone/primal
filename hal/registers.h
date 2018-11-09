@@ -1,8 +1,10 @@
 #ifndef REGISTERS_H
 #define REGISTERS_H
 
+#include "numeric_decl.h"
+#include "type_destination_decl.h"
+
 #include <stdint.h>
-#include <types.h>
 
 #include <map>
 #include <functional>
