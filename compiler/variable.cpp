@@ -48,6 +48,7 @@ bool variable::has_variable(const std::string & name)
 void variable::reset()
 {
     variables.clear();
+    working_function = "";
 }
 
 void variable::introduce_name(const std::string &name, entity_type et, entity_origin eo)

@@ -178,7 +178,7 @@ generate &generate::operator <<(type_destination td)
 
 generate &generate::operator <<(numeric_t v)
 {
-    if(options::instance().generate_assembly()) { options::instance().asm_stream() << v; }
+    if(options::instance().generate_assembly()) { options::instance().asm_stream() << std::dec << std::setw(10) << v; }
 
     numeric_t vm_v = htovm(v);
     compiled_code::instance(m_compiler).append_number(vm_v);

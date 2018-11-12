@@ -11,6 +11,7 @@ namespace primal
     {
         ET_NUMERIC = 0,
         ET_STRING = 1,
+        ET_ELLIPSIS = 2,
         ET_UNKNOWN = 255
     };
 

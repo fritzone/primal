@@ -64,7 +64,42 @@ void asm_compiler::generate_assembly_code(const primal::opcodes::opcode& opc, co
                     }
                     else
                     {
-                        throw syntax_error("Invalid memory access");
+                        // let's see if there is a - or a + in the td
+                        int curr_op = 0; // no operations, 1 : +, 2 : -
+                        auto oppos = td.find_first_of('-') ;
+                        if(oppos != std::string::npos)
+                        {
+                            curr_op = 2;
+
+                        }
+                        else
+                        {
+                            oppos = td.find_first_of('+') ;
+                        }
+                        if(oppos != std::string::npos)
+                        {
+                            curr_op = 1;
+                        }
+
+                        if(curr_op == 0) throw syntax_error("Invalid memory access: " + td);
+
+                        std::string reg = td.substr(0, oppos);
+                        std::string distance = td.substr(oppos); // this will take in + or - too
+                        token t_reg(reg, token::type::TT_REGISTER);
+                        int dist = std::stoi(distance);
+
+                        if(t_reg.is_register())
+                        {
+                            auto r = t_reg.create_register();
+                            result.push_back(static_cast<uint8_t>(util::to_integral(type_destination ::TYPE_MOD_MEM_REG_IDX_OFFS)));
+                            result.push_back(r.idx());
+                            numeric_t nv = htovm(dist);
+
+                            for(std::size_t i = 0; i< num_t_size; i++)
+                            {
+                                result.push_back( * ((reinterpret_cast<uint8_t *>(&nv) + i ) ));
+                            }
+                        }
                     }
                 }
                 else

@@ -2,6 +2,7 @@
 #define OPTIONS_H
 
 #include <sstream>
+#include <iostream>
 
 namespace primal
 {
@@ -15,7 +16,7 @@ namespace primal
         bool generate_assembly() const;
         void generate_assembly(bool);
 
-        std::stringstream& asm_stream() { return m_asm_stream; }
+        auto& asm_stream() { return std::cout; }
 
     private:
 
@@ -24,7 +25,7 @@ namespace primal
         // whether the compilation phase will also show the generated assembly
         bool m_generate_assembly = false;
 
-        std::stringstream m_asm_stream;
+//        auto m_asm_stream = std::cout;
     };
 
 }

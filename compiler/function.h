@@ -49,7 +49,7 @@ namespace primal {
 
         bool has_variadic_parameters() const
         {
-            return false;
+            return m_variadic;
         }
 
         void identify_parameters(std::vector<token>& t);
@@ -72,6 +72,7 @@ namespace primal {
         std::vector<std::shared_ptr<sequence>> m_body;
         source& m_src;
         std::vector<parameter> m_parameters;
+        bool m_variadic = false;
     };
 
 }

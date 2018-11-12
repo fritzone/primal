@@ -200,10 +200,10 @@ compiler::~compiler()
 {
     if(options::instance().generate_assembly())
     {
-        std::string s = options::instance().asm_stream().str();
-        std::cout << "-------------------------------------------------" << std::endl << s << std::endl;
-        options::instance().asm_stream().clear();
-        options::instance().asm_stream().str(std::string());
+        //std::string s = options::instance().asm_stream().str();
+        std::cout << "-------------------------------------------------" << std::endl << std::endl;
+        ///options::instance().asm_stream().clear();
+        //options::instance().asm_stream().str(std::string());
     }
 
     compiled_code::instance(this).destroy();

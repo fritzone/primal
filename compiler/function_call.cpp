@@ -108,18 +108,19 @@ bool primal::function_call::compile(primal::compiler *c)
         }
     }
 
+    // now, if variadic function push the number of parameters
+    if(f->has_variadic_parameters())
+    {
+        (*c->generator()) << opcodes::PUSH()
+                          << type_destination ::TYPE_MOD_IMM << pushed_params / 2;
+        pushed_params ++;
+    }
+
     // and now actually call the function
     (*c->generator()) << opcodes::CALL() << label(c->get_source(), f->name());
 
-    // and now actually rermove the pushed elements from the stack
-    (*c->generator()) << opcodes::SUB() << reg(255) << type_destination::TYPE_MOD_IMM << (pushed_params *  static_cast<numeric_t>(num_t_size));
-
-    // compiled_code::instance(c).encountered(f->name(), true);
-    // put out a bogus location, will be fixed in the finalize stage
-    /*for(size_t i=0; i<num_t_size; i++)
-    {
-        compiled_code::instance(c).append (0xFF);
-    }*/
+    // and now actually remove the pushed elements from the stack
+    (*c->generator()) << opcodes::SUB() << reg(255) << type_destination::TYPE_MOD_IMM << (pushed_params * num_t_size);
 
 
     return true;

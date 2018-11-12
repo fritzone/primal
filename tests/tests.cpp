@@ -5,26 +5,67 @@
 #include <options.h>
 #include <iostream>
 
-
-
-
-TEST_CASE("Compiler compiles, functions with params - 3rd", "[compiler]")
+/*
+TEST_CASE("ASM compiler - Reg offseted Indexed mem access", "[asm-compiler]")
 {
+    primal::options::instance().generate_assembly(true);
 
+    auto c = primal::compiler::create();
+    c->compile(R"code(
+                      asm MOV [$r1+0] 20
+                      asm MOV $r2 [$r1]
+                      asm MOV [$r2-0] 32
+                      asm MOV $r10   [$r254-4]
+
+                )code"
+    );
+
+    auto vm = primal::vm::create();
+    REQUIRE(vm->run(c->bytecode()));
+    REQUIRE(vm->get_mem(0) == 20);
+    REQUIRE(vm->r(2).value() == 20);
+    REQUIRE(vm->get_mem(20) == 32);
+}
+*/
+
+
+TEST_CASE("Compiler compiles, write function", "[compiler]")
+{
     primal::options::instance().generate_assembly(true);
 
     auto c = primal::compiler::create();
 
     c->compile(R"code(
+                   fun write(...)
+                       asm MOV $r10   [$r254-4]
+                   endf
+                   write(4)
+               )code"
+             );
+
+    auto vm = primal::vm::create();
+    REQUIRE(vm->run(c->bytecode()));
+    REQUIRE(vm->get_mem(0) == 12);
+}
+
+/*
+TEST_CASE("Compiler compiles, functions with params - 3rd", "[compiler]")
+{
+
+
+    auto c = primal::compiler::create();
+
+    c->compile(R"code(
                    var a
-                   fun some(integer a)
-                       var b
+                   fun some(integer a x)
+                       var b,z
                        let b = a
+                       let z = x
                    endf
                    var b
                    let b = 77
                    let a = 88
-                   some (b)
+                   some (b a)
 
                )code"
              );
@@ -34,8 +75,8 @@ TEST_CASE("Compiler compiles, functions with params - 3rd", "[compiler]")
     REQUIRE(vm->get_mem(0) == 77);
     REQUIRE(vm->get_mem(4) == 88);
 }
-
 /*
+
 TEST_CASE("Compiler compiles, functions with params - 2nd", "[compiler]")
 {
 
@@ -64,7 +105,7 @@ TEST_CASE("Compiler compiles, functions with params - 2nd", "[compiler]")
     REQUIRE(vm->get_mem(4) == 88);
 }
 
-/*
+
 
 TEST_CASE("Compiler compiles, functions with params - 1st", "[compiler]")
 {

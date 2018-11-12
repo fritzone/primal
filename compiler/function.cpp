@@ -26,9 +26,19 @@ void fun::identify_parameters(std::vector<token> &tokens)
 {
     entity_type current_parameter_type = entity_type::ET_UNKNOWN;
 
-    if(get_entity_type(tokens[0].data()) == entity_type::ET_UNKNOWN)
+    while(!tokens.empty() && tokens[0].get_type() == token::type::TT_OPEN_PARENTHESES) tokens.erase(tokens.begin());
+
+    auto tt0_type = get_entity_type(tokens[0].data());
+
+    if(tt0_type == entity_type::ET_UNKNOWN)
     {
         current_parameter_type = entity_type::ET_NUMERIC;
+    }
+    else
+    if(tt0_type == entity_type::ET_ELLIPSIS)
+    {
+        m_variadic = true;
+        return;
     }
     else
     {
@@ -45,6 +55,11 @@ void fun::identify_parameters(std::vector<token> &tokens)
         if(t.get_type() != token::type::TT_COMMA && t.get_type() != token::type::TT_CLOSE_PARENTHESES && t.get_type() != token::type::TT_OPEN_PARENTHESES )
         {
             entity_type type_2 = get_entity_type(t.data());
+            if(type_2 == entity_type::ET_ELLIPSIS)
+            {
+                m_variadic = true;
+            }
+            else
             if(type_2 == entity_type::ET_UNKNOWN) // still a parameter name
             {
                 m_parameters.push_back({t.data(), current_parameter_type});
