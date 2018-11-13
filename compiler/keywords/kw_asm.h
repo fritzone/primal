@@ -21,7 +21,8 @@ namespace primal
     private:
 
         std::vector<uint8_t> m_precompiled;
-        std::string m_assembler_code; // this is the assembler code that was generated for this
+        std::string m_opcode;
+        std::vector<token> m_tokens;
     };
 
 }

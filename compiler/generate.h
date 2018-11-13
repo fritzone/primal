@@ -10,6 +10,8 @@
 
 namespace primal
 {
+    const size_t PRIMAL_HEADER_SIZE = 16;
+
     namespace opcodes { struct opcode; }
 
     class variable;

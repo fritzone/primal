@@ -65,9 +65,18 @@ namespace primal
         {
             auto f = [&](vm* machina) -> bool {return ex(machina);};
             executor t;
-            t.opcode_runner = std::function<bool(vm*)>(f);
-            vm_runner[o.bin()] = t;
+            t.runner = std::function<bool(vm*)>(f);
+            opcode_runners[o.bin()] = t;
         };
+
+        template<class EXECUTOR>
+        static void register_interrupt(uint8_t intrn, EXECUTOR&& ex)
+        {
+            auto f = [&](vm* machina) -> bool {return ex(machina);};
+            executor t;
+            t.runner = std::function<bool(vm*)>(f);
+            interrupts[intrn] = t;
+        }
 
         [[noreturn]] void panic() ;
 
@@ -79,16 +88,24 @@ namespace primal
 
         bool call(numeric_t v);
 
+        // will perform the required interrupt
+        // After execution the state of the VM must be the one specified in the interrupts documentation
+        bool interrupt(uint8_t i);
+
+        // returns true if the given number can be mapped in the memory space of the VM
+        bool address_is_valid(numeric_t addr);
+
         void bindump(numeric_t start = -1, numeric_t end = -1, bool insert_addr = true);
         
     private:
 
         struct executor
         {
-            std::function<bool(vm*)> opcode_runner;
+            std::function<bool(vm*)> runner;
         };
 
-        static std::map<uint8_t, executor> vm_runner;
+        static std::map<uint8_t, executor> opcode_runners;
+        static std::map<uint8_t, executor> interrupts;
 
         reg m_r[VM_REG_COUNT];              // the registers of the machine
         numeric_t m_ip = 0;               // the instructions pointer

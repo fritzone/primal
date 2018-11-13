@@ -19,8 +19,6 @@
 
 using namespace primal;
 
-const size_t PRIMAL_HEADER_SIZE = 16;
-
 std::map<const compiler*, std::shared_ptr<compiled_code>> compiled_code::compilers_codes;
 
 generate::generate(compiler* c) : m_compiler(c)

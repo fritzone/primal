@@ -5,6 +5,25 @@
 #include <options.h>
 #include <iostream>
 
+TEST_CASE("Compiler compiles, interrupts", "[asm-compiler]")
+{
+    primal::options::instance().generate_assembly(true);
+
+    auto c = primal::compiler::create();
+
+    c->compile(R"code(
+                     asm MOV $r1 0
+                     asm MOV $r2 42
+                     asm INTR 1
+               )code"
+             );
+
+    auto vm = primal::vm::create();
+    REQUIRE(vm->run(c->bytecode()));
+    REQUIRE(vm->get_mem(0) == 12);
+}
+
+
 /*
 TEST_CASE("ASM compiler - Reg offseted Indexed mem access", "[asm-compiler]")
 {
@@ -26,7 +45,7 @@ TEST_CASE("ASM compiler - Reg offseted Indexed mem access", "[asm-compiler]")
     REQUIRE(vm->r(2).value() == 20);
     REQUIRE(vm->get_mem(20) == 32);
 }
-*/
+
 
 
 TEST_CASE("Compiler compiles, write function", "[compiler]")
