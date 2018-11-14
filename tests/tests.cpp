@@ -5,6 +5,51 @@
 #include <options.h>
 #include <iostream>
 
+
+TEST_CASE("Compiler compiles, simple if 1", "[compiler]")
+{
+    primal::options::instance().generate_assembly(true);
+
+    auto c = primal::compiler::create();
+
+    c->compile(R"code(
+                   var a
+                   let a = 3
+                   if a == 2 | a == 3 then
+                         let a = 3
+                   endif
+               )code"
+             );
+
+    auto vm = primal::vm::create();
+    REQUIRE(vm->run(c->bytecode()));
+    REQUIRE(vm->get_mem(0) == 3);
+}
+
+/*
+TEST_CASE("Compiler compiles, if in if", "[compiler]")
+{
+
+    auto c = primal::compiler::create();
+
+    c->compile(R"code(
+                   var a,b
+                   let a = 2
+                   let b = 3
+                   if a == 2 then
+                      if b == 3 then
+                         let    a = 5
+                      endif
+                   endif
+               )code"
+             );
+
+    auto vm = primal::vm::create();
+    REQUIRE(vm->run(c->bytecode()));
+    REQUIRE(vm->get_mem(0) == 5);
+}
+
+/*
 TEST_CASE("Compiler compiles, interrupts", "[asm-compiler]")
 {
     primal::options::instance().generate_assembly(true);

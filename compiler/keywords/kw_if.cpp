@@ -43,14 +43,20 @@ sequence::prepared_type kw_if::prepare(std::vector<token> &tokens)
 
 bool kw_if::compile(compiler* c)
 {
-    // to compile the expression
+    // to compile the expression on which the IF takes its decision
     sequence::compile(c);
 
     // and set up the jumps depending on the trueness of the expression
     label lbl_after_if = label::create(c->get_source());
     label lbl_if_body = label::create(c->get_source());
 
-    (*c->generator()) << (dynamic_cast<comp*>(operators[m_root->data.data()].get()))->jump << lbl_if_body;
+    // let's get the comparator for this IF
+    comp* comparator = dynamic_cast<comp*>(operators[m_root->data.data()].get());
+    if(!comparator)
+    {
+        throw syntax_error("Invalid IF statement condition. Nothing to compare");
+    }
+    (*c->generator()) << comparator->jump << lbl_if_body;
     (*c->generator()) << DJMP() << lbl_after_if;
 
     (*c->generator()) << declare_label(lbl_if_body);
