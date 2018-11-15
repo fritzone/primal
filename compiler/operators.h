@@ -16,15 +16,18 @@ namespace primal
             ("*",  util::make_unique<ops> ("*", PRIO_20, new opcodes::MUL))
             ("/",  util::make_unique<ops> ("/", PRIO_20, new opcodes::DIV))
             ("%",  util::make_unique<ops> ("%", PRIO_20, new opcodes::MOD))
+            ("|",  util::make_unique<ops> ("|", PRIO_40, new opcodes::OR ))
             ("^",  util::make_unique<ops> ("^", PRIO_40, new opcodes::XOR))
-            ("|",  util::make_unique<comp>("|", PRIO_40, new opcodes::OR, new opcodes::DJT ))
-            ("&",  util::make_unique<comp>("&", PRIO_30, new opcodes::AND,new opcodes::DJT))
+            ("&",  util::make_unique<ops> ("&", PRIO_30, new opcodes::AND))
             ("==", util::make_unique<comp>("==",PRIO_50, new opcodes::EQ, new opcodes::DJT ))
             ("!=", util::make_unique<comp>("!=",PRIO_50, new opcodes::EQ, new opcodes::DJNT))
             ("<",  util::make_unique<comp>("<", PRIO_50, new opcodes::LT, new opcodes::DJT ))
             (">",  util::make_unique<comp>(">", PRIO_50, new opcodes::GT, new opcodes::DJT ))
             ("<=", util::make_unique<comp>("<=",PRIO_50, new opcodes::LTE,new opcodes::DJT ))
             (">=", util::make_unique<comp>(">=",PRIO_50, new opcodes::GTE,new opcodes::DJT ))
+            ("and",util::make_unique<comp>("and",PRIO_45, new opcodes::AND, new opcodes::DJT ))
+            ("or", util::make_unique<comp>("or",PRIO_47, new opcodes::OR, new opcodes::DJT ))
+
     ;
 
 }

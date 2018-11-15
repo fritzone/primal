@@ -54,7 +54,6 @@ void variable::reset()
 void variable::introduce_name(const std::string &name, entity_type et, entity_origin eo)
 {
     std::string vn = working_function.empty()? name : working_function + ":" + name;
-    std::cout << "introducing " << vn << std::endl;
     variables.push_back ( {vn, et, eo} );
 
 }

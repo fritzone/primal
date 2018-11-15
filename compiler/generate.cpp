@@ -246,7 +246,7 @@ void compiled_code::finalize()
     {
         bytes.insert(bytes.begin(), 0xFF);
     }
-    // insert the index of thestac segments' start
+    // insert the index of the stack segments' start
     for(size_t i=0; i<num_t_size; i++)
     {
         bytes.insert(bytes.begin(), 0xFF);

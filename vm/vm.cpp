@@ -21,7 +21,7 @@ using namespace primal;
 std::map<uint8_t, vm::executor> vm::opcode_runners;
 std::map<uint8_t, vm::executor> vm::interrupts;
 
-vm::vm() : sp(r(255))
+vm::vm() : m_lbo(r(253)), sp(r(255))
 {
     for(uint8_t i = 0; i<255; i++)
     {
@@ -37,7 +37,7 @@ vm::~vm()
 
 bool vm::run(const std::vector<uint8_t> &app)
 {
-    // firstly set up the memory segment for this machine and initialize it to 0xFF
+    // firstly set up the memory segment for this machine and initialize it to 0x00
     app_size = static_cast<numeric_t>(app.size());
     ms = std::make_unique<uint8_t[]>(static_cast<size_t>(app_size + VM_MEM_SEGMENT_SIZE));
     std::fill(ms.get(), ms.get() + VM_MEM_SEGMENT_SIZE + app_size, 0x00);
@@ -80,7 +80,7 @@ bool vm::run(const std::vector<uint8_t> &app)
         }
         if(ms[static_cast<size_t>(m_ip)] == 0xFF)
         {
-            bindump();
+            //bindump();
             return true;
         }
     }

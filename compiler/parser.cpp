@@ -40,7 +40,7 @@ std::vector<token> parser::shuntyard(std::vector<token>& tokens)
                 stck.push(t);
             }
             else
-            if (tt == token::type::TT_OPERATOR || tt == token::type::TT_COMPARISON) // is this an operator?
+            if (tt == token::type::TT_OPERATOR || tt == token::type::TT_COMPARISON || tt == token::type::TT_LOGICAL) // is this an operator?
             {
                 if (!stck.empty())
                 {

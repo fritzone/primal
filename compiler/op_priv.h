@@ -5,6 +5,8 @@ static constexpr int PRIO_10 = 10;   // addition and subtraction
 static constexpr int PRIO_20 = 20;   // multiplication, division and modulo
 static constexpr int PRIO_30 = 30;   // and
 static constexpr int PRIO_40 = 40;   // or
+static constexpr int PRIO_45 = 45;   // logical and
+static constexpr int PRIO_47 = 47;   // logical or
 static constexpr int PRIO_50 = 50;   // comparison
 
 namespace primal

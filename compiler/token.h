@@ -39,6 +39,7 @@ namespace primal
             TT_COMMA                = 16,
             TT_FUNCTION_CALL        = 17,
             TT_DOT                  = 18,
+            TT_LOGICAL              = 19,
             TT_UNKNOWN              = 255
         };
 

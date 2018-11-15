@@ -84,6 +84,10 @@ std::vector<token> lexer::tokenize()
             {
                 current_token.set_type(token::type::TT_COMPARISON);
             }
+            if(util::is_logical_op(s))
+            {
+                current_token.set_type(token::type::TT_LOGICAL);
+            }
         }
         result.push_back(current_token);
         if(current_token.get_type() == token::type::TT_COMMENT_LINE) break;

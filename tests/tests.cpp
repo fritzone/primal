@@ -5,17 +5,54 @@
 #include <options.h>
 #include <iostream>
 
+// primal::options::instance().generate_assembly(true);
+
+TEST_CASE("Compiler compiles, simple add", "[compiler]")
+{
+    primal::options::instance().generate_assembly(true);
+    auto c = primal::compiler::create();
+
+    c->compile(R"code(
+                   var a
+                   let a = 2 + 3
+               )code"
+             );
+
+    auto vm = primal::vm::create();
+    REQUIRE(vm->run(c->bytecode()));
+    REQUIRE(vm->get_mem(0) == 5);
+}
+
+
+/*
+TEST_CASE("Compiler compiles, simple if 2", "[compiler]")
+{
+    auto c = primal::compiler::create();
+
+    c->compile(R"code(
+                   var a,b,c
+                   let a = 3
+                   let b = 4
+                   let c = 5
+                   if a == 2 or a == 3 and c == 5 then
+                         let a = 9
+                   endif
+               )code"
+             );
+
+    auto vm = primal::vm::create();
+    REQUIRE(vm->run(c->bytecode()));
+    REQUIRE(vm->get_mem(0) == 9);
+}
 
 TEST_CASE("Compiler compiles, simple if 1", "[compiler]")
 {
-    primal::options::instance().generate_assembly(true);
-
     auto c = primal::compiler::create();
 
     c->compile(R"code(
                    var a
                    let a = 3
-                   if a == 2 | a == 3 then
+                   if a == 2 or a == 3 then
                          let a = 3
                    endif
                )code"
@@ -26,7 +63,7 @@ TEST_CASE("Compiler compiles, simple if 1", "[compiler]")
     REQUIRE(vm->get_mem(0) == 3);
 }
 
-/*
+
 TEST_CASE("Compiler compiles, if in if", "[compiler]")
 {
 
@@ -49,11 +86,9 @@ TEST_CASE("Compiler compiles, if in if", "[compiler]")
     REQUIRE(vm->get_mem(0) == 5);
 }
 
-/*
+
 TEST_CASE("Compiler compiles, interrupts", "[asm-compiler]")
 {
-    primal::options::instance().generate_assembly(true);
-
     auto c = primal::compiler::create();
 
     c->compile(R"code(
@@ -65,22 +100,18 @@ TEST_CASE("Compiler compiles, interrupts", "[asm-compiler]")
 
     auto vm = primal::vm::create();
     REQUIRE(vm->run(c->bytecode()));
-    REQUIRE(vm->get_mem(0) == 12);
 }
 
 
-/*
+
 TEST_CASE("ASM compiler - Reg offseted Indexed mem access", "[asm-compiler]")
 {
-    primal::options::instance().generate_assembly(true);
 
     auto c = primal::compiler::create();
     c->compile(R"code(
                       asm MOV [$r1+0] 20
                       asm MOV $r2 [$r1]
                       asm MOV [$r2-0] 32
-                      asm MOV $r10   [$r254-4]
-
                 )code"
     );
 
@@ -91,28 +122,6 @@ TEST_CASE("ASM compiler - Reg offseted Indexed mem access", "[asm-compiler]")
     REQUIRE(vm->get_mem(20) == 32);
 }
 
-
-
-TEST_CASE("Compiler compiles, write function", "[compiler]")
-{
-    primal::options::instance().generate_assembly(true);
-
-    auto c = primal::compiler::create();
-
-    c->compile(R"code(
-                   fun write(...)
-                       asm MOV $r10   [$r254-4]
-                   endf
-                   write(4)
-               )code"
-             );
-
-    auto vm = primal::vm::create();
-    REQUIRE(vm->run(c->bytecode()));
-    REQUIRE(vm->get_mem(0) == 12);
-}
-
-/*
 TEST_CASE("Compiler compiles, functions with params - 3rd", "[compiler]")
 {
 
@@ -139,12 +148,10 @@ TEST_CASE("Compiler compiles, functions with params - 3rd", "[compiler]")
     REQUIRE(vm->get_mem(0) == 77);
     REQUIRE(vm->get_mem(4) == 88);
 }
-/*
+
 
 TEST_CASE("Compiler compiles, functions with params - 2nd", "[compiler]")
 {
-
-    primal::options::instance().generate_assembly(true);
 
     auto c = primal::compiler::create();
 
@@ -174,8 +181,6 @@ TEST_CASE("Compiler compiles, functions with params - 2nd", "[compiler]")
 TEST_CASE("Compiler compiles, functions with params - 1st", "[compiler]")
 {
 
-    primal::options::instance().generate_assembly(true);
-
     auto c = primal::compiler::create();
 
     c->compile(R"code(
@@ -195,8 +200,6 @@ TEST_CASE("Compiler compiles, functions with params - 1st", "[compiler]")
 
 TEST_CASE("Compiler compiles, functions with params", "[compiler]")
 {
-
-    primal::options::instance().generate_assembly(true);
 
     auto c = primal::compiler::create();
 

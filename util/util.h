@@ -15,6 +15,7 @@ namespace util
     bool is_operator(char c);
     bool is_comparison(const std::string& s);
     bool is_number(const std::string& s);
+    bool is_logical_op(const std::string &s);
 
     void skip_whitepsace(size_t& i, const std::string& s);
 

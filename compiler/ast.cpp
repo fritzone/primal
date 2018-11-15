@@ -21,7 +21,11 @@ void primal::ast::build_ast(std::vector<token>& output, std::shared_ptr<ast>& cr
         output.erase(output.begin());
 
         // are we supposed to return from here?
-        if (t.get_type() == token::type::TT_OPERATOR || t.get_type() == token::type::TT_COMPARISON || t.get_type() == token::type::TT_EXCLAMATION)
+        if (t.get_type() == token::type::TT_OPERATOR ||
+            t.get_type() == token::type::TT_COMPARISON ||
+            t.get_type() == token::type::TT_LOGICAL ||
+            t.get_type() == token::type::TT_EXCLAMATION
+           )
         {
             // build the right part
             build_ast(output, croot->right);

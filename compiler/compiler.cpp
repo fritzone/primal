@@ -182,7 +182,6 @@ std::shared_ptr<variable> compiler::get_variable(const std::string &name)
 
 std::shared_ptr<variable> compiler::create_variable(const std::string &name)
 {
-    std::cout << "CREATING VAR:" << name << std::endl;
     auto x = std::make_shared<variable>(this, name);
     // this will create BOTH variables[m_current_frame] and also the corresponding name if there is none
     variables[m_current_frame][name] = x;
@@ -192,8 +191,6 @@ std::shared_ptr<variable> compiler::create_variable(const std::string &name)
 void compiler::set_frame(fun *f)
 {
     m_current_frame = f;
-    std::cout << "SETTING FRAME:" << f->name() << std::endl;
-
 }
 
 compiler::~compiler()

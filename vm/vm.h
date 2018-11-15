@@ -83,8 +83,8 @@ namespace primal
         valued* fetch();
 
         // the flag of the last operation
-        bool flag() const {return m_lbo;}
-        bool& flag() {return m_lbo;}
+        numeric_t flag() const {return m_lbo.value();}
+        numeric_t& flag() {return m_lbo.value();}
 
         bool call(numeric_t v);
 
@@ -118,7 +118,7 @@ namespace primal
         int mb_i = 0;
         int ma_i = 0;
         std::size_t mi_i = 0;
-        bool m_lbo = false; // the last operations' result. This is set to false if the result was 0
+        reg& m_lbo; // the last operations' result. This is set to false if the result was 0
         numeric_t app_size = -1;
         numeric_t max_used_sp = 0;
         numeric_t stack_offset = 0;
