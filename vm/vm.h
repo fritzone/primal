@@ -5,41 +5,137 @@
 #include <numeric_decl.h>
 #include <registers.h>
 
-#include <vector>
-#include <map>
-#include <functional>
 #include <memory>
-#include <array>
+#include <vector>
 
 namespace primal
 {
+
+    class vm_impl;
+
+    /**
+     * @brief The vm class is responsible for running compiled bytecode
+     */
     class vm final
     {
 
     public:
 
-        vm();
-        ~vm();
-
+        /**
+         * @brief create Will create a new virtual machine you can use to run code
+         * @return A newly created virtual machine (wrapped in a std::shared_ptr)
+         */
         static std::shared_ptr<vm> create();
 
-        // will run the given application
+    public:
+
+        /**
+         * @brief vm Constructor, initializes the object
+         */
+        vm();
+
+        /**
+         * @brief run will run the given compiled application. You can use this together with the result
+         *            of the compiler
+         *
+         * You can use this method to run the compiled bytecode. The method will return true if it managed
+         * to run fully the application which exited normally. Every other situation will be rewarded by
+         * throwing a primal::vm_panic exception.
+         *
+         * @throws primal::vm_panic in case of invalid bytecode
+         * @param app the application to run
+         * @return the method returns only true or it throws an exception
+         */
         bool run(const std::vector<uint8_t>& app);
 
-        // access function for the IP. You can use this to modify it though for faster access
-        numeric_t& ip()      {return m_ip;}
-        numeric_t ip() const {return m_ip;}
+        /**
+         * @brief ip Access function for the IP of the VM.
+         *
+         * This gives R/W acces, so You can use this to modify its value.
+         *
+         * @return the IP of the application
+         */
+        numeric_t& ip();
 
-        // will set the memory at the given addres to the new value
+        /**
+         * @brief ip Access function for the IP of the VM.
+         *
+         * This gives R/O acces, so You cannot use this to modify its value.
+         *
+         * @return the IP of the application
+         */
+        numeric_t ip() const;
+
+        /**
+         * @brief set_mem will set the memory at the given addres to the new value
+         *
+         * You can use this method to set a word in the memory of the virtual machine to the specified value. If
+         * the address is invalid (ie: less tan 0 or greater than the allocated memory segments' size) the
+         * application will throw a primal::vm_panic exception
+         *
+         * @throws primal::vm_panic in case of invalid address
+         * @param address the address where the word will be placed
+         * @param new_value the value that will be placed in the memory
+         */
         void set_mem(numeric_t address, numeric_t new_value);
+
+        /**
+         * @brief get_mem can be used to fetch a word from the memory of the virtual machine
+         *
+         * You can use this method to get a word from the memory of the virtual machine. If
+         * the address is invalid (ie: less tan 0 or greater than the allocated memory segments' size) the
+         * application will throw a primal::vm_panic exception
+         *
+         * @throws primal::vm_panic in case of invalid address
+         * @param address from where to get the word from the memory
+         * @return the value as read from the memory
+         */
         numeric_t get_mem(numeric_t address);
 
+        /**
+         * @brief set_mem_byte will set the byte in the memory at the given addres to the new byte value
+         *
+         * You can use this method to set a byte in the memory of the virtual machine to the specified value. If
+         * the address is invalid (ie: less tan 0 or greater than the allocated memory segments' size) the
+         * application will throw a primal::vm_panic exception
+         *
+         * @throws primal::vm_panic in case of invalid address
+         * @param address the address where we want to change the byte
+         * @param new_value the new value that will be written to the address
+         */
         void set_mem_byte(numeric_t address, uint8_t b);
+        /**
+         * @brief get_mem can be used to fetch a word from the memory of the virtual machine
+         *
+         * You can use this method to get a word from the memory of the virtual machine. If
+         * the address is invalid (ie: less tan 0 or greater than the allocated memory segments' size) the
+         * application will throw a primal::vm_panic exception
+         *
+         * @throws primal::vm_panic in case of invalid address
+         * @param address from where to get the word from the memory
+         * @return the value as read from the memory
+         */
         uint8_t get_mem_byte(numeric_t address);
 
-        // access function for the given register. You can use this to modify it though for faster access
-        reg& r(uint8_t i)             { return m_r[i];}
-        const reg& r(uint8_t i) const { return m_r[i];}
+        /**
+         * @brief r is access function for the the given register.
+         *
+         * You can use this to modify the value of the register
+         *
+         * @param i the index of the register
+         * @return a \c reg object to access the value of the register
+         */
+        reg& r(uint8_t i);
+
+        /**
+         * @brief r is access function for the the given register.
+         *
+         * You can use this to read the value of the register
+         *
+         * @param i the index of the register
+         * @return a \c reg object to read the value of the register
+         */
+        const reg& r(uint8_t i) const;
 
         // access function for a given sub reg byte
         reg_subbyte* rsb(uint8_t ridx, uint8_t bidx);
@@ -60,31 +156,15 @@ namespace primal
 
         numeric_t pop();
 
-        template<class OPC, class EXECUTOR>
-        static void register_opcode(OPC&& o, EXECUTOR&& ex)
-        {
-            auto f = [&](vm* machina) -> bool {return ex(machina);};
-            executor t;
-            t.runner = std::function<bool(vm*)>(f);
-            opcode_runners[o.bin()] = t;
-        };
 
-        template<class EXECUTOR>
-        static void register_interrupt(uint8_t intrn, EXECUTOR&& ex)
-        {
-            auto f = [&](vm* machina) -> bool {return ex(machina);};
-            executor t;
-            t.runner = std::function<bool(vm*)>(f);
-            interrupts[intrn] = t;
-        }
 
         [[noreturn]] void panic() ;
 
         valued* fetch();
 
         // the flag of the last operation
-        numeric_t flag() const {return m_lbo.value();}
-        numeric_t& flag() {return m_lbo.value();}
+        numeric_t flag() const;
+        numeric_t& flag();
 
         bool call(numeric_t v);
 
@@ -99,30 +179,8 @@ namespace primal
         
     private:
 
-        struct executor
-        {
-            std::function<bool(vm*)> runner;
-        };
+        std::shared_ptr<vm_impl> impl;
 
-        static std::map<uint8_t, executor> opcode_runners;
-        static std::map<uint8_t, executor> interrupts;
-
-        reg m_r[VM_REG_COUNT];              // the registers of the machine
-        numeric_t m_ip = 0;               // the instructions pointer
-        std::unique_ptr<uint8_t[]> ms;      // the memory segment
-
-        reg_subbyte t1 {&this->r(0), 0};
-        std::array<immediate, 3> imv = { immediate{-1}, immediate{-1}, immediate{-1}} ;
-        memaddress_byte_ref mb[2];
-        memaddress ma[2];
-        int mb_i = 0;
-        int ma_i = 0;
-        std::size_t mi_i = 0;
-        reg& m_lbo; // the last operations' result. This is set to false if the result was 0
-        numeric_t app_size = -1;
-        numeric_t max_used_sp = 0;
-        numeric_t stack_offset = 0;
-        reg& sp;
     };
 
 }

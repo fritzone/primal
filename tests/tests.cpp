@@ -7,9 +7,28 @@
 
 // primal::options::instance().generate_assembly(true);
 
-TEST_CASE("Compiler compiles, simple add", "[compiler]")
+
+TEST_CASE("Compiler compiles, simple goto", "[compiler]")
 {
     primal::options::instance().generate_assembly(true);
+    auto c = primal::compiler::create();
+
+    c->compile(R"code(
+                   var a
+                   let a = 5
+                   goto skip
+                   let a = 6
+                   :skip
+               )code"
+             );
+
+    auto vm = primal::vm::create();
+    REQUIRE(vm->run(c->bytecode()));
+    REQUIRE(vm->get_mem(0) == 5);
+}
+
+TEST_CASE("Compiler compiles, simple add", "[compiler]")
+{
     auto c = primal::compiler::create();
 
     c->compile(R"code(
@@ -24,7 +43,6 @@ TEST_CASE("Compiler compiles, simple add", "[compiler]")
 }
 
 
-/*
 TEST_CASE("Compiler compiles, simple if 2", "[compiler]")
 {
     auto c = primal::compiler::create();

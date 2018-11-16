@@ -38,6 +38,7 @@ bool intr_1(vm* v)
             len --;
         }
     }
+    return true;
 }
 
 

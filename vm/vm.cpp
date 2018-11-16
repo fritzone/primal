@@ -1,4 +1,5 @@
 #include "vm.h"
+#include "vm_impl.h"
 
 #include <interrupts.h>
 
@@ -18,48 +19,36 @@
 
 using namespace primal;
 
-std::map<uint8_t, vm::executor> vm::opcode_runners;
-std::map<uint8_t, vm::executor> vm::interrupts;
 
-vm::vm() : m_lbo(r(253)), sp(r(255))
+vm::vm() : impl(new vm_impl)
 {
-    for(uint8_t i = 0; i<255; i++)
-    {
-        m_r[i].set_idx(i);
-    }
 }
-
-vm::~vm()
-{
-    std::fill(ms.get(), ms.get() + VM_MEM_SEGMENT_SIZE + app_size, 0xFF);
-}
-
 
 bool vm::run(const std::vector<uint8_t> &app)
 {
     // firstly set up the memory segment for this machine and initialize it to 0x00
-    app_size = static_cast<numeric_t>(app.size());
-    ms = std::make_unique<uint8_t[]>(static_cast<size_t>(app_size + VM_MEM_SEGMENT_SIZE));
-    std::fill(ms.get(), ms.get() + VM_MEM_SEGMENT_SIZE + app_size, 0x00);
+    impl->app_size = static_cast<numeric_t>(app.size());
+    impl->ms = std::make_unique<uint8_t[]>(static_cast<size_t>(impl->app_size + VM_MEM_SEGMENT_SIZE));
+    std::fill(impl->ms.get(), impl->ms.get() + VM_MEM_SEGMENT_SIZE + impl->app_size, 0x00);
 
     // then copy over the data from app to the end of the memory segment
-    std::copy(app.begin(), app.end(), ms.get() + VM_MEM_SEGMENT_SIZE);
+    std::copy(app.begin(), app.end(), impl->ms.get() + VM_MEM_SEGMENT_SIZE);
 
     // set the IP and SP to point to the correct location
-    m_ip = VM_MEM_SEGMENT_SIZE + 16; // will grow upwards, will skip .P10 and the stringtable loc entry
-    stack_offset = *reinterpret_cast<numeric_t*>(ms.get() + VM_MEM_SEGMENT_SIZE + 8);
-    sp = stack_offset * num_t_size;   // will grow upwards
+    impl->m_ip = VM_MEM_SEGMENT_SIZE + 16; // will grow upwards, will skip .P10 and the stringtable loc entry
+    impl->stack_offset = *reinterpret_cast<numeric_t*>(impl->ms.get() + VM_MEM_SEGMENT_SIZE + 8);
+    impl->sp = impl->stack_offset * num_t_size;   // will grow upwards
 
     // then start running it
-    while(opcode_runners.count(ms[static_cast<size_t>(m_ip)]))
+    while(impl->opcode_runners.count(impl->ms[static_cast<size_t>(impl->m_ip)]))
     {
         // read in an opcode
-        uint8_t opc = ms[static_cast<size_t>(m_ip++)];
+        uint8_t opc = impl->ms[static_cast<size_t>(impl->m_ip++)];
 
         try
         {
             // is there a registered opcode runner for the given opcode?
-            if(!opcode_runners[ opc ].runner(this))
+            if(!impl->opcode_runners[ opc ].runner(this))
             {
                 panic();
             }
@@ -74,11 +63,11 @@ bool vm::run(const std::vector<uint8_t> &app)
         }
 
         // is the opcode after the current one 0xFF meaning: halt the machine?
-        if(m_ip < 0)
+        if(impl->m_ip < 0)
         {
             panic();
         }
-        if(ms[static_cast<size_t>(m_ip)] == 0xFF)
+        if(impl->ms[static_cast<size_t>(impl->m_ip)] == 0xFF)
         {
             //bindump();
             return true;
@@ -86,6 +75,10 @@ bool vm::run(const std::vector<uint8_t> &app)
     }
     panic();
 }
+
+numeric_t &vm::ip()      {return impl->m_ip;}
+
+numeric_t vm::ip() const {return impl->m_ip;}
 
 std::shared_ptr<vm> vm::create()
 {
@@ -98,25 +91,25 @@ std::shared_ptr<vm> vm::create()
 
 type_destination vm::fetch_type_dest()
 {
-    return static_cast<type_destination>(ms[static_cast<size_t>(m_ip ++)]) ;
+    return static_cast<type_destination>(impl->ms[static_cast<size_t>(impl->m_ip ++)]) ;
 }
 
 void vm::bindump(numeric_t start, numeric_t end, bool insert_addr)
 {
     if(start == -1) start = VM_MEM_SEGMENT_SIZE;
-    if(end == -1) end = start + app_size;
+    if(end == -1) end = start + impl->app_size;
 
     std::stringstream ss;
     std::string s;
 
-    for(numeric_t i = start; i < std::min(end, VM_MEM_SEGMENT_SIZE + app_size); i++)
+    for(numeric_t i = start; i < std::min(end, VM_MEM_SEGMENT_SIZE + impl->app_size); i++)
     {
         if(insert_addr)
         {
             ss << std::setfill(' ') << std::setw(9) << std::dec << std::right <<  i << "[:" << std::setw(3) << i - VM_MEM_SEGMENT_SIZE << "]";
             insert_addr = false;
         }
-        if(i == m_ip)
+        if(i == impl->m_ip)
         {
             ss << ">";
         }
@@ -124,18 +117,18 @@ void vm::bindump(numeric_t start, numeric_t end, bool insert_addr)
         {
             ss << " ";
         }
-        ss << std::setfill('0') << std::setw(2) << std::hex << std::uppercase  << static_cast<int>(ms[static_cast<size_t>(i)]) ;
+        ss << std::setfill('0') << std::setw(2) << std::hex << std::uppercase  << static_cast<int>(impl->ms[static_cast<size_t>(i)]) ;
 
-        if(ms[static_cast<size_t>(i)] > 32 && ms[static_cast<size_t>(i)] < 255)
+        if(impl->ms[static_cast<size_t>(i)] > 32 && impl->ms[static_cast<size_t>(i)] < 255)
         {
-            s += static_cast<char>(ms[static_cast<size_t>(i)]);
+            s += static_cast<char>(impl->ms[static_cast<size_t>(i)]);
         }
         else
         {
             s += '.';
         }
 
-        if(i == m_ip)
+        if(i == impl->m_ip)
         {
             ss << "<";
         }
@@ -157,21 +150,21 @@ void vm::bindump(numeric_t start, numeric_t end, bool insert_addr)
     ss.str(std::string());
 
     // memory dump
-    for(numeric_t i=0; i<stack_offset * num_t_size; i += num_t_size)
+    for(numeric_t i=0; i<impl->stack_offset * num_t_size; i += num_t_size)
     {
         ss << std::right << " [" << std::setfill('0') << std::setw(8) << std::dec << i << "] = ";
         ss << get_mem(i) << std::endl;
     }
     ss << "-"; // indicates the stack start
-    for(numeric_t i = stack_offset * num_t_size; i<max_used_sp + 32; i += num_t_size)
+    for(numeric_t i = impl->stack_offset * num_t_size; i<impl->max_used_sp + 32; i += num_t_size)
     {
-        if(i == sp.value())
+        if(i == impl->sp.value())
         {
             ss <<">" ; // current stack position
         }
         else
         {
-            if (i > stack_offset * num_t_size) ss << " ";
+            if (i > impl->stack_offset * num_t_size) ss << " ";
         }
 
         ss << std::right << "[" << std::setfill('0') << std::setw(8) << std::dec << i << "] = ";
@@ -183,24 +176,24 @@ void vm::bindump(numeric_t start, numeric_t end, bool insert_addr)
 void vm::panic()
 {
     std::cout << "VM PANIC ☹ - instruction dump:\n---------------------------------------------------\n";
-    numeric_t start = std::max(VM_MEM_SEGMENT_SIZE, m_ip - 64);
-    numeric_t end = m_ip + std::min(64, app_size);
+    numeric_t start = std::max(VM_MEM_SEGMENT_SIZE, impl->m_ip - 64);
+    numeric_t end = impl->m_ip + std::min(64, impl->app_size);
     bindump(start, end, true);
-    std::cout << "IP=" << std::dec << m_ip << "[:" << m_ip - VM_MEM_SEGMENT_SIZE << "] (" << std::hex << m_ip << ")" << std::endl;
-    std::cout << "SP=" << std::dec << sp.value() << " (" << std::hex << sp.value() << ")" << std::endl;
+    std::cout << "IP=" << std::dec << impl->m_ip << "[:" << impl->m_ip - VM_MEM_SEGMENT_SIZE << "] (" << std::hex << impl->m_ip << ")" << std::endl;
+    std::cout << "SP=" << std::dec << impl->sp.value() << " (" << std::hex << impl->sp.value() << ")" << std::endl;
     std::cout << std::endl;
     throw primal::vm_panic("PANIC");
 }
 
 uint8_t vm::fetch_register_index()
 {
-    return ms[static_cast<size_t>(m_ip ++)];
+    return impl->ms[static_cast<size_t>(impl->m_ip ++)];
 }
 
 numeric_t vm::fetch_immediate()
 {
-    numeric_t retv = htovm(*(reinterpret_cast<numeric_t*>(ms.get() + m_ip)));
-    m_ip += num_t_size;
+    numeric_t retv = htovm(*(reinterpret_cast<numeric_t*>(impl->ms.get() + impl->m_ip)));
+    impl->m_ip += num_t_size;
     return retv;
 }
 
@@ -211,7 +204,7 @@ void vm::set_mem(numeric_t address, numeric_t new_value)
         panic();
     }
 
-    std::memcpy( &ms[0] + address, &new_value, sizeof(new_value));
+    std::memcpy( &impl->ms[0] + address, &new_value, sizeof(new_value));
 }
 
 numeric_t vm::get_mem(numeric_t address)
@@ -222,7 +215,7 @@ numeric_t vm::get_mem(numeric_t address)
     }
 
     numeric_t v = 0;
-    std::memcpy(&v, &ms[0] + address, sizeof(v));
+    std::memcpy(&v, &impl->ms[0] + address, sizeof(v));
     return v;
 }
 
@@ -232,7 +225,7 @@ void vm::set_mem_byte(numeric_t address, uint8_t b)
     {
         panic();
     }
-    ms[static_cast<size_t>(address)] = b;
+    impl->ms[static_cast<size_t>(address)] = b;
 }
 
 uint8_t vm::get_mem_byte(numeric_t address)
@@ -241,14 +234,17 @@ uint8_t vm::get_mem_byte(numeric_t address)
     {
         panic();
     }
-    return ms[static_cast<size_t>(address)];
+    return impl->ms[static_cast<size_t>(address)];
 }
+
+reg &vm::r(uint8_t i)             { return impl->m_r[i];}
+const reg &vm::r(uint8_t i) const { return impl->m_r[i];}
 
 reg_subbyte* vm::rsb(uint8_t ridx, uint8_t bidx)
 {
-    t1.m_r = &r(ridx);
-    t1.m_bidx = bidx;
-    return &t1;
+    impl->t1.m_r = &r(ridx);
+    impl->t1.m_bidx = bidx;
+    return &impl->t1;
 }
 
 memaddress* vm::mem(numeric_t address)
@@ -262,11 +258,11 @@ memaddress* vm::mem(numeric_t address)
             return get_mem(a);
         };
 
-    ma_i = !ma_i;
-    ma[ma_i].m_address = address;
-    ma[ma_i].m_setter = setter;
-    ma[ma_i].m_getter = getter;
-    return &ma[ma_i];
+    impl->ma_i = !impl->ma_i;
+    impl->ma[impl->ma_i].m_address = address;
+    impl->ma[impl->ma_i].m_setter = setter;
+    impl->ma[impl->ma_i].m_getter = getter;
+    return &impl->ma[impl->ma_i];
 }
 
 memaddress_byte_ref* vm::mem_byte(numeric_t address)
@@ -280,20 +276,20 @@ memaddress_byte_ref* vm::mem_byte(numeric_t address)
         return get_mem_byte(a);
     };
 
-    mb_i = !mb_i;
-    mb[mb_i].m_address = address;
-    mb[mb_i].m_setter = setter;
-    mb[mb_i].m_getter = getter;
-    return &mb[mb_i];
+    impl->mb_i = !impl->mb_i;
+    impl->mb[impl->mb_i].m_address = address;
+    impl->mb[impl->mb_i].m_setter = setter;
+    impl->mb[impl->mb_i].m_getter = getter;
+    return &impl->mb[impl->mb_i];
 }
 
 
 immediate *vm::imm(numeric_t v)
 {
-    mi_i++; if(mi_i == 3) mi_i = 1;
+    impl->mi_i++; if(impl->mi_i == 3) impl->mi_i = 1;
 
-    imv[mi_i].m_value = v;
-    return &imv[mi_i];
+    impl->imv[impl->mi_i].m_value = v;
+    return &impl->imv[impl->mi_i];
 }
 
 valued *vm::fetch()
@@ -365,25 +361,29 @@ valued *vm::fetch()
 
 }
 
+numeric_t vm::flag() const {return impl->m_lbo.value();}
+
+numeric_t &vm::flag() {return impl->m_lbo.value();}
+
 bool vm::call(numeric_t v)
 {
-    m_ip = VM_MEM_SEGMENT_SIZE + v;
-    return m_ip < VM_MEM_SEGMENT_SIZE + app_size;
+    impl->m_ip = VM_MEM_SEGMENT_SIZE + v;
+    return impl->m_ip < VM_MEM_SEGMENT_SIZE + impl->app_size;
 }
 
 bool vm::interrupt(uint8_t i)
 {
     std::function<bool(vm*)> fun;
-    if(interrupts.count(i) > 0)
+    if(impl->interrupts.count(i) > 0)
     {
-        return interrupts[i].runner(this);
+        return impl->interrupts[i].runner(this);
     }
     return false;
 }
 
 bool vm::address_is_valid(numeric_t addr)
 {
-    return addr < app_size + VM_MEM_SEGMENT_SIZE && addr >= 0;
+    return addr < impl->app_size + VM_MEM_SEGMENT_SIZE && addr >= 0;
 }
 
 bool vm::copy(numeric_t dest, numeric_t src, numeric_t cnt)
@@ -392,7 +392,7 @@ bool vm::copy(numeric_t dest, numeric_t src, numeric_t cnt)
     {
         return false;
     }
-    std::memmove(&ms[static_cast<size_t>(dest)], &ms[static_cast<size_t>(src)], static_cast<size_t>(cnt));
+    std::memmove(&impl->ms[static_cast<size_t>(dest)], &impl->ms[static_cast<size_t>(src)], static_cast<size_t>(cnt));
     return true;
 }
 
@@ -401,10 +401,10 @@ bool vm::push(const valued* v)
     if(!v) return false;
 
     // value
-    set_mem(sp.value(), v->value());
-    sp += num_t_size;
-    if(sp > max_used_sp) max_used_sp = sp.value();
-    if(sp.value() > VM_MEM_SEGMENT_SIZE)
+    set_mem(impl->sp.value(), v->value());
+    impl->sp += num_t_size;
+    if(impl->sp > impl->max_used_sp) impl->max_used_sp = impl->sp.value();
+    if(impl->sp.value() > VM_MEM_SEGMENT_SIZE)
     {
         panic();
     }
@@ -420,11 +420,11 @@ bool vm::push(const numeric_t v)
 
 numeric_t vm::pop()
 {
-    if(sp.value() - num_t_size < 0)
+    if(impl->sp.value() - num_t_size < 0)
     {
         panic();
     }
-    numeric_t v = get_mem(sp.value() - num_t_size);
-    sp -= num_t_size;
+    numeric_t v = get_mem(impl->sp.value() - num_t_size);
+    impl->sp -= num_t_size;
     return v;
 }
