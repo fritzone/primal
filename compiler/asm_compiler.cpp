@@ -93,7 +93,7 @@ void asm_compiler::generate_assembly_code(const primal::opcodes::opcode& opc, co
                             auto r = t_reg.create_register();
                             result.push_back(static_cast<uint8_t>(util::to_integral(type_destination ::TYPE_MOD_MEM_REG_IDX_OFFS)));
                             result.push_back(r.idx());
-                            numeric_t nv = htovm(dist);
+                            numeric_t nv = htovm(static_cast<numeric_t>(dist));
 
                             for(std::size_t i = 0; i< num_t_size; i++)
                             {

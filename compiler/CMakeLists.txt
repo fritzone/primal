@@ -109,4 +109,4 @@ add_library(${project}
         ${CMAKE_CURRENT_BINARY_DIR}/all_keywords.cpp
 )
 
-target_link_libraries(${project} util opcode-compilers)
+target_link_libraries(${project} util opcode-compilers hal)
