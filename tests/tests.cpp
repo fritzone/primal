@@ -308,7 +308,7 @@ TEST_CASE("Asm compiler - stack operatons", "[asm-compiler")
     std::shared_ptr<primal::vm> vm = primal::vm::create();
     REQUIRE(vm->run(c->bytecode()));
     REQUIRE(vm->r(2).value() == 42);
-    REQUIRE(vm->flag() == true);
+    REQUIRE(vm->flag() != 0);
 }
 
 TEST_CASE("Compiler compiles, Simple write", "[compiler]")
@@ -498,7 +498,7 @@ TEST_CASE("Asm compiler - EQ/JT test", "[asm-compiler]")
     std::shared_ptr<primal::vm> vm = primal::vm::create();
     REQUIRE(vm->run(c->bytecode()));
     REQUIRE(vm->r(1).value() == 42);
-    REQUIRE(vm->flag() == true);
+    REQUIRE(vm->flag() != 0);
 }
 
 /**/

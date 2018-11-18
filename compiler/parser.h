@@ -81,6 +81,10 @@ namespace primal
                     {
                         // for each parameter create an AST
                         primal::function_call* fc = dynamic_cast<primal::function_call*>(seq.get()) ;
+                        if (!fc)
+                        {
+                            throw primal::syntax_error("Invalid function call");
+                        }
                         for(auto& p : fc->params())
                         {
                             std::vector<token> parIoutput = shuntyard(p.tokens());
@@ -105,7 +109,7 @@ namespace primal
                     result_operations.push_back(seq);
                 }
             }
-            return {result_operations, result_func_decl};
+            return std::make_tuple(result_operations, result_func_decl);
 
         }
     private:

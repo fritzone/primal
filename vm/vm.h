@@ -11,7 +11,7 @@
 namespace primal
 {
 
-    class vm_impl;
+    struct vm_impl;
 
     /**
      * @brief The vm class is responsible for running compiled bytecode
@@ -170,7 +170,7 @@ namespace primal
 
         // will perform the required interrupt
         // After execution the state of the VM must be the one specified in the interrupts documentation
-        bool interrupt(uint8_t i);
+        bool interrupt(numeric_t i);
 
         // returns true if the given number can be mapped in the memory space of the VM
         bool address_is_valid(numeric_t addr);

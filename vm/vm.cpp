@@ -176,8 +176,8 @@ void vm::bindump(numeric_t start, numeric_t end, bool insert_addr)
 void vm::panic()
 {
     std::cout << "VM PANIC ☹ - instruction dump:\n---------------------------------------------------\n";
-    numeric_t start = std::max(VM_MEM_SEGMENT_SIZE, impl->m_ip - 64);
-    numeric_t end = impl->m_ip + std::min(64, impl->app_size);
+    numeric_t start = std::max<numeric_t>(VM_MEM_SEGMENT_SIZE, impl->m_ip - 64);
+    numeric_t end = impl->m_ip + std::min<numeric_t>(64, impl->app_size);
     bindump(start, end, true);
     std::cout << "IP=" << std::dec << impl->m_ip << "[:" << impl->m_ip - VM_MEM_SEGMENT_SIZE << "] (" << std::hex << impl->m_ip << ")" << std::endl;
     std::cout << "SP=" << std::dec << impl->sp.value() << " (" << std::hex << impl->sp.value() << ")" << std::endl;
@@ -371,7 +371,7 @@ bool vm::call(numeric_t v)
     return impl->m_ip < VM_MEM_SEGMENT_SIZE + impl->app_size;
 }
 
-bool vm::interrupt(uint8_t i)
+bool vm::interrupt(numeric_t i)
 {
     std::function<bool(vm*)> fun;
     if(impl->interrupts.count(i) > 0)

@@ -48,7 +48,7 @@ struct vm_impl
 
 
     static std::map<uint8_t, executor> opcode_runners;
-    static std::map<uint8_t, executor> interrupts;
+    static std::map<numeric_t, executor> interrupts;
 
     reg m_r[VM_REG_COUNT];              // the registers of the machine
     numeric_t m_ip = 0;               // the instructions pointer

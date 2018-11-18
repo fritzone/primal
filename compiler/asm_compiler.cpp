@@ -3,7 +3,7 @@
 #include "exceptions.h"
 #include "opcode.h"
 #include "options.h"
-
+#include <numeric_decl.h>
 #include <opcodes.h>
 
 #include <iostream>
@@ -57,7 +57,7 @@ void asm_compiler::generate_assembly_code(const primal::opcodes::opcode& opc, co
 
                         result.push_back(static_cast<uint8_t>(util::to_integral(type_destination::TYPE_MOD_MEM_IMM_BYTE)));
 
-                        for(std::size_t i = 0; i< sizeof(v); i++)
+                        for(std::size_t i = 0; i < num_t_size; i++)
                         {
                             result.push_back(*((reinterpret_cast<uint8_t *>(&nv) + i)));
                         }

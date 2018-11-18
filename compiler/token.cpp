@@ -88,8 +88,8 @@ token::type token::identify_type(char c)
 
 reg token::create_register() const
 {
-    if(   (m_data.length() < 3 || (m_data[0] != '$' && m_data[1] != 'r'))
-        ||(m_data.length() < 3 || (m_data[0] != '$' && m_data[1] != 's' && m_data[2] != 'p'))
+    if(   (m_data.length() > 3 && (m_data[0] != '$' && m_data[1] != 'r'))
+        ||(m_data.length() >= 3 && (m_data[0] != '$' && m_data[1] != 's' && m_data[2] != 'p'))
       )
     {
         throw syntax_error("Invalid register: " + m_data);

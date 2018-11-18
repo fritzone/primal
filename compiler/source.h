@@ -15,6 +15,8 @@ namespace primal
         explicit source(const char* src);
         explicit source(const std::string& src);
 
+        source(const source&) = delete;
+
         /*Assignment OP*/
         source& operator = (const source& oth)
         {

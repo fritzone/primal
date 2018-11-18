@@ -52,8 +52,8 @@ namespace primal
         bool operator > (numeric_t v) const { return value() > v; }
         bool operator > (const valued& v) const { return value() > v.value(); }
 
-        bool operator < (numeric_t v) const { return value() > v; }
-        bool operator < (const valued& v) const { return value() > v.value(); }
+        bool operator < (numeric_t v) const { return value() < v; }
+        bool operator < (const valued& v) const { return value() < v.value(); }
 
         valued& operator += (numeric_t v) { set_value(value() + v); return *this; }
         valued& operator += (const valued& v) { set_value(value() + v.value()); return *this; }
@@ -94,6 +94,8 @@ namespace primal
     {
         reg()                   : m_reg_idx(0) {}
         explicit reg(uint8_t i) : m_reg_idx(i) {}
+
+        reg(const reg& o) : m_reg_idx(o.m_reg_idx) {}
 
         reg& operator = (numeric_t v) { m_value = v; return *this; }
         reg& operator = (const reg& ov) { m_value = ov.m_value; return *this; }
@@ -154,7 +156,7 @@ namespace primal
         reg_subbyte(reg* r, uint8_t bidx) : m_r(r), m_bidx(bidx) {}
         void set_value(numeric_t v) override
         {
-            m_r->set_value( m_r->value() | (((v << masks[m_bidx].second) & masks[m_bidx].first) | !(masks[m_bidx].first)));
+            m_r->set_value( ((m_r->value()) | (((v << masks[m_bidx].second) & masks[m_bidx].first) | !(masks[m_bidx].first))) );
         }
 
         type_destination get_type() const override { return type_destination::TYPE_MOD_REG_BYTE; }
