@@ -20,13 +20,13 @@ bool intr_1(vm* v)
     }
     else
     {
-        numeric_t addr = v->r(2).value();
+        word_t addr = v->r(2).value();
         if(!v->address_is_valid(addr))
         {
             return false;
         }
 
-        numeric_t len = v->r(1).value();
+        word_t len = v->r(1).value();
         if(len < 0 || len > VM_MEM_SEGMENT_SIZE)
         {
             return false;

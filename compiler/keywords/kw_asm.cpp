@@ -2,6 +2,7 @@
 #include "asm_compiler.h"
 #include "generate.h"
 #include "options.h"
+#include "hal.h"
 
 #include <exceptions.h>
 #include <iomanip>

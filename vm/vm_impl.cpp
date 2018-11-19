@@ -3,7 +3,7 @@
 using namespace primal;
 
 std::map<uint8_t, vm_impl::executor> vm_impl::opcode_runners;
-std::map<numeric_t, vm_impl::executor> vm_impl::interrupts;
+std::map<word_t, vm_impl::executor> vm_impl::interrupts;
 
 vm_impl::vm_impl() : m_lbo(m_r[253]), sp(m_r[255])
 {

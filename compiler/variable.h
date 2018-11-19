@@ -21,7 +21,7 @@ namespace primal
     public:
 
         variable(compiler* c, const std::string& name);
-        numeric_t location() const;
+        word_t location() const;
         fun* frame() const;
 
     public:
@@ -38,7 +38,7 @@ namespace primal
     private:
 
         std::string m_name;
-        numeric_t m_location;
+        word_t m_location;
         static std::vector<std::tuple<std::string, entity_type, entity_origin>> variables;
         static std::string working_function;
         fun* m_frame;

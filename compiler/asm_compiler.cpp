@@ -52,12 +52,12 @@ void asm_compiler::generate_assembly_code(const primal::opcodes::opcode& opc, co
                     else
                     if(util::is_number(tcopy.data()))
                     {
-                        numeric_t v = tcopy.to_number();
-                        numeric_t nv = htovm(v);
+                        word_t v = tcopy.to_number();
+                        word_t nv = htovm(v);
 
                         result.push_back(static_cast<uint8_t>(util::to_integral(type_destination::TYPE_MOD_MEM_IMM_BYTE)));
 
-                        for(std::size_t i = 0; i < num_t_size; i++)
+                        for(std::size_t i = 0; i < word_size; i++)
                         {
                             result.push_back(*((reinterpret_cast<uint8_t *>(&nv) + i)));
                         }
@@ -93,9 +93,9 @@ void asm_compiler::generate_assembly_code(const primal::opcodes::opcode& opc, co
                             auto r = t_reg.create_register();
                             result.push_back(static_cast<uint8_t>(util::to_integral(type_destination ::TYPE_MOD_MEM_REG_IDX_OFFS)));
                             result.push_back(r.idx());
-                            numeric_t nv = htovm(static_cast<numeric_t>(dist));
+                            word_t nv = htovm(static_cast<word_t>(dist));
 
-                            for(std::size_t i = 0; i< num_t_size; i++)
+                            for(std::size_t i = 0; i< word_size; i++)
                             {
                                 result.push_back( * ((reinterpret_cast<uint8_t *>(&nv) + i ) ));
                             }
@@ -104,8 +104,8 @@ void asm_compiler::generate_assembly_code(const primal::opcodes::opcode& opc, co
                 }
                 else
                 {
-                    numeric_t v = t.to_number();
-                    numeric_t nv = htovm(v);
+                    word_t v = t.to_number();
+                    word_t nv = htovm(v);
 
                     result.push_back(static_cast<uint8_t>(util::to_integral(type_destination::TYPE_MOD_MEM_IMM)));
 
@@ -129,8 +129,8 @@ void asm_compiler::generate_assembly_code(const primal::opcodes::opcode& opc, co
             case token::type::TT_NUMBER:
             {
                 result.push_back(static_cast<uint8_t>(util::to_integral(type_destination::TYPE_MOD_IMM)));
-                numeric_t v = t.to_number();
-                numeric_t nv = htovm(v);
+                word_t v = t.to_number();
+                word_t nv = htovm(v);
 
                 for(std::size_t i = 0; i< sizeof(v); i++)
                 {

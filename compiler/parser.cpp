@@ -29,7 +29,7 @@ std::vector<token> parser::shuntyard(std::vector<token>& tokens)
             result.insert(result.begin(), t);
             if(tt == token::type::TT_STRING)
             {
-                numeric_t idx = stringtable::instance().add(s);
+                word_t idx = stringtable::instance().add(s);
                 t.set_extra_info(idx);
             }
         }

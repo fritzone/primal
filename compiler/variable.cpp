@@ -20,7 +20,7 @@ variable::variable(compiler* c, const std::string & name) : m_name(name), m_fram
     //if(options::instance().generate_assembly()) { options::instance().asm_stream() << "CV:" << m_name << "@" << m_location << " - " << reinterpret_cast<void*>(c->frame()) << std::endl; }
 }
 
-numeric_t variable::location() const
+word_t variable::location() const
 {
     return m_location;
 }

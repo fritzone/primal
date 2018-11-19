@@ -13,21 +13,21 @@ public:
 
     struct entry final
     {
-        numeric_t location;
+        word_t location;
         std::string the_string;
     };
 
     static stringtable& instance();
 
-    numeric_t add(const std::string& s);
+    word_t add(const std::string& s);
 
-    entry& e(numeric_t i);
+    entry& e(word_t i);
 
-    numeric_t count() const;
+    word_t count() const;
 
 private:
 
-    std::map<numeric_t, entry> m_entries;
+    std::map<word_t, entry> m_entries;
 };
 
 #endif // STRINGTABLE_H

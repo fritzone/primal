@@ -64,12 +64,12 @@ namespace primal
 
         type get_type() const;
 
-        void set_extra_info(numeric_t v);
-        numeric_t  get_extra_info() const;
+        void set_extra_info(word_t v);
+        word_t  get_extra_info() const;
 
         // will create a register from this token for easier compilation
         reg create_register() const;
-        numeric_t to_number() const;
+        word_t to_number() const;
 
         bool is_register() const;
     public:
@@ -85,7 +85,7 @@ namespace primal
 
         std::string m_data;
         type m_type = type::TT_UNKNOWN;
-        numeric_t m_extra = -1;
+        word_t m_extra = -1;
     };
 
 }

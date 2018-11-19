@@ -29,64 +29,64 @@ namespace primal
     struct valued
     {
         valued() = default;
-        explicit valued(numeric_t v) : m_value(v) {}
+        explicit valued(word_t v) : m_value(v) {}
         ~valued() = default;
 
         valued(const valued&o) { set_value(o.value()); }
 
-        valued& operator = (numeric_t v) { set_value(v); return *this;}
+        valued& operator = (word_t v) { set_value(v); return *this;}
         valued& operator = (const valued& o) { set_value(o.value()); return *this;}
 
-        bool operator == (numeric_t v) const { return value() == v; }
+        bool operator == (word_t v) const { return value() == v; }
         bool operator == (const valued& v) const { return value() == v.value(); }
 
-        bool operator != (numeric_t v) const { return value() != v; }
+        bool operator != (word_t v) const { return value() != v; }
         bool operator != (const valued& v) const { return value() != v.value(); }
 
-        bool operator >= (numeric_t v) const { return value() >= v; }
+        bool operator >= (word_t v) const { return value() >= v; }
         bool operator >= (const valued& v) const { return value() >= v.value(); }
 
-        bool operator <= (numeric_t v) const { return value() <= v; }
+        bool operator <= (word_t v) const { return value() <= v; }
         bool operator <= (const valued& v) const { return value() <= v.value(); }
 
-        bool operator > (numeric_t v) const { return value() > v; }
+        bool operator > (word_t v) const { return value() > v; }
         bool operator > (const valued& v) const { return value() > v.value(); }
 
-        bool operator < (numeric_t v) const { return value() < v; }
+        bool operator < (word_t v) const { return value() < v; }
         bool operator < (const valued& v) const { return value() < v.value(); }
 
-        valued& operator += (numeric_t v) { set_value(value() + v); return *this; }
+        valued& operator += (word_t v) { set_value(value() + v); return *this; }
         valued& operator += (const valued& v) { set_value(value() + v.value()); return *this; }
 
-        valued& operator -= (numeric_t v) { set_value(value() - v); return *this; }
+        valued& operator -= (word_t v) { set_value(value() - v); return *this; }
         valued& operator -= (const valued& v) { set_value(value() - v.value()); return *this; }
 
-        valued& operator /= (numeric_t v) {set_value(value() / v); return *this; }
+        valued& operator /= (word_t v) {set_value(value() / v); return *this; }
         valued& operator /= (const valued& v) { set_value(value() / v.value()); return *this; }
 
-        valued& operator *= (numeric_t v) { set_value(value() * v); return *this; }
+        valued& operator *= (word_t v) { set_value(value() * v); return *this; }
         valued& operator *= (const valued& v) { set_value(value() * v.value()); return *this; }
 
-        valued& operator %= (numeric_t v) { set_value(value() % v); return *this; }
+        valued& operator %= (word_t v) { set_value(value() % v); return *this; }
         valued& operator %= (const valued& v) { set_value(value() % v.value()); return *this; }
 
-        valued& operator &= (numeric_t v) { set_value(value() & v); return *this; }
+        valued& operator &= (word_t v) { set_value(value() & v); return *this; }
         valued& operator &= (const valued& v) { set_value(value() & v.value()); return *this; }
 
-        valued& operator |= (numeric_t v) { set_value(value() | v); return *this; }
+        valued& operator |= (word_t v) { set_value(value() | v); return *this; }
         valued& operator |= (const valued& v) { set_value(value() | v.value()); return *this; }
 
-        valued& operator ^= (numeric_t v) { set_value(value() ^ v); return *this; }
+        valued& operator ^= (word_t v) { set_value(value() ^ v); return *this; }
         valued& operator ^= (const valued& v) { set_value(value() ^ v.value()); return *this; }
 
-        virtual numeric_t value() const {return m_value;}
-        virtual numeric_t& value() {return m_value;}
+        virtual word_t value() const {return m_value;}
+        virtual word_t& value() {return m_value;}
 
-        virtual void set_value(numeric_t v) {m_value = v;}
+        virtual void set_value(word_t v) {m_value = v;}
 
         virtual type_destination get_type() const = 0;
 
-        numeric_t m_value = 0;
+        word_t m_value = 0;
     };
 
 /* This class represents a concrete register that can be found in the system */
@@ -95,9 +95,9 @@ namespace primal
         reg()                   : m_reg_idx(0) {}
         explicit reg(uint8_t i) : m_reg_idx(i) {}
 
-        reg(const reg& o) : m_reg_idx(o.m_reg_idx) {}
+        reg(const reg& o) : valued (o.value()), m_reg_idx(o.m_reg_idx) {}
 
-        reg& operator = (numeric_t v) { m_value = v; return *this; }
+        reg& operator = (word_t v) { m_value = v; return *this; }
         reg& operator = (const reg& ov) { m_value = ov.m_value; return *this; }
 
         bool operator == (const reg& v) const { return m_value == v.m_value; }
@@ -118,43 +118,43 @@ namespace primal
     struct memaddress final : public valued
     {
         memaddress() = default;
-        explicit memaddress(numeric_t address, std::function<void(numeric_t, numeric_t)> setter, std::function<numeric_t(numeric_t)> getter) : m_address(address), m_getter(std::move(getter)), m_setter(std::move(setter)) {}
+        explicit memaddress(word_t address, std::function<void(word_t, word_t)> setter, std::function<word_t(word_t)> getter) : m_address(address), m_getter(std::move(getter)), m_setter(std::move(setter)) {}
 
-        void set_value(numeric_t v) override
+        void set_value(word_t v) override
         {
             m_setter(m_address, v);
         }
-        numeric_t value() const override { return m_getter(m_address); }
+        word_t value() const override { return m_getter(m_address); }
 
         type_destination get_type() const override { return type_destination::TYPE_MOD_MEM_REG_IDX; }
 
-        numeric_t m_address = -1;
-        std::function<numeric_t(numeric_t)> m_getter;
-        std::function<void(numeric_t, numeric_t)> m_setter;
+        word_t m_address = -1;
+        std::function<word_t(word_t)> m_getter;
+        std::function<void(word_t, word_t)> m_setter;
     };
 
     struct memaddress_byte_ref final : public valued
     {
         memaddress_byte_ref() = default;
-        explicit memaddress_byte_ref(numeric_t address, std::function<void(numeric_t, uint8_t)> setter, std::function<uint8_t(numeric_t)> getter) : m_address(address), m_getter(std::move(getter)), m_setter(std::move(setter)) {}
+        explicit memaddress_byte_ref(word_t address, std::function<void(word_t, uint8_t)> setter, std::function<uint8_t(word_t)> getter) : m_address(address), m_getter(std::move(getter)), m_setter(std::move(setter)) {}
 
-        void set_value(numeric_t v) override
+        void set_value(word_t v) override
         {
             m_setter(m_address, static_cast<uint8_t>(v));
         }
-        numeric_t value() const override { return m_getter(m_address); }
+        word_t value() const override { return m_getter(m_address); }
         type_destination get_type() const override { return type_destination::TYPE_MOD_MEM_REG_BYTE; }
 
-        numeric_t m_address = -1;
-        std::function<uint8_t(numeric_t)> m_getter;
-        std::function<void(numeric_t, uint8_t)> m_setter;
+        word_t m_address = -1;
+        std::function<uint8_t(word_t)> m_getter;
+        std::function<void(word_t, uint8_t)> m_setter;
     };
 
 /* This class represents a sub byte of a register */
     struct reg_subbyte : public valued
     {
         reg_subbyte(reg* r, uint8_t bidx) : m_r(r), m_bidx(bidx) {}
-        void set_value(numeric_t v) override
+        void set_value(word_t v) override
         {
             m_r->set_value( ((m_r->value()) | (((v << masks[m_bidx].second) & masks[m_bidx].first) | !(masks[m_bidx].first))) );
         }
@@ -169,9 +169,9 @@ namespace primal
     struct immediate : public valued
     {
         immediate() = default;
-        explicit immediate(numeric_t p) { m_value = p; }
+        explicit immediate(word_t p) { m_value = p; }
 
-        void set_value(numeric_t) override
+        void set_value(word_t) override
         {
             throw "cannot do this";
         }

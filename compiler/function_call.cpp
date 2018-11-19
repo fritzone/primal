@@ -56,7 +56,7 @@ bool primal::function_call::compile(primal::compiler *c)
         return false;
     }
 
-    numeric_t pushed_params = 0;
+    word_t pushed_params = 0;
 
     for(auto& p : m_params)
     {
@@ -70,7 +70,7 @@ bool primal::function_call::compile(primal::compiler *c)
             {
                 (*c->generator()) << opcodes::PUSH()
                                   << type_destination ::TYPE_MOD_IMM
-                                  << static_cast<numeric_t>(util::to_integral(entity_type::ET_NUMERIC));
+                                  << static_cast<word_t>(util::to_integral(entity_type::ET_NUMERIC));
                 pushed_params ++;
             }
 
@@ -88,7 +88,7 @@ bool primal::function_call::compile(primal::compiler *c)
             {
                 (*c->generator()) << opcodes::PUSH()
                                   << type_destination ::TYPE_MOD_IMM
-                                  << static_cast<numeric_t>(util::to_integral(entity_type::ET_STRING));
+                                  << static_cast<word_t>(util::to_integral(entity_type::ET_STRING));
                 pushed_params ++;
 
             }
@@ -100,7 +100,7 @@ bool primal::function_call::compile(primal::compiler *c)
             // notify the compiled code we have a future string reference here
             compiled_code::instance(c).string_encountered(p.tokens()[0].get_extra_info());
 
-            for(size_t i=0; i<num_t_size; i++)
+            for(size_t i=0; i<word_size; i++)
             {
                 compiled_code::instance(c).append (0xFF);
             }
@@ -120,7 +120,7 @@ bool primal::function_call::compile(primal::compiler *c)
     (*c->generator()) << opcodes::CALL() << label(c->get_source(), f->name());
 
     // and now actually remove the pushed elements from the stack
-    (*c->generator()) << opcodes::SUB() << reg(255) << type_destination::TYPE_MOD_IMM << (pushed_params * num_t_size);
+    (*c->generator()) << opcodes::SUB() << reg(255) << type_destination::TYPE_MOD_IMM << (pushed_params * word_size);
 
 
     return true;

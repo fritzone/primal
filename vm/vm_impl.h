@@ -48,10 +48,10 @@ struct vm_impl
 
 
     static std::map<uint8_t, executor> opcode_runners;
-    static std::map<numeric_t, executor> interrupts;
+    static std::map<word_t, executor> interrupts;
 
     reg m_r[VM_REG_COUNT];              // the registers of the machine
-    numeric_t m_ip = 0;               // the instructions pointer
+    word_t m_ip = 0;               // the instructions pointer
     std::unique_ptr<uint8_t[]> ms;      // the memory segment
 
     reg_subbyte t1 {&this->m_r[0], 0};
@@ -62,9 +62,9 @@ struct vm_impl
     int ma_i = 0;
     std::size_t mi_i = 0;
     reg& m_lbo; // the last operations' result. This is set to false if the result was 0
-    numeric_t app_size = -1;
-    numeric_t max_used_sp = 0;
-    numeric_t stack_offset = 0;
+    word_t app_size = -1;
+    word_t max_used_sp = 0;
+    word_t stack_offset = 0;
     reg& sp;
 };
 

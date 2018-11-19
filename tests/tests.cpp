@@ -1,4 +1,5 @@
 #include "catch.hpp"
+#include "numeric_decl.h"
 
 #include <vm.h>
 #include <compiler.h>
@@ -10,7 +11,6 @@
 
 TEST_CASE("Compiler compiles, simple goto", "[compiler]")
 {
-    primal::options::instance().generate_assembly(true);
     auto c = primal::compiler::create();
 
     c->compile(R"code(
@@ -164,7 +164,7 @@ TEST_CASE("Compiler compiles, functions with params - 3rd", "[compiler]")
     auto vm = primal::vm::create();
     REQUIRE(vm->run(c->bytecode()));
     REQUIRE(vm->get_mem(0) == 77);
-    REQUIRE(vm->get_mem(4) == 88);
+    REQUIRE(vm->get_mem(word_size) == 88);
 }
 
 
@@ -191,7 +191,7 @@ TEST_CASE("Compiler compiles, functions with params - 2nd", "[compiler]")
     auto vm = primal::vm::create();
     REQUIRE(vm->run(c->bytecode()));
     REQUIRE(vm->get_mem(0) == 77);
-    REQUIRE(vm->get_mem(4) == 88);
+    REQUIRE(vm->get_mem(word_size) == 88);
 }
 
 
@@ -255,7 +255,7 @@ TEST_CASE("Compiler compiles, functions 1", "[compiler]")
     auto vm = primal::vm::create();
     REQUIRE(vm->run(c->bytecode()));
     REQUIRE(vm->get_mem(0) == 44);
-    REQUIRE(vm->get_mem(4) == 66);
+    REQUIRE(vm->get_mem(word_size) == 66);
 }
 
 TEST_CASE("ASM compiler - Reg byte mem access", "[asm-compiler]")
@@ -279,6 +279,8 @@ TEST_CASE("ASM compiler - Reg byte mem access", "[asm-compiler]")
     REQUIRE(vm->r(3).value() == 20);
 }
 
+#if TARGET_ARCH == 32
+
 TEST_CASE("Asm compiler - JUMP test", "[asm-compiler]")
 {
     // ASM code below will jump over the MOV $r1, 43. Please note, there is added 16 bytes for the header!
@@ -294,6 +296,8 @@ TEST_CASE("Asm compiler - JUMP test", "[asm-compiler]")
     REQUIRE(vm->run(c->bytecode()));
     REQUIRE(vm->r(1).value() == 41);
 }
+
+#endif
 
 TEST_CASE("Asm compiler - stack operatons", "[asm-compiler")
 {
@@ -345,8 +349,8 @@ TEST_CASE("Script compiler - NOT operations", "[script-compiler]")
     auto vm = primal::vm::create();
     REQUIRE(vm->run(c->bytecode()));
     REQUIRE(vm->get_mem(0) == 0);
-    REQUIRE(vm->get_mem(4) == 1);
-    REQUIRE(vm->get_mem(8) == 0);
+    REQUIRE(vm->get_mem(word_size) == 1);
+    REQUIRE(vm->get_mem(word_size * 2) == 0);
 }
 
 TEST_CASE("Compiler compiles, IF test", "[compiler]")
@@ -402,28 +406,38 @@ TEST_CASE("ASM compiler - Reg Indexed mem access", "[asm-compiler]")
 TEST_CASE("ASM compiler - basic operations", "[asm-compiler]")
 {
     auto c = primal::compiler::create();
-    c->compile(R"code(
-                      asm MOV $r1 20
-                      asm MOV $r2 $r1
-                      asm MOV $r5 9
-                      asm MOV [0] $r2
-                      asm MOV [4] $r2
-                      asm MOV $r3@1 9
-                      asm MOV $r4@2 $r5
-                      asm ADD $r2 $r1
+    std::string cd1(R"code(
+              asm MOV $r1 20
+              asm MOV $r2 $r1
+              asm MOV $r5 9
+              asm MOV [0] $r2
+              )code"
+            );
 
-                      # Comment in here
-                      asm ADD $r2 10
-                      asm MOV $r7 $r2
-                      asm MOD $r7 7
-                      asm DIV $r2 2
-                      asm MOV $r6 11
-                      asm AND $r6 10
-                      asm MUL $r6 10
-                      asm OR  $r6 1
-                      asm SUB $r2 1
-                )code"
-              );
+#if TARGET_ARCH == 32
+    cd1 += "asm MOV [4] $r2";
+#else
+    cd1 += "asm MOV [8] $r2";
+#endif
+
+    cd1 += R"code(
+              asm MOV $r3@1 9
+              asm MOV $r4@2 $r5
+              asm ADD $r2 $r1
+
+              # Comment in here
+              asm ADD $r2 10
+              asm MOV $r7 $r2
+              asm MOD $r7 7
+              asm DIV $r2 2
+              asm MOV $r6 11
+              asm AND $r6 10
+              asm MUL $r6 10
+              asm OR  $r6 1
+              asm SUB $r2 1
+           )code";
+
+    c->compile(cd1);
 
     auto vm = primal::vm::create();
     REQUIRE(vm->run(c->bytecode()));
@@ -431,8 +445,8 @@ TEST_CASE("ASM compiler - basic operations", "[asm-compiler]")
     REQUIRE(vm->r(1) == 20);
     REQUIRE(vm->r(3).value() == 0x0000000900);
     REQUIRE(vm->get_mem(0) == 20);
-    REQUIRE(vm->get_mem(4) == 20);
-    REQUIRE(vm->get_mem(4) != 21);
+    REQUIRE(vm->get_mem(word_size) == 20);
+    REQUIRE(vm->get_mem(word_size) != 21);
     REQUIRE(vm->r(4) == 0x00090000);
     REQUIRE(vm->r(6).value() == 101);
     REQUIRE(vm->r(7).value() == 1);

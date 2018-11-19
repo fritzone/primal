@@ -100,7 +100,7 @@ reg token::create_register() const
     return reg( ridx );
 }
 
-numeric_t token::to_number() const
+word_t token::to_number() const
 {
     return std::stoi(m_data);
 }
@@ -110,12 +110,12 @@ void token::set_data(const std::string &d)
     m_data = d;
 }
 
-void token::set_extra_info(numeric_t v)
+void token::set_extra_info(word_t v)
 {
     m_extra = v;
 }
 
-numeric_t token::get_extra_info() const
+word_t token::get_extra_info() const
 {
     return m_extra;
 }
@@ -166,7 +166,7 @@ std::vector<token> token::identify_assembly_parameters(const std::vector<token> 
                 if (i < tokens.size())
                 {
                     int subbyte_nr = std::stoi(tokens[i].data());
-                    if (subbyte_nr < static_cast<int>(num_t_size))
+                    if (subbyte_nr < static_cast<int>(word_size))
                     {
                         l.set_extra_info(subbyte_nr);
                     }

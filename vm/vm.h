@@ -55,7 +55,7 @@ namespace primal
          *
          * @return the IP of the application
          */
-        numeric_t& ip();
+        word_t& ip();
 
         /**
          * @brief ip Access function for the IP of the VM.
@@ -64,7 +64,7 @@ namespace primal
          *
          * @return the IP of the application
          */
-        numeric_t ip() const;
+        word_t ip() const;
 
         /**
          * @brief set_mem will set the memory at the given addres to the new value
@@ -77,7 +77,7 @@ namespace primal
          * @param address the address where the word will be placed
          * @param new_value the value that will be placed in the memory
          */
-        void set_mem(numeric_t address, numeric_t new_value);
+        void set_mem(word_t address, word_t new_value);
 
         /**
          * @brief get_mem can be used to fetch a word from the memory of the virtual machine
@@ -90,7 +90,7 @@ namespace primal
          * @param address from where to get the word from the memory
          * @return the value as read from the memory
          */
-        numeric_t get_mem(numeric_t address);
+        word_t get_mem(word_t address);
 
         /**
          * @brief set_mem_byte will set the byte in the memory at the given addres to the new byte value
@@ -103,7 +103,7 @@ namespace primal
          * @param address the address where we want to change the byte
          * @param new_value the new value that will be written to the address
          */
-        void set_mem_byte(numeric_t address, uint8_t b);
+        void set_mem_byte(word_t address, uint8_t b);
         /**
          * @brief get_mem can be used to fetch a word from the memory of the virtual machine
          *
@@ -115,7 +115,7 @@ namespace primal
          * @param address from where to get the word from the memory
          * @return the value as read from the memory
          */
-        uint8_t get_mem_byte(numeric_t address);
+        uint8_t get_mem_byte(word_t address);
 
         /**
          * @brief r is access function for the the given register.
@@ -141,20 +141,20 @@ namespace primal
         reg_subbyte* rsb(uint8_t ridx, uint8_t bidx);
 
         // access the memory at the given location
-        memaddress* mem(numeric_t address);
-        memaddress_byte_ref* mem_byte(numeric_t address);
-        immediate* imm(numeric_t v);
+        memaddress* mem(word_t address);
+        memaddress_byte_ref* mem_byte(word_t address);
+        immediate* imm(word_t v);
 
         type_destination fetch_type_dest();
         uint8_t fetch_register_index();
-        numeric_t fetch_immediate();
+        word_t fetch_immediate();
 
-        bool copy(numeric_t dest, numeric_t src, numeric_t cnt);
+        bool copy(word_t dest, word_t src, word_t cnt);
 
         bool push(const valued* v);
-        bool push(const numeric_t v);
+        bool push(const word_t v);
 
-        numeric_t pop();
+        word_t pop();
 
 
 
@@ -163,19 +163,19 @@ namespace primal
         valued* fetch();
 
         // the flag of the last operation
-        numeric_t flag() const;
-        numeric_t& flag();
+        word_t flag() const;
+        word_t& flag();
 
-        bool call(numeric_t v);
+        bool call(word_t v);
 
         // will perform the required interrupt
         // After execution the state of the VM must be the one specified in the interrupts documentation
-        bool interrupt(numeric_t i);
+        bool interrupt(word_t i);
 
         // returns true if the given number can be mapped in the memory space of the VM
-        bool address_is_valid(numeric_t addr);
+        bool address_is_valid(word_t addr);
 
-        void bindump(numeric_t start = -1, numeric_t end = -1, bool insert_addr = true);
+        void bindump(word_t start = -1, word_t end = -1, bool insert_addr = true);
         
     private:
 

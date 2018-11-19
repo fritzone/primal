@@ -10,7 +10,6 @@
 
 namespace primal
 {
-    const size_t PRIMAL_HEADER_SIZE = 16;
 
     namespace opcodes { struct opcode; }
 
@@ -32,7 +31,7 @@ namespace primal
         ~compiled_code() = default;
 
         void append(uint8_t b);
-        void append_number(numeric_t v);
+        void append_number(word_t v);
 
         void encountered(const label&, bool absolute);
         void encountered(const std::string&, bool absolute);
@@ -40,7 +39,7 @@ namespace primal
 
         void string_encountered(int strtbl_idx);
 
-        numeric_t location() const
+        word_t location() const
         {
             return bytes.size();
         }
@@ -57,13 +56,13 @@ namespace primal
         std::vector<uint8_t> bytes;
 
         /* holds the map where a specific label was encountered in the code, such as jmp _label_2*/
-        std::map<std::string, std::vector< std::pair<bool,numeric_t>>> label_encounters;
+        std::map<std::string, std::vector< std::pair<bool,word_t>>> label_encounters;
 
         /* holds the locations where a specific string was encountered in the code */
-        std::map<int, std::vector<numeric_t>> string_encounters;
+        std::map<int, std::vector<word_t>> string_encounters;
 
         /* holds the map where a specific label was declared in the code, such as :_label_2*/
-        std::map<std::string, numeric_t> label_declarations;
+        std::map<std::string, word_t> label_declarations;
 
         static std::map<const compiler*, std::shared_ptr<compiled_code>> compilers_codes;
         compiler* m_compiler = nullptr;
@@ -85,12 +84,12 @@ namespace primal
         generate& operator << (const label& l);
         generate& operator << (declare_label&& dl);
         generate& operator << (type_destination td);
-        generate& operator << (numeric_t v);
+        generate& operator << (word_t v);
 
     private:
         compiler* m_compiler;
-        numeric_t m_current_binseq_start = -1;
-        numeric_t m_current_binseq_end = -1;
+        word_t m_current_binseq_start = -1;
+        word_t m_current_binseq_end = -1;
         int params_sent = 0;
     };
 }

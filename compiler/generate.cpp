@@ -10,6 +10,7 @@
 #include "type_destination_decl.h"
 #include "stringtable.h"
 #include "compiler.h"
+#include "hal.h"
 
 #include <iostream>
 #include <limits>
@@ -36,7 +37,7 @@ generate::~generate()
     if(options::instance().generate_assembly())
     {
         options::instance().asm_stream() << std::setfill(' ') << std::right << std::setw(30 - 10 * params_sent) << "# " << "L:" << (m_current_binseq_end - m_current_binseq_start) << " [";
-        for(numeric_t i = m_current_binseq_start; i< m_current_binseq_end; i++)
+        for(word_t i = m_current_binseq_start; i< m_current_binseq_end; i++)
         {
             uint8_t b = compiled_code::instance(m_compiler).bytecode().at(static_cast<size_t>(i));
             options::instance().asm_stream() << " " << std::setfill('0') << std::setw(2) << std::hex << std::uppercase  << static_cast<int>(b) ;
@@ -57,7 +58,7 @@ generate &generate::operator<<(primal::opcodes::opcode &&opc)
 
 generate &generate::operator<<(variable &&var)
 {
-    numeric_t a = var.location() * num_t_size;
+    word_t a = var.location() * word_size;
     auto address = htovm(a);
 
     if(options::instance().generate_assembly()) {
@@ -125,7 +126,7 @@ generate &generate::operator<<(const token &tok)
     {
     case token::type::TT_NUMBER:
         {
-            numeric_t tok_value = std::stoi(tok.data());
+            word_t tok_value = std::stoi(tok.data());
 
             // 0 is the indicator that the following is to be interpreted as a direct number
             compiled_code::instance(m_compiler).append(static_cast<uint8_t>(util::to_integral(type_destination::TYPE_MOD_IMM)));
@@ -153,7 +154,7 @@ generate &generate::operator<<(const label& l)
 
     /* For now the label will go out in the code asa numeric value since if it was not declared yet
      * there is no way for us to know the location itself */
-    for(size_t i=0; i<num_t_size; i++)
+    for(size_t i=0; i<word_size; i++)
     {
         compiled_code::instance(m_compiler).append (0xFF);
     }
@@ -174,11 +175,11 @@ generate &generate::operator <<(type_destination td)
     return *this;
 }
 
-generate &generate::operator <<(numeric_t v)
+generate &generate::operator <<(word_t v)
 {
     if(options::instance().generate_assembly()) { options::instance().asm_stream() << std::dec << std::setw(10) << v; }
 
-    numeric_t vm_v = htovm(v);
+    word_t vm_v = htovm(v);
     compiled_code::instance(m_compiler).append_number(vm_v);
     return *this;
 }
@@ -231,28 +232,28 @@ void compiled_code::string_encountered(int strtbl_idx)
 {
     if(string_encounters.count(strtbl_idx) > 0)
     {
-        string_encounters[strtbl_idx].push_back(static_cast<numeric_t>(bytes.size()));
+        string_encounters[strtbl_idx].push_back(static_cast<word_t>(bytes.size()));
     }
     else
     {
-        string_encounters[strtbl_idx] = { static_cast<numeric_t>(bytes.size()) };
+        string_encounters[strtbl_idx] = { static_cast<word_t>(bytes.size()) };
     }
 }
 
 void compiled_code::finalize()
 {
     // insert the offset of the string table bytes
-    for(size_t i=0; i<num_t_size; i++)
+    for(size_t i=0; i<word_size; i++)
     {
         bytes.insert(bytes.begin(), 0xFF);
     }
     // insert the index of the stack segments' start
-    for(size_t i=0; i<num_t_size; i++)
+    for(size_t i=0; i<word_size; i++)
     {
         bytes.insert(bytes.begin(), 0xFF);
     }
     // insert the reserved bytes
-    for(size_t i=0; i<num_t_size; i++)
+    for(size_t i=0; i<word_size; i++)
     {
         bytes.insert(bytes.begin(), 0xFF);
     }
@@ -264,16 +265,16 @@ void compiled_code::finalize()
     {
         for(const auto& lref : label_encounters[ldecl.first])
         {
-            numeric_t vm_ord = -1;
+            word_t vm_ord = -1;
             if(lref.first)  // means: absolute reference to the address of the label
             {
                 vm_ord = htovm(ldecl.second) + PRIMAL_HEADER_SIZE;
             }
             else    // relative reference to the address of the label
             {
-                numeric_t dist_diff = ldecl.second - lref.second;
+                word_t dist_diff = ldecl.second - lref.second;
                 // substract the size of a labels' address, as added in the generate to get the correct location
-                vm_ord = htovm(dist_diff) - static_cast<numeric_t>(num_t_size);
+                vm_ord = htovm(dist_diff) - static_cast<word_t>(word_size);
             }
 
             if(options::instance().generate_assembly())
@@ -288,25 +289,25 @@ void compiled_code::finalize()
 
     // fix the string table offset
     {
-    numeric_t l = bytes.size();
-    numeric_t vm_l = htovm(l);
+    word_t l = bytes.size();
+    word_t vm_l = htovm(l);
     memcpy( &bytes[4], &vm_l, sizeof(vm_l));
     }
 
     // fix the stack start offset
     {
-    numeric_t l = m_compiler->last_varcount(nullptr);
-    numeric_t vm_l = htovm(l);
+    word_t l = m_compiler->last_varcount(nullptr);
+    word_t vm_l = htovm(l);
     memcpy( &bytes[8], &vm_l, sizeof(vm_l));
     }
 
     // finalize the stringtable
-    numeric_t strtblcnt = stringtable::instance().count();
+    word_t strtblcnt = stringtable::instance().count();
     for(auto i = 0; i<strtblcnt; i++)
     {
         auto& e = stringtable::instance().e(i);
         uint8_t l = static_cast<uint8_t>(e.the_string.length());
-        e.location = static_cast<numeric_t>(bytes.size());
+        e.location = static_cast<word_t>(bytes.size());
         bytes.push_back(l);
         for(const auto& c : e.the_string)
         {
@@ -316,9 +317,9 @@ void compiled_code::finalize()
 
     for(const auto& s_e : string_encounters)
     {
-        numeric_t i = s_e.first;
+        word_t i = s_e.first;
         auto& entry = stringtable::instance().e(i);
-        numeric_t vm_loc = htovm(entry.location);
+        word_t vm_loc = htovm(entry.location);
         for(const auto& e : s_e.second)
         {
             memcpy(&bytes[0] + e + PRIMAL_HEADER_SIZE, &vm_loc, sizeof(vm_loc));
@@ -328,9 +329,9 @@ void compiled_code::finalize()
     // all done theoretically
 }
 
-void compiled_code::append_number(numeric_t v)
+void compiled_code::append_number(word_t v)
 {
-    numeric_t nv = htovm(v);
+    word_t nv = htovm(v);
 
     for(std::size_t i = 0; i< sizeof(v); i++)
     {
