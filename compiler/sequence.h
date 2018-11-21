@@ -14,19 +14,20 @@ namespace primal
     class compiler;
     class function;
 
-    /* A sequence represents a keyword and its attached expressions */
+    /* A sequence represents a keyword and its attached expression */
     class sequence
     {
     public:
 
+        /* A value returned by the prepare functions of specific keywords. */
         enum class prepared_type
         {
-            PT_NORMAL           = 1,
-            PT_PRECOMPILED      = 2,
-            PT_CONSUMED         = 3,
-            PT_FUNCTION_CALL    = 4,
-            PT_FUNCTION_DECL    = 5,
-            PT_INVALID          = 255
+            PT_NORMAL           = 1,        // this is the default value, we store the keyword and will parse the remaining expression
+            PT_PRECOMPILED      = 2,        // the ASM keyword returns that the sequence was already compiled by it
+            PT_CONSUMED         = 3,        // a keyword which consumes its epxression, so no work is needed here
+            PT_FUNCTION_CALL    = 4,        // a function call
+            PT_FUNCTION_DECL    = 5,        // a function declaration
+            PT_INVALID          = 255       // something went wrong
         };
 
         virtual ~sequence() = default;
@@ -51,6 +52,7 @@ namespace primal
 
     protected:
 
+        /* Compiles the simples of the expressions */
         virtual void traverse_ast(uint8_t level, const std::shared_ptr<ast>& croot, compiler* c);
 
     protected:

@@ -97,7 +97,7 @@ namespace primal
                     }
                     else
                     {
-                        if(prep_t != sequence::prepared_type::PT_CONSUMED)
+                        if(prep_t != sequence::prepared_type::PT_CONSUMED && prep_t != sequence::prepared_type::PT_PRECOMPILED)
                         {
                             // create the RPN for the expression
                             std::vector<token> output = shuntyard(tokens);

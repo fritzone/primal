@@ -9,6 +9,98 @@
 // primal::options::instance().generate_assembly(true);
 
 
+TEST_CASE("Compiler compiles, write function", "[compiler]")
+{
+
+    auto c = primal::compiler::create();
+
+    c->compile(R"code(
+
+               fun write(...)
+                    # Decrease the stack pointer to skip the pushed R254 and the return address. This is for 32 bit builds
+                    asm SUB $r255 8
+
+                    # First: the number of parameters that came in
+                    asm POP $r10
+
+                :next_var
+
+                    # fetch the value that needs to be printed
+                    asm POP $r2
+
+                    # This will contain the type of the variable: 1 for string, 0 for number
+                    asm POP $r1
+
+                    # print it out
+                    asm INTR 1
+
+                    # Move to the next variable
+                    asm SUB $r10 1
+
+                    # JT is logically equivalent to JNZ
+                    asm JT next_var
+
+               end
+
+
+               var a,b,c
+               let a = 56789
+               let b = 12345
+               let c = 66332
+               write(a,b,c)
+
+               )code"
+             );
+
+    auto vm = primal::vm::create();
+
+    REQUIRE(vm->run(c->bytecode()));
+
+    REQUIRE(vm->get_mem(0) == 56789);
+    REQUIRE(vm->r(1).value() == 0);
+}
+
+/*
+
+TEST_CASE("ASM compiler - jump in asm statements", "[asm-compiler]")
+{
+    primal::options::instance().generate_assembly(true);
+    auto c = primal::compiler::create();
+
+
+    c->compile(R"code(
+                      asm JMP lbl
+                      asm MOV $r1 30
+                    :lbl
+                )code"
+    );
+
+    auto vm = primal::vm::create();
+    REQUIRE(vm->run(c->bytecode()));
+    REQUIRE(vm->r(1).value() == 0);
+}
+
+TEST_CASE("ASM compiler - Reg byte mem access", "[asm-compiler]")
+{
+    auto c = primal::compiler::create();
+
+    c->compile(R"code(
+                      asm MOV [@$r1] 20
+                      asm MOV $r2 3
+                      asm MOV [@$r2] [@$r1]
+                      asm MOV $r3@0 [@0]
+                )code"
+    );
+
+    auto vm = primal::vm::create();
+    REQUIRE(vm->run(c->bytecode()));
+    REQUIRE(vm->get_mem_byte(0) == 20);
+    REQUIRE(static_cast<int>(vm->get_mem_byte(1)) == 0);
+    REQUIRE(static_cast<int>(vm->get_mem_byte(2)) == 0);
+    REQUIRE(vm->get_mem_byte(3) == 20);
+    REQUIRE(vm->r(3).value() == 20);
+}
+
 TEST_CASE("Compiler compiles, simple goto", "[compiler]")
 {
     auto c = primal::compiler::create();
@@ -54,7 +146,7 @@ TEST_CASE("Compiler compiles, simple if 2", "[compiler]")
                    let c = 5
                    if a == 2 or a == 3 and c == 5 then
                          let a = 9
-                   endif
+                   end
                )code"
              );
 
@@ -72,7 +164,7 @@ TEST_CASE("Compiler compiles, simple if 1", "[compiler]")
                    let a = 3
                    if a == 2 or a == 3 then
                          let a = 3
-                   endif
+                   end
                )code"
              );
 
@@ -94,8 +186,8 @@ TEST_CASE("Compiler compiles, if in if", "[compiler]")
                    if a == 2 then
                       if b == 3 then
                          let    a = 5
-                      endif
-                   endif
+                      end
+                   end
                )code"
              );
 
@@ -152,7 +244,7 @@ TEST_CASE("Compiler compiles, functions with params - 3rd", "[compiler]")
                        var b,z
                        let b = a
                        let z = x
-                   endf
+                   end
                    var b
                    let b = 77
                    let a = 88
@@ -179,7 +271,7 @@ TEST_CASE("Compiler compiles, functions with params - 2nd", "[compiler]")
                        var b
                        let b = 55
                        let a = 44
-                   endf
+                   end
                    var b
                    let b = 77
                    let a = 88
@@ -205,7 +297,7 @@ TEST_CASE("Compiler compiles, functions with params - 1st", "[compiler]")
                    var a
                    fun some(integer a)
                        let a = 44
-                   endf
+                   end
                    let a = 88
                    some (a)
                )code"
@@ -226,7 +318,7 @@ TEST_CASE("Compiler compiles, functions with params", "[compiler]")
                        var b
                        let b = 55
                        let a = 44
-                   endf
+                   end
                    some (4)
                )code"
              );
@@ -246,7 +338,7 @@ TEST_CASE("Compiler compiles, functions 1", "[compiler]")
                        var z
                        let z = 53
                        let a = 44
-                   endf
+                   end
                    some (4)
                    let t = 66
                )code"
@@ -256,27 +348,6 @@ TEST_CASE("Compiler compiles, functions 1", "[compiler]")
     REQUIRE(vm->run(c->bytecode()));
     REQUIRE(vm->get_mem(0) == 44);
     REQUIRE(vm->get_mem(word_size) == 66);
-}
-
-TEST_CASE("ASM compiler - Reg byte mem access", "[asm-compiler]")
-{
-    auto c = primal::compiler::create();
-
-    c->compile(R"code(
-                      asm MOV [@$r1] 20
-                      asm MOV $r2 3
-                      asm MOV [@$r2] [@$r1]
-                      asm MOV $r3@0 [@0]
-                )code"
-    );
-
-    auto vm = primal::vm::create();
-    REQUIRE(vm->run(c->bytecode()));
-    REQUIRE(vm->get_mem_byte(0) == 20);
-    REQUIRE(static_cast<int>(vm->get_mem_byte(1)) == 0);
-    REQUIRE(static_cast<int>(vm->get_mem_byte(2)) == 0);
-    REQUIRE(vm->get_mem_byte(3) == 20);
-    REQUIRE(vm->r(3).value() == 20);
 }
 
 #if TARGET_ARCH == 32
@@ -315,7 +386,7 @@ TEST_CASE("Asm compiler - stack operatons", "[asm-compiler")
     REQUIRE(vm->flag() != 0);
 }
 
-TEST_CASE("Compiler compiles, Simple write", "[compiler]")
+TEST_CASE("Compiler compiles, function with variable args", "[compiler]")
 {
     auto c = primal::compiler::create();
 
@@ -323,7 +394,7 @@ TEST_CASE("Compiler compiles, Simple write", "[compiler]")
                    fun some(...)
                        var int y
                        let y = 2
-                   endf
+                   end
                    var x,z
                    let x = 12
                    some (4)
@@ -362,7 +433,7 @@ TEST_CASE("Compiler compiles, IF test", "[compiler]")
                    let x = 1
                    if x == 1 then
                       let x = 3
-                   endif
+                   end
                )code"
              );
 

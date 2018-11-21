@@ -10,7 +10,7 @@
 #include "label.h"
 #include "variable.h"
 
-#include <kw_endf.h>
+#include <kw_end.h>
 
 using namespace primal;
 using namespace primal::opcodes;
@@ -84,7 +84,7 @@ void fun::parse()
     auto seqs = p.parse(m_src,
             [&](std::string s)
             {
-                return util::to_upper(s) == kw_endf::N;
+                return util::to_upper(s) == kw_end::N;
             },
     last);
     m_body = std::get<0>(seqs);

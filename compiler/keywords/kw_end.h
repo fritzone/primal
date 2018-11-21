@@ -6,13 +6,13 @@
 
 namespace primal
 {
-    class kw_endif : public sequence, public keyword
+    class kw_end : public sequence, public keyword
     {
     public:
 
-        static constexpr const char *N= "ENDIF";
+        static constexpr const char *N= "END";
 
-        explicit kw_endif(source& src) : sequence(src) {}
+        explicit kw_end(source& src) : sequence(src) {}
 
         sequence::prepared_type prepare(std::vector<token>&) override;
         bool compile(compiler*) override;

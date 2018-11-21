@@ -11,6 +11,8 @@
 
 namespace primal
 {
+    class compiler;
+
     class opcode_compiler_store
     {
     public:
@@ -22,7 +24,7 @@ namespace primal
         }
 
         template<class T>
-        void register_opcode(T&& v, std::function<std::vector<uint8_t>(std::vector<token>&)> cmplr)
+        void register_opcode(T&& v, std::function<std::vector<uint8_t>(std::vector<token>&, compiler*)> cmplr)
         {
             instance().register_opcode_by_name(v.name(), cmplr);
         }
@@ -32,7 +34,7 @@ namespace primal
             return opcode_compilers.count(opc) > 0;
         }
 
-        std::function<std::vector<uint8_t>(std::vector<token>&)>& opcode_compiler(const std::string& opc)
+        std::function<std::vector<uint8_t>(std::vector<token>&,compiler*)>& opcode_compiler(const std::string& opc)
         {
             if(!have_opcode(opc))
             {
@@ -43,12 +45,12 @@ namespace primal
 
     private:
 
-        void register_opcode_by_name(const std::string& name, const std::function<std::vector<uint8_t>(std::vector<token>&)>& cmplr)
+        void register_opcode_by_name(const std::string& name, const std::function<std::vector<uint8_t>(std::vector<token>&,compiler*)>& cmplr)
         {
             opcode_compilers[name] = cmplr;
         }
 
-        std::map<std::string, std::function<std::vector<uint8_t>(std::vector<token>&)>> opcode_compilers;
+        std::map<std::string, std::function<std::vector<uint8_t>(std::vector<token>&,compiler*)>> opcode_compilers;
     };
 
     /**
@@ -59,7 +61,10 @@ namespace primal
     public:
 
         // will generate the assebmly code for the given token holding assembly instructions
-        static void generate_assembly_code(const primal::opcodes::opcode &opc, const std::vector<token>& tokens, std::vector<uint8_t>& result);
+        static void generate_assembly_code(const primal::opcodes::opcode &opc,
+                                           const std::vector<token>& tokens,
+                                           std::vector<uint8_t>& result,
+                                           compiler* c);
     };
 
 }

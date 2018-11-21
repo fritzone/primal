@@ -18,7 +18,9 @@
 namespace primal
 {
 
-    std::vector<uint8_t> compile_@OPCODE@(std::vector<token>& tokens)
+    class compiler;
+
+    std::vector<uint8_t> compile_@OPCODE@(std::vector<token>& tokens, compiler* c)
     {
         opcodes::@OPCODE@ opc;
         auto work_tokens = token::identify_assembly_parameters(tokens, opc);
@@ -59,7 +61,7 @@ namespace primal
         std::vector<uint8_t> result;
 
         // solve the generation
-        asm_compiler::generate_assembly_code(opc, work_tokens, result);
+        asm_compiler::generate_assembly_code(opc, work_tokens, result, c);
 
         if(options::instance().generate_assembly())
         {

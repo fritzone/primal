@@ -58,12 +58,12 @@ bool primal::function_call::compile(primal::compiler *c)
 
     word_t pushed_params = 0;
 
-    for(auto& p : m_params)
+    for(auto ri = m_params.rbegin(); ri != m_params.rend(); ++ri)
     {
-        if(p.root()->data.get_type() != token::type::TT_STRING)
+        if(ri->root()->data.get_type() != token::type::TT_STRING)
         {
             // firstly: compile the parameter
-            sequence::traverse_ast(0, p.root(), c);
+            sequence::traverse_ast(0, ri->root(), c);
             // then push reg0 to the stack, since that contains the value of the parameter
 
             if(f->has_variadic_parameters())
@@ -79,7 +79,7 @@ bool primal::function_call::compile(primal::compiler *c)
         }
         else
         {
-            if(p.tokens().empty())
+            if(ri->tokens().empty())
             {
                 throw "internal compiler error";
             }
@@ -95,10 +95,13 @@ bool primal::function_call::compile(primal::compiler *c)
 
             // send out a PUSH with the bogus memory address of the string, which will be fixed in the finalize phase
             (*c->generator()) << opcodes::PUSH() << type_destination ::TYPE_MOD_MEM_IMM;
+            if(options::instance().generate_assembly()) { options::instance().asm_stream() << "# S." << std::dec << ri->tokens()[0].get_extra_info() << std::endl; }
+
             pushed_params ++;
 
             // notify the compiled code we have a future string reference here
-            compiled_code::instance(c).string_encountered(p.tokens()[0].get_extra_info());
+            compiled_code::instance(c).string_encountered(ri->tokens()[0].get_extra_info());
+
 
             for(size_t i=0; i<word_size; i++)
             {

@@ -17,7 +17,6 @@ namespace primal
     public:
         static std::map<std::string, std::function<std::shared_ptr<sequence>(source&)>> store;
 
-
     public:
 
         keyword() = default;

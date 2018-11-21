@@ -94,13 +94,19 @@ type_destination vm::fetch_type_dest()
     return static_cast<type_destination>(impl->ms[static_cast<size_t>(impl->m_ip ++)]) ;
 }
 
-void vm::bindump(word_t start, word_t end, bool insert_addr)
+void vm::bindump(const char *title, word_t start, word_t end, bool insert_addr)
 {
-    if(start == -1) start = VM_MEM_SEGMENT_SIZE;
+
+    if(start == -1) start = std::max<word_t>(VM_MEM_SEGMENT_SIZE, impl->m_ip - 64);
     if(end == -1) end = start + impl->app_size;
 
     std::stringstream ss;
     std::string s;
+
+    if(title)
+    {
+        ss << "----" << title << "----" << std::endl;
+    }
 
     for(word_t i = start; i < std::min(end, VM_MEM_SEGMENT_SIZE + impl->app_size); i++)
     {
@@ -156,7 +162,7 @@ void vm::bindump(word_t start, word_t end, bool insert_addr)
         ss << get_mem(i) << std::endl;
     }
     ss << "-"; // indicates the stack start
-    for(word_t i = impl->stack_offset * word_size; i<impl->max_used_sp + 32; i += word_size)
+    for(word_t i = impl->stack_offset * word_size; i<impl->max_used_sp + 4*word_size; i += word_size)
     {
         if(i == impl->sp.value())
         {
@@ -168,9 +174,13 @@ void vm::bindump(word_t start, word_t end, bool insert_addr)
         }
 
         ss << std::right << "[" << std::setfill('0') << std::setw(8) << std::dec << i << "] = ";
-        ss << std::setfill('0') << std::setw(8) << std::dec << get_mem(i) << std::endl;
+        ss << std::setfill('0') << std::setw(16) << std::dec << get_mem(i) << std::endl;
     }
     std::cout << ss.str();
+
+    std::cout << "IP=" << std::dec << impl->m_ip << "[:" << impl->m_ip - VM_MEM_SEGMENT_SIZE << "] (" << std::hex << impl->m_ip << ")" << std::endl;
+    std::cout << "SP=" << std::dec << impl->sp.value() << " (" << std::hex << impl->sp.value() << ")" << std::endl;
+    std::cout << std::endl;
 }
 
 void vm::panic()
@@ -178,10 +188,8 @@ void vm::panic()
     std::cout << "VM PANIC ☹ - instruction dump:\n---------------------------------------------------\n";
     word_t start = std::max<word_t>(VM_MEM_SEGMENT_SIZE, impl->m_ip - 64);
     word_t end = impl->m_ip + std::min<word_t>(64, impl->app_size);
-    bindump(start, end, true);
-    std::cout << "IP=" << std::dec << impl->m_ip << "[:" << impl->m_ip - VM_MEM_SEGMENT_SIZE << "] (" << std::hex << impl->m_ip << ")" << std::endl;
-    std::cout << "SP=" << std::dec << impl->sp.value() << " (" << std::hex << impl->sp.value() << ")" << std::endl;
-    std::cout << std::endl;
+    bindump("PANIC", start, end, true);
+
     throw primal::vm_panic("PANIC");
 }
 
@@ -365,7 +373,7 @@ word_t vm::flag() const {return impl->m_lbo.value();}
 
 word_t &vm::flag() {return impl->m_lbo.value();}
 
-bool vm::call(word_t v)
+bool vm::jump(word_t v)
 {
     impl->m_ip = VM_MEM_SEGMENT_SIZE + v;
     return impl->m_ip < VM_MEM_SEGMENT_SIZE + impl->app_size;

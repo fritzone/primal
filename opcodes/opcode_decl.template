@@ -13,6 +13,7 @@
 namespace primal
 {
     class vm;
+    class compiler;
 
     namespace opcodes
     {
@@ -26,7 +27,7 @@ namespace primal
     }
 
     bool impl_@OPCODE@(vm*);
-    std::vector<uint8_t> compile_@OPCODE@(std::vector<primal::token>&);
+    std::vector<uint8_t> compile_@OPCODE@(std::vector<primal::token>&,compiler*);
 
 }
 

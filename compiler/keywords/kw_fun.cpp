@@ -1,5 +1,5 @@
 #include "kw_fun.h"
-#include "kw_endf.h"
+#include "kw_end.h"
 #include "parser.h"
 #include "opcodes.h"
 #include "compiler.h"

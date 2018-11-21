@@ -38,7 +38,7 @@ bool kw_asm::compile(compiler *c)
     {
         options::instance().asm_stream() << std::setfill(' ') << std::right << std::setw(5) << std::dec << compiled_code::instance(c).location() + PRIMAL_HEADER_SIZE << ": ";
     }
-    m_precompiled = opcode_compiler_store::instance().opcode_compiler(m_opcode)(m_tokens);
+    m_precompiled = opcode_compiler_store::instance().opcode_compiler(m_opcode)(m_tokens,c);
 
     for(auto b : m_precompiled)
     {

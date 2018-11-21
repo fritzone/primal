@@ -6,7 +6,7 @@
 #include "label.h"
 #include "opcodes.h"
 #include "compiler.h"
-#include "kw_endif.h"
+#include "kw_end.h"
 
 #include <iostream>
 
@@ -33,7 +33,7 @@ sequence::prepared_type kw_if::prepare(std::vector<token> &tokens)
     auto seqs = p.parse(m_src,
             [&](std::string s)
             {
-                return util::to_upper(s) == kw_endif::N;
+                return util::to_upper(s) == kw_end::N;
             },
     last);
     m_if_body = std::get<0>(seqs);

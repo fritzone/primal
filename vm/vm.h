@@ -166,7 +166,7 @@ namespace primal
         word_t flag() const;
         word_t& flag();
 
-        bool call(word_t v);
+        bool jump(word_t v);
 
         // will perform the required interrupt
         // After execution the state of the VM must be the one specified in the interrupts documentation
@@ -175,7 +175,7 @@ namespace primal
         // returns true if the given number can be mapped in the memory space of the VM
         bool address_is_valid(word_t addr);
 
-        void bindump(word_t start = -1, word_t end = -1, bool insert_addr = true);
+        void bindump(const char* title = nullptr, word_t start = -1, word_t end = -1, bool insert_addr = true);
         
     private:
 

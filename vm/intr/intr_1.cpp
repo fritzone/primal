@@ -14,7 +14,7 @@ namespace primal
  */
 bool intr_1(vm* v)
 {
-    if(v->r(0) == 0)
+    if(v->r(1) == 0)
     {
         std::cout << v->r(2).value();
     }

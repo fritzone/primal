@@ -112,7 +112,7 @@ file(APPEND ${OPCC} "#include <opcodes.h>\n")
 file(APPEND ${OPCC} "namespace primal { \n void register_opcode_compilers() {\n")
 foreach(opcode ${registered_opcodes})
     set(VOPCODE ${opcode})
-    string(CONFIGURE "\tprimal::opcode_compiler_store::instance().register_opcode(primal::opcodes::${VOPCODE}(), [&](std::vector<primal::token>& t) -> std::vector<uint8_t> { return primal::compile_${VOPCODE}(t); });" conf_line @ONLY)
+    string(CONFIGURE "\tprimal::opcode_compiler_store::instance().register_opcode(primal::opcodes::${VOPCODE}(), [&](std::vector<primal::token>& t, compiler* c) -> std::vector<uint8_t> { return primal::compile_${VOPCODE}(t,c); });" conf_line @ONLY)
     file(APPEND ${OPCC} "${conf_line}\n")
     # and here add the cpp file to the project sources
     list(APPEND opcode-compiler-sources ${CMAKE_CURRENT_BINARY_DIR}/compile_${opcode}.cpp)

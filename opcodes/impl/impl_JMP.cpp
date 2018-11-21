@@ -6,7 +6,6 @@
 bool primal::impl_JMP(primal::vm* v)
 {
     auto* loc = v->fetch();
-    v->ip() = loc->value();
-    return true;
+    return v->jump(loc->value());
 }
 

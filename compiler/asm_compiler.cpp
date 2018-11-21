@@ -2,7 +2,11 @@
 #include "util.h"
 #include "exceptions.h"
 #include "opcode.h"
+#include "opcodes.h"
 #include "options.h"
+#include "compiler.h"
+#include "generate.h"
+#include "label.h"
 #include <numeric_decl.h>
 #include <opcodes.h>
 
@@ -11,7 +15,7 @@
 
 using namespace primal;
 
-void asm_compiler::generate_assembly_code(const primal::opcodes::opcode& opc, const std::vector<token>& tokens, std::vector<uint8_t>& result)
+void asm_compiler::generate_assembly_code(const primal::opcodes::opcode& opc, const std::vector<token>& tokens, std::vector<uint8_t>& result, compiler *c)
 {
 
     // the opcode for COPY
@@ -143,7 +147,19 @@ void asm_compiler::generate_assembly_code(const primal::opcodes::opcode& opc, co
             default:
             if(opc.family() == primal::opcodes::opcode_family::OF_JUMP)
             {
-                throw syntax_error("Jump commands cannot jump to labels. Use goto for that purpose.");
+                label l(c->get_source());
+                l.set_name(tokens[0].data());
+
+                result.push_back(util::to_integral(type_destination ::TYPE_MOD_IMM));
+
+                // notifying the label
+                compiled_code::instance(c).encountered(l, true, result.size());
+
+                // the label location
+                for(size_t i=0; i<word_size; i++)
+                {
+                    result.push_back(0xFF);
+                }
             }
             else
             {

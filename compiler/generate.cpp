@@ -201,25 +201,27 @@ void compiled_code::append(uint8_t b)
     bytes.push_back(b);
 }
 
-void compiled_code::encountered(const label& l, bool absolute)
+void compiled_code::encountered(const label& l, bool absolute, int delta )
 {
-    encountered(l.name(), absolute);
+    encountered(l.name(), absolute, delta);
 }
 
-void compiled_code::encountered(const std::string &s, bool absolute)
+void compiled_code::encountered(const std::string &s, bool absolute, int delta)
 {
     if(bytes.size() > std::numeric_limits<uint32_t>::max())
     {
         throw "sorry mate, this application is too complex for me to compile";
     }
 
+    if(options::instance().generate_assembly())options::instance().asm_stream() << "ENC: " << s << " at:" << std::dec << PRIMAL_HEADER_SIZE + static_cast<uint32_t>(delta + static_cast<int>(bytes.size()))  << std::endl;
+
     if(label_encounters.count(s) > 0)
     {
-        label_encounters[s].push_back( {absolute, static_cast<uint32_t>(bytes.size()) } );
+        label_encounters[s].push_back( {absolute, static_cast<uint32_t>(delta + static_cast<int>(bytes.size())) } );
     }
     else
     {
-        label_encounters[s] = { {absolute, static_cast<uint32_t>(bytes.size())} };
+        label_encounters[s] = { {absolute, static_cast<uint32_t>(delta + static_cast<int>(bytes.size())) } };
     }
 }
 
@@ -268,10 +270,12 @@ void compiled_code::finalize()
             word_t vm_ord = -1;
             if(lref.first)  // means: absolute reference to the address of the label
             {
+                if(options::instance().generate_assembly()) options::instance().asm_stream() << "ABSREF ";
                 vm_ord = htovm(ldecl.second) + PRIMAL_HEADER_SIZE;
             }
             else    // relative reference to the address of the label
             {
+                if(options::instance().generate_assembly()) options::instance().asm_stream() << "DELTA  ";
                 word_t dist_diff = ldecl.second - lref.second;
                 // substract the size of a labels' address, as added in the generate to get the correct location
                 vm_ord = htovm(dist_diff) - static_cast<word_t>(word_size);
@@ -279,7 +283,7 @@ void compiled_code::finalize()
 
             if(options::instance().generate_assembly())
             {
-                options::instance().asm_stream() << std::dec << "decl:" << ldecl.first << "(@" << ldecl.second << ") " << " ref found at " << lref.second << " patching to:" << vm_ord << std::endl;
+                options::instance().asm_stream() << std::dec << "decl:" << ldecl.first << "(@" << ldecl.second << ") " << " ref found at " << lref.second  << " patching to:" << vm_ord << std::endl;
             }
 
             memcpy( &bytes[0] + lref.second + PRIMAL_HEADER_SIZE, &vm_ord, sizeof(vm_ord));

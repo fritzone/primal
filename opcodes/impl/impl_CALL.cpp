@@ -10,5 +10,5 @@ bool primal::impl_CALL(primal::vm* v)
     // now push the current IP
     v->push( v->ip() );
     // and now just go to the address where the dest points
-    return v->call(dest->value());
+    return v->jump(dest->value());
 }

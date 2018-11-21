@@ -33,8 +33,8 @@ namespace primal
         void append(uint8_t b);
         void append_number(word_t v);
 
-        void encountered(const label&, bool absolute);
-        void encountered(const std::string&, bool absolute);
+        void encountered(const label&, bool absolute, int delta = 0);
+        void encountered(const std::string&, bool absolute, int delta = 0);
         void declare_label(const label&);
 
         void string_encountered(int strtbl_idx);

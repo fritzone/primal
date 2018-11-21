@@ -47,7 +47,7 @@ set(${project}-headers
         ${CMAKE_CURRENT_SOURCE_DIR}/function_call.h
         ${CMAKE_CURRENT_SOURCE_DIR}/stringtable.h
         ${CMAKE_CURRENT_SOURCE_DIR}/function.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/parameter.h
+	${CMAKE_CURRENT_SOURCE_DIR}/parameter.h
         ${CMAKE_CURRENT_SOURCE_DIR}/types.h
 )
 
@@ -61,12 +61,11 @@ set(${project}-headers
 ########################################################################################################################
 
 register_keyword(if)
-register_keyword(endif)
+register_keyword(end)
 register_keyword(let)
 register_keyword(asm)
 register_keyword(goto)
 register_keyword(fun)
-register_keyword(endf)
 register_keyword(var)
 
 ########################################################################################################################
