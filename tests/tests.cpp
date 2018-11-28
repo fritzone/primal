@@ -11,12 +11,12 @@
 
 TEST_CASE("Compiler compiles, write function", "[compiler]")
 {
-
     auto c = primal::compiler::create();
 
     c->compile(R"code(
-
                fun write(...)
+
+                    asm MOV $r249 $r255
                     # Decrease the stack pointer to skip the pushed R254 and the return address. This is for 32 bit builds
                     asm SUB $r255 8
 
@@ -28,8 +28,19 @@ TEST_CASE("Compiler compiles, write function", "[compiler]")
                     # fetch the value that needs to be printed
                     asm POP $r2
 
-                    # This will contain the type of the variable: 1 for string, 0 for number
+                    # This $r1 will contain the type of the variable: 1 for string, 0 for number
                     asm POP $r1
+
+                    # Is this a numeric value we want to print?
+                    asm EQ $r1 0
+
+                    # If yes, goto the print number location
+                    asm JT print_number
+
+                    # else goto the print string location
+                    asm JMP print_string
+
+                 :print_number
 
                     # print it out
                     asm INTR 1
@@ -40,15 +51,37 @@ TEST_CASE("Compiler compiles, write function", "[compiler]")
                     # JT is logically equivalent to JNZ
                     asm JT next_var
 
+                    # Done here, just return
+                    asm MOV $r255 $r249
+                    asm RET
+
+                 :print_string
+
+                    # Here $r2 contains the address of the string, first character is the length
+
+                    # Initialize $r1 with the length
+                    asm MOV $r1 0
+                    asm MOV $r1@0 [$r2+$r251]
+
+                    # Get the address of the actual character data
+                    asm ADD $r2 1
+
+                    # Print it
+                    asm INTR 1
+
+                    # Move to the next variable
+                    asm SUB $r10 1
+
+                    # JT is logically equivalent to JNZ
+                    asm JT next_var
+
+                    # Done here, just return
+                    asm MOV $r255 $r249
+                    asm RET
+
                end
 
-
-               var a,b,c
-               let a = 56789
-               let b = 12345
-               let c = 66332
-               write(a,b,c)
-
+               write(5678, "abc", "def", 1234)
                )code"
              );
 
@@ -56,15 +89,29 @@ TEST_CASE("Compiler compiles, write function", "[compiler]")
 
     REQUIRE(vm->run(c->bytecode()));
 
-    REQUIRE(vm->get_mem(0) == 56789);
-    REQUIRE(vm->r(1).value() == 0);
+}
+/*
+TEST_CASE("ASM compiler - Reg offseted Indexed mem access", "[asm-compiler]")
+{
+    primal::options::instance().generate_assembly(true);
+    auto c = primal::compiler::create();
+    c->compile(R"code(
+                      asm MOV [$r1+0] 20
+                      asm MOV $r2 [$r1]
+                      asm MOV [$r2-0] 32
+                )code"
+    );
+
+    auto vm = primal::vm::create();
+    REQUIRE(vm->run(c->bytecode()));
+    REQUIRE(vm->get_mem(0) == 20);
+    REQUIRE(vm->r(2).value() == 20);
+    REQUIRE(vm->get_mem(20) == 32);
 }
 
-/*
 
 TEST_CASE("ASM compiler - jump in asm statements", "[asm-compiler]")
 {
-    primal::options::instance().generate_assembly(true);
     auto c = primal::compiler::create();
 
 
@@ -210,26 +257,6 @@ TEST_CASE("Compiler compiles, interrupts", "[asm-compiler]")
 
     auto vm = primal::vm::create();
     REQUIRE(vm->run(c->bytecode()));
-}
-
-
-
-TEST_CASE("ASM compiler - Reg offseted Indexed mem access", "[asm-compiler]")
-{
-
-    auto c = primal::compiler::create();
-    c->compile(R"code(
-                      asm MOV [$r1+0] 20
-                      asm MOV $r2 [$r1]
-                      asm MOV [$r2-0] 32
-                )code"
-    );
-
-    auto vm = primal::vm::create();
-    REQUIRE(vm->run(c->bytecode()));
-    REQUIRE(vm->get_mem(0) == 20);
-    REQUIRE(vm->r(2).value() == 20);
-    REQUIRE(vm->get_mem(20) == 32);
 }
 
 TEST_CASE("Compiler compiles, functions with params - 3rd", "[compiler]")

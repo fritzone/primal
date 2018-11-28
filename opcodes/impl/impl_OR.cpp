@@ -9,7 +9,7 @@ bool primal::impl_OR(primal::vm* v)
     primal::valued* src  = v->fetch();
 
     *dest |= *src;
-    v->flag() = (*dest != 0);
+    v->set_flag(*dest != 0);
     return true;
 }
 

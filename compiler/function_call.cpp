@@ -94,7 +94,7 @@ bool primal::function_call::compile(primal::compiler *c)
             }
 
             // send out a PUSH with the bogus memory address of the string, which will be fixed in the finalize phase
-            (*c->generator()) << opcodes::PUSH() << type_destination ::TYPE_MOD_MEM_IMM;
+            (*c->generator()) << opcodes::PUSH() << type_destination ::TYPE_MOD_IMM;
             if(options::instance().generate_assembly()) { options::instance().asm_stream() << "# S." << std::dec << ri->tokens()[0].get_extra_info() << std::endl; }
 
             pushed_params ++;

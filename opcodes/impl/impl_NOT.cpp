@@ -7,7 +7,7 @@ bool primal::impl_NOT(primal::vm* v)
 {
     primal::valued* dest = v->fetch();
     dest->set_value(!dest->value());
-    v->flag() = (dest->value() != 0);
+    v->set_flag(dest->value() != 0);
     return true;
 }
 

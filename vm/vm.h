@@ -148,6 +148,7 @@ namespace primal
         type_destination fetch_type_dest();
         uint8_t fetch_register_index();
         word_t fetch_immediate();
+        uint8_t fetch_byte();
 
         bool copy(word_t dest, word_t src, word_t cnt);
 
@@ -164,7 +165,7 @@ namespace primal
 
         // the flag of the last operation
         word_t flag() const;
-        word_t& flag();
+        void set_flag(word_t);
 
         bool jump(word_t v);
 
@@ -176,8 +177,7 @@ namespace primal
         bool address_is_valid(word_t addr);
 
         void bindump(const char* title = nullptr, word_t start = -1, word_t end = -1, bool insert_addr = true);
-        
-    private:
+
 
         std::shared_ptr<vm_impl> impl;
 

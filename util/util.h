@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <functional>
 #include <map>
+#include <vector>
 
 namespace util
 {
@@ -71,5 +72,22 @@ namespace util
     {
         return static_cast<typename std::underlying_type<E>::type>(e);
     }
+
+    /** Simple class reused for the purpose of this app.
+     * @author Iain Hull (http://iainhull.github.io/)
+     */
+    class InputParser{
+        public:
+            InputParser (int &argc, char **argv){
+                for (int i=1; i < argc; ++i)
+                    this->tokens.push_back(std::string(argv[i]));
+            }
+            /// @author iain
+            const std::string& getCmdOption(const std::string &option) const;
+            /// @author iain
+            bool cmdOptionExists(const std::string &option) const;
+        private:
+            std::vector <std::string> tokens;
+    };
 }
 

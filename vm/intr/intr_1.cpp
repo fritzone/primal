@@ -1,6 +1,6 @@
 #include <vm.h>
 #include <numeric_decl.h>
-
+#include <vm_impl.h>
 #include <iostream>
 
 namespace primal
@@ -20,20 +20,20 @@ bool intr_1(vm* v)
     }
     else
     {
-        word_t addr = v->r(2).value();
+        word_t addr = VM_MEM_SEGMENT_SIZE + v->r(2).value();
         if(!v->address_is_valid(addr))
         {
             return false;
         }
 
         word_t len = v->r(1).value();
-        if(len < 0 || len > VM_MEM_SEGMENT_SIZE)
+        if(len < 0 || len > VM_MEM_SEGMENT_SIZE + v->impl->app_size )
         {
             return false;
         }
         while(len)
         {
-            std::cout << v->get_mem_byte(addr);
+            std::cout << static_cast<char>(v->get_mem_byte(addr));
             addr ++;
             len --;
         }

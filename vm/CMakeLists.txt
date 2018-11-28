@@ -71,3 +71,6 @@ add_library(${project} STATIC
 
 target_link_libraries(${project} hal opcode-impl util)
 target_include_directories(${project} PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+
+add_executable(primv ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
+target_link_libraries(primv ${project})

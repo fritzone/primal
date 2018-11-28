@@ -35,3 +35,18 @@ bool util::is_number(const std::string &s)
                                       s.end(), [](char c) { return !std::isdigit(c); }) == s.end();
 }
 
+
+const std::string &util::InputParser::getCmdOption(const std::string &option) const{
+    std::vector<std::string>::const_iterator itr;
+    itr =  std::find(this->tokens.begin(), this->tokens.end(), option);
+    if (itr != this->tokens.end() && ++itr != this->tokens.end()){
+        return *itr;
+    }
+    static const std::string empty_string("");
+    return empty_string;
+}
+
+bool util::InputParser::cmdOptionExists(const std::string &option) const{
+    return std::find(this->tokens.begin(), this->tokens.end(), option)
+            != this->tokens.end();
+}

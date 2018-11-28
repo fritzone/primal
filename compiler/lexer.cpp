@@ -26,10 +26,28 @@ std::vector<token> lexer::tokenize()
             while(i < l)
             {
                 current_token.extend(m_sequence[i]);
-                if(m_sequence[i] == '"') break;
+                if(m_sequence[i] == '"')
+                {
+                    if(m_sequence[i - 1] != '\\')
+                    {
+                        break;
+                    }
+                    std::string dt = current_token.data();
+                    if(dt.length() >= 2)
+                    {
+                        dt[dt.length() - 2] = '"';
+                        dt = dt.substr(0, dt.length() - 1);
+                        current_token.set_data(dt);
+                    }
+                }
                 i++;
             }
             i++; // i points to the closing " move it forward
+            // now remove the starting and ending double quotes from the string
+            std::string dt = current_token.data();
+            dt = dt.substr(1);
+            dt = dt.substr(0, dt.length() - 1);
+            current_token.set_data(dt);
         }
         else
         {

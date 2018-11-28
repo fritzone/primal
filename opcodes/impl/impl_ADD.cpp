@@ -10,7 +10,7 @@ bool primal::impl_ADD(primal::vm* v)
 
     *dest += *src;
 
-    v->flag() = (dest->value() != 0);
+    v->set_flag(dest->value() != 0);
 
     return true;
 }

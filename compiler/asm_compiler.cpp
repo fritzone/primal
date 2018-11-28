@@ -90,20 +90,42 @@ void asm_compiler::generate_assembly_code(const primal::opcodes::opcode& opc, co
                         std::string reg = td.substr(0, oppos);
                         std::string distance = td.substr(oppos); // this will take in + or - too
                         token t_reg(reg, token::type::TT_REGISTER);
-                        int dist = std::stoi(distance);
 
-                        if(t_reg.is_register())
+                        uint8_t op = distance[0];
+                        distance = distance.substr(1);  // skip the + or -, it does not matter here
+
+                        if(util::is_number(distance))    // is the distance a number
                         {
-                            auto r = t_reg.create_register();
-                            result.push_back(static_cast<uint8_t>(util::to_integral(type_destination ::TYPE_MOD_MEM_REG_IDX_OFFS)));
-                            result.push_back(r.idx());
-                            word_t nv = htovm(static_cast<word_t>(dist));
+                            int dist = std::stoi(distance);
 
-                            for(std::size_t i = 0; i< word_size; i++)
+                            if(t_reg.is_register())
                             {
-                                result.push_back( * ((reinterpret_cast<uint8_t *>(&nv) + i ) ));
+                                auto r = t_reg.create_register();
+                                result.push_back(static_cast<uint8_t>(util::to_integral(type_destination ::TYPE_MOD_MEM_REG_IDX_OFFS)));
+                                result.push_back(r.idx());
+                                result.push_back(op);
+                                word_t nv = htovm(static_cast<word_t>(dist));
+
+                                for(std::size_t i = 0; i< word_size; i++)
+                                {
+                                    result.push_back( * ((reinterpret_cast<uint8_t *>(&nv) + i ) ));
+                                }
                             }
                         }
+                        else    // is the distance a register?
+                        {
+                            token t_reg2(distance, token::type::TT_REGISTER);
+                            if(t_reg2.is_register() && t_reg.is_register())
+                            {
+                                auto r = t_reg.create_register();
+                                auto r2 = t_reg2.create_register();
+                                result.push_back(static_cast<uint8_t>(util::to_integral(type_destination ::TYPE_MOD_MEM_REG_IDX_REG_OFFS)));
+                                result.push_back(r.idx());
+                                result.push_back(op);
+                                result.push_back(r2.idx());
+                            }
+                        }
+
                     }
                 }
                 else

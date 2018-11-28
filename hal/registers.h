@@ -80,7 +80,6 @@ namespace primal
         valued& operator ^= (const valued& v) { set_value(value() ^ v.value()); return *this; }
 
         virtual word_t value() const {return m_value;}
-        virtual word_t& value() {return m_value;}
 
         virtual void set_value(word_t v) {m_value = v;}
 

@@ -33,11 +33,14 @@ bool vm::run(const std::vector<uint8_t> &app)
 
     // then copy over the data from app to the end of the memory segment
     std::copy(app.begin(), app.end(), impl->ms.get() + VM_MEM_SEGMENT_SIZE);
-
     // set the IP and SP to point to the correct location
     impl->m_ip = VM_MEM_SEGMENT_SIZE + PRIMAL_HEADER_SIZE; // will grow upwards, will skip .P10 and the stringtable loc entry
     impl->stack_offset = *reinterpret_cast<word_t*>(impl->ms.get() + VM_MEM_SEGMENT_SIZE + 8);
     impl->sp = impl->stack_offset * word_size;   // will grow upwards
+
+    // set the size of the memory into reg 251
+    impl->m_r[251] = VM_MEM_SEGMENT_SIZE;
+    impl->m_r[252] = impl->sp;
 
     // then start running it
     while(impl->opcode_runners.count(impl->ms[static_cast<size_t>(impl->m_ip)]))
@@ -97,18 +100,18 @@ type_destination vm::fetch_type_dest()
 void vm::bindump(const char *title, word_t start, word_t end, bool insert_addr)
 {
 
-    if(start == -1) start = std::max<word_t>(VM_MEM_SEGMENT_SIZE, impl->m_ip - 64);
-    if(end == -1) end = start + impl->app_size;
+    if(start == -1) start = VM_MEM_SEGMENT_SIZE; //std::max<word_t>(VM_MEM_SEGMENT_SIZE, impl->m_ip - 64);
+    if(end == -1) end = VM_MEM_SEGMENT_SIZE + impl->app_size;
 
     std::stringstream ss;
     std::string s;
 
     if(title)
     {
-        ss << "----" << title << "----" << std::endl;
+        std::cout << "----" << title << "----" << std::endl;
     }
 
-    for(word_t i = start; i < std::min(end, VM_MEM_SEGMENT_SIZE + impl->app_size); i++)
+    for(word_t i = start; i <  end; i++)
     {
         if(insert_addr)
         {
@@ -151,7 +154,11 @@ void vm::bindump(const char *title, word_t start, word_t end, bool insert_addr)
             insert_addr = true;
         }
     }
-    std::cout << ss.str() << std::endl;
+
+    std::string sttrs = ss.str();
+    while(sttrs.length() < 80) sttrs += " ";
+
+    std::cout << sttrs << "    | " << s << std::endl;
     ss.clear();
     ss.str(std::string());
 
@@ -205,9 +212,14 @@ word_t vm::fetch_immediate()
     return retv;
 }
 
+uint8_t vm::fetch_byte()
+{
+    return impl->ms[static_cast<size_t>(impl->m_ip ++)];
+}
+
 void vm::set_mem(word_t address, word_t new_value)
 {
-    if(address > VM_MEM_SEGMENT_SIZE || address < 0)
+    if(address > VM_MEM_SEGMENT_SIZE + impl->app_size || address < 0)
     {
         panic();
     }
@@ -217,7 +229,7 @@ void vm::set_mem(word_t address, word_t new_value)
 
 word_t vm::get_mem(word_t address)
 {
-    if(address > VM_MEM_SEGMENT_SIZE || address < 0)
+    if(address > VM_MEM_SEGMENT_SIZE + impl->app_size || address < 0)
     {
         panic();
     }
@@ -229,7 +241,7 @@ word_t vm::get_mem(word_t address)
 
 void vm::set_mem_byte(word_t address, uint8_t b)
 {
-    if(address > VM_MEM_SEGMENT_SIZE || address < 0)
+    if(address > VM_MEM_SEGMENT_SIZE + impl->app_size || address < 0)
     {
         panic();
     }
@@ -238,7 +250,7 @@ void vm::set_mem_byte(word_t address, uint8_t b)
 
 uint8_t vm::get_mem_byte(word_t address)
 {
-    if(address > VM_MEM_SEGMENT_SIZE || address < 0)
+    if(address > VM_MEM_SEGMENT_SIZE + impl->app_size || address < 0)
     {
         panic();
     }
@@ -360,8 +372,50 @@ valued *vm::fetch()
         case type_destination::TYPE_MOD_MEM_REG_IDX_OFFS:
         {
             uint8_t ridx = fetch_register_index();
+            uint8_t op = fetch_byte();
+
             word_t vaddr = fetch_immediate();
-            return mem(r(ridx).value() + vaddr);
+
+            if(op == '+')
+            {
+                return mem_byte(r(ridx).value() + vaddr);
+            }
+            else if(op == '-')
+            {
+                return mem_byte(r(ridx).value() - vaddr);
+            }
+            else if(op == '*')
+            {
+                return mem_byte(r(ridx).value() * vaddr);
+            }
+            else if(op == '/')
+            {
+                return mem_byte(r(ridx).value() / vaddr);
+            }
+            break;
+        }
+
+        case type_destination::TYPE_MOD_MEM_REG_IDX_REG_OFFS:
+        {
+            uint8_t ridx = fetch_register_index();
+            uint8_t op = fetch_byte();
+            uint8_t ridx2 = fetch_register_index();
+            if(op == '+')
+            {
+                return mem_byte( r(ridx).value() + r(ridx2).value() );
+            }
+            else if(op == '-')
+            {
+                return mem_byte( r(ridx).value() - r(ridx2).value() );
+            }
+            else if(op == '*')
+            {
+                return mem_byte( r(ridx).value() * r(ridx2).value() );
+            }
+            else if(op == '/')
+            {
+                return mem_byte( r(ridx).value() / r(ridx2).value() );
+            }
         }
     }
 
@@ -371,7 +425,10 @@ valued *vm::fetch()
 
 word_t vm::flag() const {return impl->m_lbo.value();}
 
-word_t &vm::flag() {return impl->m_lbo.value();}
+void vm::set_flag(word_t v)
+{
+    impl->m_r[253].set_value( v );
+}
 
 bool vm::jump(word_t v)
 {
