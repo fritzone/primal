@@ -11,6 +11,8 @@
 
 TEST_CASE("Compiler compiles, write function", "[compiler]")
 {
+    primal::options::instance().generate_assembly(true);
+
     auto c = primal::compiler::create();
 
     c->compile(R"code(
@@ -53,7 +55,7 @@ TEST_CASE("Compiler compiles, write function", "[compiler]")
 
                     # Done here, just return
                     asm MOV $r255 $r249
-                    asm RET
+                    asm JMP leave
 
                  :print_string
 
@@ -77,8 +79,7 @@ TEST_CASE("Compiler compiles, write function", "[compiler]")
 
                     # Done here, just return
                     asm MOV $r255 $r249
-                    asm RET
-
+               :leave
                end
 
                write(5678, "abc", "def", 1234)

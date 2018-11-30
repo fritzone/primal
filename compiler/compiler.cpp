@@ -12,6 +12,8 @@
 
 #include <all_keywords.h>
 
+#include <fstream>
+#include <streambuf>
 #include <iomanip>
 
 using namespace primal;
@@ -27,8 +29,11 @@ std::shared_ptr<compiler> compiler::create()
 bool compiler::compile(const std::string &s)
 {
     parser p;
-    std::string trimmed = s;
+    std::string preprocessed = preprocess(s);
+
+    std::string trimmed = preprocessed;
     trimmed = util::strim(trimmed);
+
     m_src = source(trimmed);
     std::string last;
     auto seqs = p.parse(m_src, [&](std::string) {return false;}, last);
@@ -191,6 +196,41 @@ std::shared_ptr<variable> compiler::create_variable(const std::string &name)
 void compiler::set_frame(fun *f)
 {
     m_current_frame = f;
+}
+
+std::string compiler::preprocess(const std::string& s)
+{
+    std::string result;
+
+    std::istringstream f(s);
+    std::string line;
+    while (std::getline(f, line))
+    {
+        util::strim(line);
+        if(line.find("import") == 0)
+        {
+            std::string package = line.substr(6);
+            util::strim(package);
+            package += ".prim";
+
+            std::ifstream pf(package);
+            std::string app((std::istreambuf_iterator<char>(pf)),
+                             std::istreambuf_iterator<char>());
+
+            std::string preprocessed_package = preprocess(app);
+            result += preprocessed_package;
+
+        }
+        else
+        {
+            if(!line.empty() && line[0] != '#')
+            {
+                result += line + "\n";
+            }
+        }
+    }
+
+    return result;
 }
 
 compiler::~compiler()

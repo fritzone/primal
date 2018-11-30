@@ -49,6 +49,8 @@ namespace primal
         void set_frame(fun* f);
         fun* frame() const { return m_current_frame; }
 
+        std::string preprocess(const std::string& s);
+
     private:
 
         source m_src;
