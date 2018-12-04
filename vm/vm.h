@@ -137,47 +137,105 @@ namespace primal
          */
         const reg& r(uint8_t i) const;
 
-        // access function for a given sub reg byte
-        reg_subbyte* rsb(uint8_t ridx, uint8_t bidx);
-
-        // access the memory at the given location
-        memaddress* mem(word_t address);
-        memaddress_byte_ref* mem_byte(word_t address);
-        immediate* imm(word_t v);
-
-        type_destination fetch_type_dest();
-        uint8_t fetch_register_index();
-        word_t fetch_immediate();
-        uint8_t fetch_byte();
-
+        /**
+         * @brief copy Copies a buffer in the memory area of the VM
+         *
+         * @param dest The destination address
+         * @param src The source address
+         * @param cnt The number of bytes to oppy
+         *
+         * @return True or false, depending if the address were correct or not
+         */
         bool copy(word_t dest, word_t src, word_t cnt);
 
+        /**
+         * @brief push Pushes a value onto the VM's stack
+         *
+         * @param v The value to push
+         *
+         * @return True. If the stack is full the VM will have a panic attack.
+         */
         bool push(const valued* v);
+
+        /**
+         * @brief push Pushes a number onto the stack.
+         *
+         * @param v the number to push
+         *
+         * @return True. If the stack is full the VM will have a panic attack.
+         */
         bool push(const word_t v);
 
+        /**
+         * @brief pop Pops a number from the stack and returns it
+         *
+         * If the stack is empty the VM will throw a pani exception.
+         *
+         * @return The popped number.
+         */
         word_t pop();
 
-
-
+        /**
+         * This method is called when the VM entered an exceptionally bad situation.
+         * A dump of the memory is performed and the application will exit.
+         */
         [[noreturn]] void panic() ;
 
+        /**
+         * @brief fetch Will return the next object from the virtual machine's memory.
+         *
+         * This gives an object in order for the opcode implementations to perform operation on them
+         *
+         * @return The next valued object which can be used to peform operations on them
+         */
         valued* fetch();
 
-        // the flag of the last operation
+        /**
+         * @brief flag Returns the flag of the last operation.
+         *
+         * The flag is zero if the result of the last operation was zero, otherwise is not zero
+         *
+         * @return The VM's flag register.
+         */
         word_t flag() const;
-        void set_flag(word_t);
 
+        /**
+         * @brief set_flag Sets the flag to the given value
+         *
+         * @param v the new value of the flag
+         */
+        void set_flag(word_t v);
+
+        /**
+         * @brief jump Will execute a jump operation in the bytecode of the VM
+         *
+         * This method will not throw an exception if the VM's IP has left it's internal memory range
+         *
+         * @param v The new address to jump to
+         *
+         * @return True if the new address is inside the valid memory range of the VM, false if not
+         */
         bool jump(word_t v);
 
-        // will perform the required interrupt
-        // After execution the state of the VM must be the one specified in the interrupts documentation
+        /**
+         * @brief interrupt will perform the required interrupt
+         *
+         * After execution the state of the VM must be the one specified in the interrupts documentation.
+         * Before the interrupt, the VM needs to set up its structures as per the interrupts requirements.
+         *
+         * @param i The interrupt number.
+         * @return The value the interrupt handler returned
+         */
         bool interrupt(word_t i);
 
-        // returns true if the given number can be mapped in the memory space of the VM
+        /**
+         * @brief address_is_valid returns true if the given number can be mapped in the memory space of the VM
+         * @param addr The address
+         * @return True/False
+         */
         bool address_is_valid(word_t addr);
 
-        void bindump(const char* title = nullptr, word_t start = -1, word_t end = -1, bool insert_addr = true);
-
+    private:
 
         std::shared_ptr<vm_impl> impl;
 

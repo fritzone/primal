@@ -27,7 +27,7 @@ bool intr_1(vm* v)
         }
 
         word_t len = v->r(1).value();
-        if(len < 0 || len > VM_MEM_SEGMENT_SIZE + v->impl->app_size )
+        if(v->address_is_valid(len))
         {
             return false;
         }

@@ -20,6 +20,8 @@ class vm;
 struct vm_impl
 {
 
+    friend class vm;
+
     vm_impl();
     ~vm_impl();
 
@@ -27,6 +29,8 @@ struct vm_impl
     {
         std::function<bool(vm*)> runner;
     };
+
+    bool run(const std::vector<uint8_t> &app, vm *v);
 
     template<class OPC, class EXECUTOR>
     static void register_opcode(OPC&& o, EXECUTOR&& ex)
@@ -46,6 +50,54 @@ struct vm_impl
         interrupts[intrn] = t;
     }
 
+    [[noreturn]] void panic() ;
+
+
+    void bindump(const char* title = nullptr, word_t start = -1, word_t end = -1, bool insert_addr = true);
+
+    /**
+     * @brief rsb is an access function for a given byte from a register
+     */
+
+    reg_subbyte* rsb(uint8_t ridx, uint8_t bidx);
+
+
+    void set_mem(word_t address, word_t new_value);
+
+    word_t get_mem(word_t address);
+
+    void set_mem_byte(word_t address, uint8_t b);
+
+    uint8_t get_mem_byte(word_t address);
+
+    bool copy(word_t dest, word_t src, word_t cnt);
+
+    // access the memory at the given location
+    memaddress* mem(word_t address);
+    memaddress_byte_ref* mem_byte(word_t address);
+    immediate* imm(word_t v);
+
+    type_destination fetch_type_dest();
+    uint8_t fetch_register_index();
+    word_t fetch_immediate();
+    uint8_t fetch_byte();
+
+    valued *fetch();
+
+
+    word_t &ip();
+
+    word_t ip() const;
+    word_t flag() const;
+
+
+    bool push(const valued* v);
+
+    bool push(const word_t v);
+
+    word_t pop();
+
+private:
 
     static std::map<uint8_t, executor> opcode_runners;
     static std::map<word_t, executor> interrupts;
