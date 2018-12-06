@@ -6,8 +6,87 @@
 #include <options.h>
 #include <iostream>
 
+TEST_CASE("Compiler fibonacci", "[compiler]")
+{
+    std::shared_ptr<primal::compiler> c = primal::compiler::create();
+    c->compile(R"code(
+                   import write
+
+                   var t1, t2, nextTerm, n
+                   let n = 100
+
+                   let t1 = 0
+                   let t2 = 1
+
+                   :again
+
+                   let nextTerm = t1 + t2
+
+                   let t1 = t2
+                   let t2 = nextTerm
+                   if nextTerm < n then
+                       write(nextTerm, "  ")
+                       goto again
+                   end
+                )code");
+
+    std::shared_ptr<primal::vm> vm = primal::vm::create();
+    REQUIRE(vm->run(c->bytecode()));
+    REQUIRE(vm->get_mem(12) == 144);
+
+} /**/
+
+
 // primal::options::instance().generate_assembly(true);
 
+#if TARGET_ARCH == 32
+
+TEST_CASE("Asm compiler - JUMP test", "[asm-compiler]")
+{
+    primal::options::instance().generate_assembly(true);
+
+    // ASM code below will jump over the MOV $r1, 43. Please note, there is added 16 bytes for the header!
+    std::shared_ptr<primal::compiler> c = primal::compiler::create();
+    c->compile(R"code(
+                      asm MOV $r1 42
+                      asm JMP 38
+                      asm MOV $r1 43
+                      asm SUB $r1 1
+                )code");
+
+    std::shared_ptr<primal::vm> vm = primal::vm::create();
+    REQUIRE(vm->run(c->bytecode()));
+    REQUIRE(vm->r(1).value() == 41);
+}
+
+#endif
+
+TEST_CASE("Compiler compiles, functions with params - 3rd", "[compiler]")
+{
+
+
+    auto c = primal::compiler::create();
+
+    c->compile(R"code(
+                   var a
+                   fun some(integer a x)
+                       var b,z
+                       let b = a
+                       let z = x
+                   end
+                   var b
+                   let b = 77
+                   let a = 88
+                   some (b a)
+
+               )code"
+             );
+
+    auto vm = primal::vm::create();
+    REQUIRE(vm->run(c->bytecode()));
+    REQUIRE(vm->get_mem(0) == 77);
+    REQUIRE(vm->get_mem(word_size) == 88);
+}
 
 TEST_CASE("Compiler compiles, write function", "[compiler]")
 {
@@ -91,7 +170,7 @@ TEST_CASE("Compiler compiles, write function", "[compiler]")
     REQUIRE(vm->run(c->bytecode()));
 
 }
-/*
+
 TEST_CASE("ASM compiler - Reg offseted Indexed mem access", "[asm-compiler]")
 {
     primal::options::instance().generate_assembly(true);
@@ -260,34 +339,6 @@ TEST_CASE("Compiler compiles, interrupts", "[asm-compiler]")
     REQUIRE(vm->run(c->bytecode()));
 }
 
-TEST_CASE("Compiler compiles, functions with params - 3rd", "[compiler]")
-{
-
-
-    auto c = primal::compiler::create();
-
-    c->compile(R"code(
-                   var a
-                   fun some(integer a x)
-                       var b,z
-                       let b = a
-                       let z = x
-                   end
-                   var b
-                   let b = 77
-                   let a = 88
-                   some (b a)
-
-               )code"
-             );
-
-    auto vm = primal::vm::create();
-    REQUIRE(vm->run(c->bytecode()));
-    REQUIRE(vm->get_mem(0) == 77);
-    REQUIRE(vm->get_mem(word_size) == 88);
-}
-
-
 TEST_CASE("Compiler compiles, functions with params - 2nd", "[compiler]")
 {
 
@@ -377,26 +428,6 @@ TEST_CASE("Compiler compiles, functions 1", "[compiler]")
     REQUIRE(vm->get_mem(0) == 44);
     REQUIRE(vm->get_mem(word_size) == 66);
 }
-
-#if TARGET_ARCH == 32
-
-TEST_CASE("Asm compiler - JUMP test", "[asm-compiler]")
-{
-    // ASM code below will jump over the MOV $r1, 43. Please note, there is added 16 bytes for the header!
-    std::shared_ptr<primal::compiler> c = primal::compiler::create();
-    c->compile(R"code(
-                      asm MOV $r1 42
-                      asm JMP 1048614
-                      asm MOV $r1 43
-                      asm SUB $r1 1
-                )code");
-
-    std::shared_ptr<primal::vm> vm = primal::vm::create();
-    REQUIRE(vm->run(c->bytecode()));
-    REQUIRE(vm->r(1).value() == 41);
-}
-
-#endif
 
 TEST_CASE("Asm compiler - stack operatons", "[asm-compiler")
 {

@@ -74,6 +74,7 @@ generate &generate::operator<<(variable &&var)
         // at the entry point reg 254 is set up to pointto the first element after the SP, ie. the first local variable
         compiled_code::instance(m_compiler).append(static_cast<uint8_t>(util::to_integral(type_destination ::TYPE_MOD_MEM_REG_IDX_OFFS)));
         compiled_code::instance(m_compiler).append(254);
+        compiled_code::instance(m_compiler).append('+');
         compiled_code::instance(m_compiler).append_number(address);
     }
     else            // this is a global
@@ -213,7 +214,7 @@ void compiled_code::encountered(const std::string &s, bool absolute, int delta)
         throw "sorry mate, this application is too complex for me to compile";
     }
 
-    if(options::instance().generate_assembly())options::instance().asm_stream() << "ENC: " << s << " at:" << std::dec << PRIMAL_HEADER_SIZE + static_cast<uint32_t>(delta + static_cast<int>(bytes.size()))  << std::endl;
+    if(options::instance().generate_assembly())options::instance().asm_stream() << "\nENC: " << s << " at:" << std::dec << PRIMAL_HEADER_SIZE + static_cast<uint32_t>(delta + static_cast<int>(bytes.size()))  << std::endl;
 
     if(label_encounters.count(s) > 0)
     {

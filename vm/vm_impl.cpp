@@ -83,7 +83,7 @@ void vm_impl::panic()
 {
     std::cout << "VM PANIC ☹ - instruction dump:\n---------------------------------------------------\n";
     word_t start = std::max<word_t>(VM_MEM_SEGMENT_SIZE, m_ip - 64);
-    word_t end = VM_MEM_SEGMENT_SIZE + m_ip + std::min<word_t>(64, app_size);
+    word_t end = m_ip + std::min<word_t>(64, app_size);
     bindump("PANIC", start, end, true);
 
     throw primal::vm_panic("PANIC");

@@ -117,7 +117,7 @@ bool vm::interrupt(word_t i)
 
 bool vm::address_is_valid(word_t addr)
 {
-    return addr < impl->app_size + VM_MEM_SEGMENT_SIZE && addr >= 0;
+    return addr <= impl->app_size + VM_MEM_SEGMENT_SIZE && addr >= 0;
 }
 
 

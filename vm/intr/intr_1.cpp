@@ -21,16 +21,7 @@ bool intr_1(vm* v)
     else
     {
         word_t addr = VM_MEM_SEGMENT_SIZE + v->r(2).value();
-        if(!v->address_is_valid(addr))
-        {
-            return false;
-        }
-
         word_t len = v->r(1).value();
-        if(v->address_is_valid(len))
-        {
-            return false;
-        }
         while(len)
         {
             std::cout << static_cast<char>(v->get_mem_byte(addr));
