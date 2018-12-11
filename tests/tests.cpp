@@ -8,6 +8,29 @@
 
 //     primal::options::instance().generate_assembly(true);
 
+#if TARGET_ARCH == 32
+
+TEST_CASE("Asm compiler - JUMP test", "[asm-compiler]")
+{
+    primal::options::instance().generate_assembly(true);
+    // ASM code below will jump over the MOV $r1, 43. Please note, there is added 16 bytes for the header!
+    std::shared_ptr<primal::compiler> c = primal::compiler::create();
+    c->compile(R"code(
+                      asm MOV $r1 42
+                      asm JMP 1048614
+                      asm MOV $r1 43
+                      asm SUB $r1 1
+                )code");
+
+    std::shared_ptr<primal::vm> vm = primal::vm::create();
+    REQUIRE(vm->run(c->bytecode()));
+    REQUIRE(vm->r(1).value() == 41);
+}
+
+#endif
+
+/*
+
 TEST_CASE("Compiler compiles, function with variable args", "[compiler]")
 {
     auto c = primal::compiler::create();
@@ -158,25 +181,6 @@ TEST_CASE("Compiler fibonacci", "[compiler]")
 
 }
 
-#if TARGET_ARCH == 32
-
-TEST_CASE("Asm compiler - JUMP test", "[asm-compiler]")
-{
-    // ASM code below will jump over the MOV $r1, 43. Please note, there is added 16 bytes for the header!
-    std::shared_ptr<primal::compiler> c = primal::compiler::create();
-    c->compile(R"code(
-                      asm MOV $r1 42
-                      asm JMP 1048614
-                      asm MOV $r1 43
-                      asm SUB $r1 1
-                )code");
-
-    std::shared_ptr<primal::vm> vm = primal::vm::create();
-    REQUIRE(vm->run(c->bytecode()));
-    REQUIRE(vm->r(1).value() == 41);
-}
-
-#endif
 
 TEST_CASE("Compiler compiles, functions with params - 3rd", "[compiler]")
 {
