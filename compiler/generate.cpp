@@ -272,7 +272,7 @@ void compiled_code::finalize()
             if(lref.first)  // means: absolute reference to the address of the label
             {
                 if(options::instance().generate_assembly()) options::instance().asm_stream() << "ABSREF ";
-                vm_ord = htovm(ldecl.second) + PRIMAL_HEADER_SIZE;
+                vm_ord = htovm(ldecl.second) + PRIMAL_HEADER_SIZE + VM_MEM_SEGMENT_SIZE;
             }
             else    // relative reference to the address of the label
             {

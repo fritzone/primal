@@ -98,7 +98,7 @@ void vm::set_flag(word_t v)
 
 bool vm::jump(word_t v)
 {
-    impl->m_ip = VM_MEM_SEGMENT_SIZE + v;
+    impl->m_ip = v;
     return impl->m_ip < VM_MEM_SEGMENT_SIZE + impl->app_size;
 }
 
