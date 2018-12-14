@@ -15,6 +15,7 @@
 #include "exceptions.h"
 #include "function_call.h"
 #include "function.h"
+#include "stringtable.h"
 
 #include <iostream>
 
@@ -102,6 +103,30 @@ void sequence::traverse_ast(uint8_t level, const std::shared_ptr<ast>& croot, co
     if (tt == token::type::TT_NUMBER)
     {
         (*c->generator()) << MOV() << reg(level) << croot->data;
+    }
+    else
+    if(tt == token::type::TT_STRING)
+    {
+        // 1. allocate a location for the given string in the memory after the end of the global variables
+        word_t after_variables = variable::global_variable_count() * word_size + 4096;
+
+        // 2. mov into the given register level the allocated address
+        (*c->generator()) << MOV() << reg(level) << type_destination::TYPE_MOD_IMM << after_variables;
+
+        // 3. copy the data from the string table to the given address
+        (*c->generator()) << COPY() << type_destination::TYPE_MOD_IMM << after_variables     // DEST
+                          << type_destination::TYPE_MOD_IMM;                                 // SRC
+
+        // 4. notify the compiled code we have a future string reference here
+        compiled_code::instance(c).string_encountered(croot->data.get_extra_info());
+        for(size_t i=0; i<word_size; i++)                                                    // SRC
+        {                                                                                    // SRC
+            compiled_code::instance(c).append (0xFF);                                        // SRC
+        }                                                                                    // SRC
+
+        std::string to_copy = stringtable::instance().e(croot->data.get_extra_info()).the_string;
+        (*c->generator()) << type_destination::TYPE_MOD_IMM <<                               // COUNT
+                             static_cast<word_t>(to_copy.length() + 1);                      // +1: because the string starts with the length
     }
 
     if (tt == token::type::TT_VARIABLE)

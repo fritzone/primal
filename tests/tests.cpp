@@ -2,9 +2,108 @@
 #include "numeric_decl.h"
 
 #include <vm.h>
+#include <vm_impl.h>
 #include <compiler.h>
 #include <options.h>
 #include <iostream>
+/*
+TEST_CASE("Compiler compiles, string indexed assignment", "[compiler]")
+{
+    primal::options::instance().generate_assembly(true);
+    auto c = primal::compiler::create();
+
+    c->compile(R"code(
+                   var string a
+                   let a = "ABCDEF"
+                   let a[2] = "X"
+               )code"
+             );
+
+    auto vm = primal::vm::create();
+    REQUIRE(vm->run(c->bytecode()));
+
+    vm->impl->bindump();
+
+    REQUIRE(vm->get_mem(0) == 4);
+    REQUIRE(vm->get_mem_byte(4) == 6);
+}
+
+/**/
+
+
+TEST_CASE("Compiler compiles, string assignment", "[compiler]")
+{
+
+    auto c = primal::compiler::create();
+
+    c->compile(R"code(
+                   import write
+
+                   var string a
+                   let a = "ABCDEF"
+
+                   write(a)
+               )code"
+             );
+
+    auto vm = primal::vm::create();
+    REQUIRE(vm->run(c->bytecode()));
+
+    REQUIRE(vm->get_mem(0) == 4100);
+    REQUIRE(vm->get_mem_byte(4100) == 6);
+}
+
+
+TEST_CASE("Compiler fibonacci", "[compiler]")
+{
+    std::shared_ptr<primal::compiler> c = primal::compiler::create();
+    c->compile(R"code(
+                   import write
+
+                   var t1, t2, nextTerm, n
+                   let n = 100
+
+                   let t1 = 0
+                   let t2 = 1
+
+                   :again
+
+                   let nextTerm = t1 + t2
+
+                   let t1 = t2
+                   let t2 = nextTerm
+                   if nextTerm < n then
+                       write(nextTerm, " --> ")
+                       goto again
+                   end
+                )code");
+
+    std::shared_ptr<primal::vm> vm = primal::vm::create();
+    REQUIRE(vm->run(c->bytecode()));
+    REQUIRE(vm->get_mem(12) == 144);
+
+}
+
+TEST_CASE("Compiler compiles, simple if else", "[compiler]")
+{
+    auto c = primal::compiler::create();
+
+    c->compile(R"code(
+                   var a,b
+                   let a = 3
+                   let b = 3
+                   if b == 4 then
+                       let a = 9
+                   else
+                       let a = 6
+                   end
+               )code"
+             );
+
+    auto vm = primal::vm::create();
+    REQUIRE(vm->run(c->bytecode()));
+    REQUIRE(vm->get_mem(0) == 6);
+}
 
 //     primal::options::instance().generate_assembly(true);
 
@@ -12,7 +111,6 @@
 
 TEST_CASE("Asm compiler - JUMP test", "[asm-compiler]")
 {
-    primal::options::instance().generate_assembly(true);
     // ASM code below will jump over the MOV $r1, 43. Please note, there is added 16 bytes for the header!
     std::shared_ptr<primal::compiler> c = primal::compiler::create();
     c->compile(R"code(
@@ -29,7 +127,26 @@ TEST_CASE("Asm compiler - JUMP test", "[asm-compiler]")
 
 #endif
 
-/*
+TEST_CASE("Compiler compiles, while test", "[compiler]")
+{
+    auto c = primal::compiler::create();
+
+    c->compile(R"code(
+                   var a,b
+                   let a = 5
+                   let b = 0
+                   while a > 0
+                      let a = a - 1
+                      let b = b + 1
+                   end
+               )code"
+             );
+
+    auto vm = primal::vm::create();
+    REQUIRE(vm->run(c->bytecode()));
+    REQUIRE(vm->get_mem(0) == 0);
+    REQUIRE(vm->get_mem(word_size) == 5);
+}
 
 TEST_CASE("Compiler compiles, function with variable args", "[compiler]")
 {
@@ -104,7 +221,7 @@ TEST_CASE("Compiler compiles, write function", "[compiler]")
 
                     # Initialize $r1 with the length
                     asm MOV $r1 0
-                    asm MOV $r1@0 [$r2+$r251]
+                    asm MOV $r1@0 [$r2]
 
                     # Get the address of the actual character data
                     asm ADD $r2 1
@@ -149,36 +266,6 @@ TEST_CASE("Compiler compiles, simple goto", "[compiler]")
     auto vm = primal::vm::create();
     REQUIRE(vm->run(c->bytecode()));
     REQUIRE(vm->get_mem(0) == 5);
-}
-
-TEST_CASE("Compiler fibonacci", "[compiler]")
-{
-    std::shared_ptr<primal::compiler> c = primal::compiler::create();
-    c->compile(R"code(
-                   import write
-
-                   var t1, t2, nextTerm, n
-                   let n = 100
-
-                   let t1 = 0
-                   let t2 = 1
-
-                   :again
-
-                   let nextTerm = t1 + t2
-
-                   let t1 = t2
-                   let t2 = nextTerm
-                   if nextTerm < n then
-                       write(nextTerm, "  ")
-                       goto again
-                   end
-                )code");
-
-    std::shared_ptr<primal::vm> vm = primal::vm::create();
-    REQUIRE(vm->run(c->bytecode()));
-    REQUIRE(vm->get_mem(12) == 144);
-
 }
 
 

@@ -8,6 +8,7 @@
 #include <registers.h>
 
 #include <vector>
+#include <sstream>
 #include <map>
 #include <functional>
 #include <memory>
@@ -96,6 +97,10 @@ struct vm_impl
     bool push(const word_t v);
 
     word_t pop();
+
+
+public:
+    void memdump(word_t start, word_t end, bool insert_addr = true);
 
 private:
 

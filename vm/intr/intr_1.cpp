@@ -20,11 +20,12 @@ bool intr_1(vm* v)
     }
     else
     {
-        word_t addr = VM_MEM_SEGMENT_SIZE + v->r(2).value();
+        word_t addr = v->r(2).value();
         word_t len = v->r(1).value();
         while(len)
         {
-            std::cout << static_cast<char>(v->get_mem_byte(addr));
+            char c = static_cast<char>(v->get_mem_byte(addr));
+            std::cout << c;
             addr ++;
             len --;
         }

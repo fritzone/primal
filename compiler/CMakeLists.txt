@@ -67,6 +67,7 @@ register_keyword(asm)
 register_keyword(goto)
 register_keyword(fun)
 register_keyword(var)
+register_keyword(while)
 
 ########################################################################################################################
 #                 Done, no more keywords have to be added after this point in the code                                 #

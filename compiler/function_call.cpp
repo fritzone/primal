@@ -7,10 +7,13 @@
 #include "function.h"
 #include "options.h"
 #include "label.h"
+#include "variable.h"
 
 #include <opcodes.h>
 
 #include <algorithm>
+
+using namespace primal::opcodes;
 
 primal::sequence::prepared_type primal::function_call::prepare(std::vector<primal::token>&)
 {
@@ -60,7 +63,8 @@ bool primal::function_call::compile(primal::compiler *c)
 
     for(auto ri = m_params.rbegin(); ri != m_params.rend(); ++ri)
     {
-        if(ri->root()->data.get_type() != token::type::TT_STRING)
+        auto& riroot = ri->root();
+        if(riroot->data.get_type() != token::type::TT_STRING)
         {
             // firstly: compile the parameter
             sequence::traverse_ast(0, ri->root(), c);
@@ -68,12 +72,43 @@ bool primal::function_call::compile(primal::compiler *c)
 
             if(f->has_variadic_parameters())
             {
-                (*c->generator()) << opcodes::PUSH()
-                                  << type_destination ::TYPE_MOD_IMM
-                                  << static_cast<word_t>(util::to_integral(entity_type::ET_NUMERIC));
-                pushed_params ++;
-            }
+                if(riroot->data.get_type() == token::type::TT_VARIABLE)
+                {
+                    entity_type et = variable::get_type(riroot->data.data());
+                    if(et == entity_type::ET_STRING)
+                    {
+                        // now mov int reg 0 the actual address of the string
+                        auto v = c->get_variable(riroot->data.data());
+                        if(!v)
+                        {
+                            throw primal::syntax_error("Internal compiler error. Lost a variable.");
+                        }
 
+                        (*c->generator()) << MOV() << reg(0) << c->get_variable(riroot->data.data());
+
+
+                        // send ot the string type
+                        (*c->generator()) << PUSH()
+                                          << type_destination ::TYPE_MOD_IMM
+                                          << static_cast<word_t>(util::to_integral(entity_type::ET_STRING));
+                        pushed_params ++;
+                    }
+                    else
+                    {
+                        (*c->generator()) << opcodes::PUSH()
+                                          << type_destination ::TYPE_MOD_IMM
+                                          << static_cast<word_t>(util::to_integral(entity_type::ET_NUMERIC));
+                        pushed_params ++;
+                    }
+                }
+                else    // just a normal literal number
+                {
+                    (*c->generator()) << opcodes::PUSH()
+                                      << type_destination ::TYPE_MOD_IMM
+                                      << static_cast<word_t>(util::to_integral(entity_type::ET_NUMERIC));
+                    pushed_params ++;
+                }
+            }
             pushed_params ++;
             (*c->generator()) << opcodes::PUSH() << reg(0);
         }
@@ -101,7 +136,6 @@ bool primal::function_call::compile(primal::compiler *c)
 
             // notify the compiled code we have a future string reference here
             compiled_code::instance(c).string_encountered(ri->tokens()[0].get_extra_info());
-
 
             for(size_t i=0; i<word_size; i++)
             {

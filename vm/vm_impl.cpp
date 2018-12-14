@@ -89,19 +89,10 @@ void vm_impl::panic()
     throw primal::vm_panic("PANIC");
 }
 
-void vm_impl::bindump(const char *title, word_t start, word_t end, bool insert_addr)
+void vm_impl::memdump(word_t start, word_t end, bool insert_addr)
 {
-
-    if(start == -1) start = VM_MEM_SEGMENT_SIZE; //std::max<word_t>(VM_MEM_SEGMENT_SIZE, m_ip - 64);
-    if(end == -1) end = VM_MEM_SEGMENT_SIZE + app_size;
-
-    std::stringstream ss;
     std::string s;
-
-    if(title)
-    {
-        std::cout << "----" << title << "----" << std::endl;
-    }
+    std::stringstream ss;
 
     for(word_t i = start; i <  end; i++)
     {
@@ -151,8 +142,22 @@ void vm_impl::bindump(const char *title, word_t start, word_t end, bool insert_a
     while(sttrs.length() < 80) sttrs += " ";
 
     std::cout << sttrs << "    | " << s << std::endl;
-    ss.clear();
-    ss.str(std::string());
+}
+
+void vm_impl::bindump(const char *title, word_t start, word_t end, bool insert_addr)
+{
+
+    if(start == -1) start = VM_MEM_SEGMENT_SIZE; //std::max<word_t>(VM_MEM_SEGMENT_SIZE, m_ip - 64);
+    if(end == -1) end = VM_MEM_SEGMENT_SIZE + app_size;
+
+    std::stringstream ss;
+
+    if(title)
+    {
+        std::cout << "----" << title << "----" << std::endl;
+    }
+
+    memdump(start, end, insert_addr);
 
     // memory dump
     for(word_t i=0; i<stack_offset * word_size; i += word_size)
@@ -269,7 +274,7 @@ memaddress_byte_ref* vm_impl::mem_byte(word_t address)
 
 immediate *vm_impl::imm(word_t v)
 {
-    mi_i++; if(mi_i == 3) mi_i = 1;
+    mi_i++; if(mi_i == 3) mi_i = 0;
 
     imv[mi_i].m_value = v;
     return &imv[mi_i];
@@ -451,10 +456,21 @@ word_t vm_impl::pop()
 
 bool vm_impl::copy(word_t dest, word_t src, word_t cnt)
 {
-    if(dest + cnt > VM_MEM_SEGMENT_SIZE || src < 0 || dest < 0 || src > VM_MEM_SEGMENT_SIZE)
+    if(dest + cnt > VM_MEM_SEGMENT_SIZE || src < 0 || dest < 0)
     {
         return false;
     }
+
+    std::cout << "************************************" << std::endl;
+    memdump(src, src + cnt);
+    std::cout << "************************************" << std::endl;
+
     std::memmove(&ms[static_cast<size_t>(dest)], &ms[static_cast<size_t>(src)], static_cast<size_t>(cnt));
+
+
+    std::cout << "************************************" << std::endl;
+    memdump(dest-4, dest + 4 + cnt);
+    std::cout << "************************************" << std::endl;
+
     return true;
 }

@@ -26,12 +26,12 @@ std::vector<token> parser::shuntyard(std::vector<token>& tokens)
         token::type tt = t.get_type();
         if (tt == token::type::TT_NUMBER || tt == token::type::TT_VARIABLE || tt == token::type::TT_STRING)
         {
-            result.insert(result.begin(), t);
             if(tt == token::type::TT_STRING)
             {
                 word_t idx = stringtable::instance().add(s);
                 t.set_extra_info(idx);
             }
+            result.insert(result.begin(), t);
         }
         else
         {

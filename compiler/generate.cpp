@@ -324,7 +324,7 @@ void compiled_code::finalize()
     {
         word_t i = s_e.first;
         auto& entry = stringtable::instance().e(i);
-        word_t vm_loc = htovm(entry.location);
+        word_t vm_loc = htovm(entry.location) + VM_MEM_SEGMENT_SIZE; // +1: because it starts with the length
         for(const auto& e : s_e.second)
         {
             memcpy(&bytes[0] + e + PRIMAL_HEADER_SIZE, &vm_loc, sizeof(vm_loc));

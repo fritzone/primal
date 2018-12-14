@@ -235,7 +235,7 @@ namespace primal
          */
         bool address_is_valid(word_t addr);
 
-    private:
+    // private:
 
         std::shared_ptr<vm_impl> impl;
 

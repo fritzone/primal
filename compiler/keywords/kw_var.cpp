@@ -21,7 +21,7 @@ sequence::prepared_type kw_var::prepare(std::vector<token> &tokens)
 
     entity_type var_types = entity_type::ET_UNKNOWN;
     // first step: see if there is a type identifier following the var: integer (default) or string
-    if(get_entity_type(tokens[0].data()) == entity_type::ET_UNKNOWN)
+    if((var_types = get_entity_type(tokens[0].data())) == entity_type::ET_UNKNOWN)
     {
         var_types = entity_type::ET_NUMERIC;
     }
