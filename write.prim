@@ -1,0 +1,65 @@
+fun write(...)
+
+     asm MOV $r249 $r255
+     # Decrease the stack pointer to skip the pushed R254 and the return address. This is for 32 bit builds
+     asm SUB $r255 8
+
+     # First: the number of parameters that came in
+     asm POP $r10
+
+ :next_var
+
+     # fetch the value that needs to be printed
+     asm POP $r2
+
+     # This $r1 will contain the type of the variable: 1 for string, 0 for number
+     asm POP $r1
+
+     # Is this a numeric value we want to print?
+     asm EQ $r1 0
+
+     # If yes, goto the print number location
+     asm JT print_number
+
+     # else goto the print string location
+     asm JMP print_string
+
+  :print_number
+
+     # print it out
+     asm INTR 1
+
+     # Move to the next variable
+     asm SUB $r10 1
+
+     # JT is logically equivalent to JNZ
+     asm JT next_var
+
+     # Done here, just return
+     asm MOV $r255 $r249
+     asm JMP leave
+
+  :print_string
+
+     # Here $r2 contains the address of the string, first character is the length
+
+     # Initialize $r1 with the length
+     asm MOV $r1 0
+     asm MOV $r1@0 [$r2+$r251]
+
+     # Get the address of the actual character data
+     asm ADD $r2 1
+
+     # Print it
+     asm INTR 1
+
+     # Move to the next variable
+     asm SUB $r10 1
+
+     # JT is logically equivalent to JNZ
+     asm JT next_var
+
+     # Done here, just return
+     asm MOV $r255 $r249
+:leave
+end
