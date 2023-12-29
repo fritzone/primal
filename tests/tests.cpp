@@ -30,6 +30,28 @@ TEST_CASE("Compiler compiles, string indexed assignment", "[compiler]")
 
 /**/
 
+TEST_CASE("Compiler compiles, string indexed assignment", "[compiler]")
+{
+    primal::options::instance().generate_assembly(true);
+    auto c = primal::compiler::create();
+
+    c->compile(R"code(
+                   var string a
+                   let a
+                   let a[2] = "X"
+               )code"
+             );
+
+    auto vm = primal::vm::create();
+    REQUIRE(vm->run(c->bytecode()));
+
+    vm->impl->bindump();
+
+    REQUIRE(vm->get_mem(0) == 4);
+    REQUIRE(vm->get_mem_byte(4) == 6);
+}
+
+/*
 
 TEST_CASE("Compiler compiles, string assignment", "[compiler]")
 {

@@ -8,7 +8,11 @@ namespace primal
     class syntax_error : public std::runtime_error
     {
     public:
-        explicit syntax_error(const std::string& s) : std::runtime_error(s), m_message("[syntax error] " + s)  {}
+
+        explicit syntax_error(const std::string& s) : std::runtime_error(s),
+            m_message(s)
+        {}
+
         ~syntax_error() override = default;
         const char* what() const noexcept override
         {

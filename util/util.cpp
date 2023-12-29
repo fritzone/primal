@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <string>
 #include <ctype.h>
+#include <token.h>
 
 bool util::is_identifier_char(char c) { return isalnum(c) || c == '_'; }
 bool util::is_whitespace(char c) { return c == ' ' || c == '\t' || c == '\r' || c == '\n'; }

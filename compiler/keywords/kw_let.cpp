@@ -11,6 +11,7 @@ using namespace primal::opcodes;
 
 sequence::prepared_type kw_let::prepare(std::vector<token> &tokens)
 {
+    std::vector<token> token_copy = tokens;
     if(tokens.empty())
     {
         return sequence::prepared_type::PT_INVALID;
@@ -20,10 +21,14 @@ sequence::prepared_type kw_let::prepare(std::vector<token> &tokens)
     tokens.erase(tokens.begin());
     if(!variable::has_variable(m_name))
     {
-        throw primal::syntax_error("Not found a variable declaration: " + m_name);
+        throw primal::syntax_error("not found a variable declaration: " + m_name);
     }
 
     // erasing the equality sign, check for error
+    if(tokens.empty())
+    {
+        throw primal::syntax_error("incomplete LET command");
+    }
     tokens.erase(tokens.begin());
     if(tokens.empty())
     {

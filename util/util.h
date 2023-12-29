@@ -8,6 +8,10 @@
 #include <map>
 #include <vector>
 
+namespace primal{
+class token;
+}
+
 namespace util
 {
     bool is_identifier_char(char c);
@@ -89,5 +93,6 @@ namespace util
         private:
             std::vector <std::string> tokens;
     };
+
 }
 

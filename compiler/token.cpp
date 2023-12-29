@@ -208,3 +208,10 @@ bool token::is_register() const
     }
     return false;
 }
+
+std::string token::token_vector_to_string(const std::vector<primal::token>& v)
+{
+    std::string result;
+    std::for_each(v.begin(), v.end(), [&result](const primal::token& t) {result += t.data();});
+    return result;
+}

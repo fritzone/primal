@@ -77,10 +77,11 @@ namespace primal
         // Gets the type of a character
         static type identify_type(char c);
 
-
         // will create a valid assembly <DST, SRC> pair for assembly commands supporting it
         static std::vector<token> identify_assembly_parameters(const std::vector<token>& tokens, const opcodes::opcode& opc);
 
+        // will concert the given vector of tokens to its string representation
+        static std::string token_vector_to_string(const std::vector<primal::token>& v);
     private:
 
         std::string m_data;

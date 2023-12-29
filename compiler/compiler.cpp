@@ -7,6 +7,7 @@
 #include "keywords.h"
 #include "options.h"
 #include "variable.h"
+#include "hal.h"
 
 #include <opcodes.h>
 
@@ -48,7 +49,8 @@ bool compiler::compile(const std::string &s)
     compiled_code::instance(this).append(0xFF);
     if(options::instance().generate_assembly())
     {
-        options::instance().asm_stream() << std::setfill(' ') << std::right << std::setw(5) << std::dec << compiled_code::instance(this).location() + 16 << ": (FF) EXIT" << std::endl;
+        options::instance().asm_stream() << std::setfill(' ') << std::right << std::setw(5) << std::dec
+                                         << compiled_code::instance(this).location() + PRIMAL_HEADER_SIZE << ": (FF) EXIT" << std::endl;
     }
 
     auto fdecls = std::get<1>(seqs);
