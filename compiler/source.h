@@ -11,7 +11,7 @@ namespace primal
     {
     public:
         /*Constructors*/
-        source() = default;
+        source();
         explicit source(const char* src);
         explicit source(const std::string& src);
 
@@ -34,10 +34,13 @@ namespace primal
         /* Gets the next string from the source code */
         std::string next();
 
+        static source& get();
+
     private:
 
         std::stringstream m_ss;
         bool m_empty = false;
+        static source* m_s_instance;
     };
 
 }

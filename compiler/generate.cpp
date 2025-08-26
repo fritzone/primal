@@ -86,6 +86,37 @@ generate &generate::operator<<(variable &&var)
     return *this;
 }
 
+generate &generate::operator << (indexed_variable_access iva)
+{
+    auto& var = iva.m_var;
+    word_t a = var->location() * word_size;
+    auto address = htovm(a);
+
+    if(options::instance().generate_assembly()) {
+
+        std::stringstream ss;
+        ss << "[" << (var->frame() ? "$r254" + std::string(address>=0?"+":"") : "") << address << "]";
+        options::instance().asm_stream() << std::setfill(' ') << std::left << std::setw(10) << ss.str();
+        params_sent ++;
+    }
+
+    if(var->frame()) // if this variable is in a function make some address calculations
+    {
+        // at the entry point reg 254 is set up to pointto the first element after the SP, ie. the first local variable
+        compiled_code::instance(m_compiler).append(static_cast<uint8_t>(util::to_integral(type_destination ::TYPE_MOD_MEM_REG_IDX_OFFS)));
+        compiled_code::instance(m_compiler).append(254);
+        compiled_code::instance(m_compiler).append('+');
+        compiled_code::instance(m_compiler).append_number(address);
+    }
+    else            // this is a global
+    {
+        compiled_code::instance(m_compiler).append(static_cast<uint8_t>(util::to_integral(type_destination ::TYPE_MOD_MEM_IMM)));
+        compiled_code::instance(m_compiler).append_number(address);
+    }
+
+    return *this;
+}
+
 generate &generate::operator<<(std::shared_ptr<variable> var)
 {
     return operator<<(std::forward<variable>(*var));

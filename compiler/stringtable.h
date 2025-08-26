@@ -15,6 +15,7 @@ public:
     {
         word_t location;
         std::string the_string;
+        word_t in_mem_location;
     };
 
     static stringtable& instance();

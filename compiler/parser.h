@@ -46,14 +46,16 @@ namespace primal
             return std::make_tuple(result_operations, result_func_decl);
 
         }
+
+        /* Creates the Reverse Polish Notation of the given tokens */
+        static std::vector<token> shuntyard(std::vector<token> &tokens);
     private:
 
         void parse(source& input, std::string& next_seq,
                    std::vector<std::shared_ptr<sequence>>& result_operations,
                    std::vector<std::shared_ptr<sequence>>& result_func_decl);
 
-        /* Creates the Reverse Polish Notation of the given tokens */
-        std::vector<token> shuntyard(std::vector<token> &tokens);
+
 
     };
 

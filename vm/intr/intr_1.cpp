@@ -25,9 +25,28 @@ bool intr_1(vm* v)
         while(len)
         {
             char c = static_cast<char>(v->get_mem_byte(addr));
-            std::cout << c;
-            addr ++;
-            len --;
+            if(c != '\\')
+            {
+                std::cout << c;
+                addr ++;
+                len --;
+            }
+            else
+            {
+                addr ++;
+                len --;
+                if(len)
+                {
+                    c = static_cast<char>(v->get_mem_byte(addr));
+                    addr ++;
+                    len --;
+                    switch(c)
+                    {
+                    case 'n': std::cout << std::endl;
+                        break;
+                    }
+                }
+            }
         }
     }
     return true;

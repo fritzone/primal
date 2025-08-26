@@ -45,7 +45,7 @@ void parser::parse(source &input, std::string &next_seq, std::vector<std::shared
     {
         prep_t = seq->prepare(tokens);
     }
-    catch (primal::syntax_error e)
+    catch (primal::syntax_error& e)
     {
         std::string msg = e.what();
         throw syntax_error("[syntax error] " + msg + " -> " + next_seq);

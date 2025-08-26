@@ -61,6 +61,7 @@ register_opcode("NOT" 0x58 1 OF_BIN)
 register_opcode("CALL" 0x59 1 OF_JUMP)
 register_opcode("RET" 0x60 0 OF_JUMP)
 register_opcode("INTR" 0x61 1 OF_JUMP)
+register_opcode("INC" 0xEE 1 OF_ARITH)
 
 ########################################################################################################################
 #                 Done, no more opcodes have to be added after this point in the code                                  #

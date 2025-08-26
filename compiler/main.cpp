@@ -36,12 +36,19 @@ int main(int argc, char **argv)
                      std::istreambuf_iterator<char>());
 
     auto c = primal::compiler::create();
-    c->compile(app);
+    try
+    {
+        c->compile(app);
+        std::vector<uint8_t> compiled_app = c->bytecode();
 
-    std::vector<uint8_t> compiled_app = c->bytecode();
+        std::ofstream outf(outfile, std::ios::out | std::ios::binary);
+        outf.write(reinterpret_cast<char*>(&compiled_app[0]), static_cast<std::streamsize>(compiled_app.size() * sizeof(uint8_t)));
+        outf.close();
+    }
+    catch(std::exception& ex)
+    {
+        std::cerr << ex.what() << std::endl;
+    }
 
-    std::ofstream outf(outfile, std::ios::out | std::ios::binary);
-    outf.write(reinterpret_cast<char*>(&compiled_app[0]), static_cast<std::streamsize>(compiled_app.size() * sizeof(uint8_t)));
-    outf.close();
 
 }

@@ -12,7 +12,7 @@ option(coverage-build "gcov/lcov test coverage analysis (make coverage_test)" OF
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -31,7 +31,7 @@ else()
 endif()
 
 # To specify the word size of the VM: 32 bit or 64 bit
-set(TARGET_ARCH "32" CACHE STRING "The selected architecture's size")
+set(TARGET_ARCH "64" CACHE STRING "The selected architecture's size")
 set_property(CACHE TARGET_ARCH PROPERTY STRINGS "32" "64")
 
 message(Building: ${TARGET_ARCH} bit machine)

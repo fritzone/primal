@@ -1,4 +1,4 @@
-#include "catch.hpp"
+#include <catch2/catch_all.hpp>
 #include "numeric_decl.h"
 
 #include <vm.h>
@@ -6,7 +6,7 @@
 #include <compiler.h>
 #include <options.h>
 #include <iostream>
-/*
+
 TEST_CASE("Compiler compiles, string indexed assignment", "[compiler]")
 {
     primal::options::instance().generate_assembly(true);
@@ -24,13 +24,10 @@ TEST_CASE("Compiler compiles, string indexed assignment", "[compiler]")
 
     vm->impl->bindump();
 
-    REQUIRE(vm->get_mem(0) == 4);
     REQUIRE(vm->get_mem_byte(4) == 6);
 }
 
-/**/
-
-TEST_CASE("Compiler compiles, string indexed assignment", "[compiler]")
+TEST_CASE("Compiler compiles, string indexed assignment - grows", "[compiler]")
 {
     primal::options::instance().generate_assembly(true);
     auto c = primal::compiler::create();
@@ -50,8 +47,6 @@ TEST_CASE("Compiler compiles, string indexed assignment", "[compiler]")
     REQUIRE(vm->get_mem(0) == 4);
     REQUIRE(vm->get_mem_byte(4) == 6);
 }
-
-/*
 
 TEST_CASE("Compiler compiles, string assignment", "[compiler]")
 {
@@ -557,7 +552,7 @@ TEST_CASE("Compiler compiles, functions 1", "[compiler]")
     REQUIRE(vm->get_mem(word_size) == 66);
 }
 
-TEST_CASE("Asm compiler - stack operatons", "[asm-compiler")
+TEST_CASE("Asm compiler - stack operatons", "[asm-compiler]")
 {
     std::shared_ptr<primal::compiler> c = primal::compiler::create();
     c->compile(R"code(

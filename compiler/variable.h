@@ -15,6 +15,7 @@ namespace primal
 
     class compiler;
     class fun;
+    struct reg;
 
     /* This class will hold the variables and their associated memory adresses */
     class variable
@@ -57,6 +58,12 @@ namespace primal
         compiler* m_compiler;
 
         static word_t global_var_cnt;
+    };
+
+    struct indexed_variable_access
+    {
+        std::shared_ptr<variable> m_var;
+        const reg& m_index;
     };
 
 }

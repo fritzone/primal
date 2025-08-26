@@ -19,6 +19,7 @@ namespace primal
     class label;
     class declare_label;
     class compiler;
+    struct indexed_variable_access;
 
     class compiled_code final
     {
@@ -85,6 +86,7 @@ namespace primal
         generate& operator << (declare_label&& dl);
         generate& operator << (type_destination td);
         generate& operator << (word_t v);
+        generate& operator << (indexed_variable_access iva);
 
     private:
         compiler* m_compiler;

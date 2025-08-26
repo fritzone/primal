@@ -56,7 +56,7 @@ bool vm_impl::run(const std::vector<uint8_t> &app, vm* v)
                 panic();
             }
         }
-        catch (const primal::vm_panic&)
+        catch (const primal::vm_panic& p)
         {
             throw;
         }
@@ -460,17 +460,18 @@ bool vm_impl::copy(word_t dest, word_t src, word_t cnt)
     {
         return false;
     }
-
+#if 1
     std::cout << "************************************" << std::endl;
+    std::cout << "COPY: src=" << src << " dest=" << dest << " cnt=" << cnt << std::endl;
     memdump(src, src + cnt);
     std::cout << "************************************" << std::endl;
-
+#endif
     std::memmove(&ms[static_cast<size_t>(dest)], &ms[static_cast<size_t>(src)], static_cast<size_t>(cnt));
 
-
+#if 1
     std::cout << "************************************" << std::endl;
-    memdump(dest-4, dest + 4 + cnt);
+    memdump(dest - 4, dest + 10 + cnt);
     std::cout << "************************************" << std::endl;
-
+#endif
     return true;
 }

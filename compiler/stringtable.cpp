@@ -9,7 +9,12 @@ stringtable &stringtable::instance()
 word_t stringtable::add(const std::string &s)
 {
     word_t l = static_cast<word_t>(m_entries.size());
-    entry e{ l, s};
+    word_t total_length = 0;
+    for (const auto& [key, val] : m_entries)
+    {
+        total_length += val.the_string.size() + 1;
+    }
+    entry e{ l, s, total_length};
     m_entries[l] = e;
     return l;
 }

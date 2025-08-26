@@ -32,6 +32,7 @@ set(${project}-sources
 set(${project}-headers
         ${CMAKE_CURRENT_SOURCE_DIR}/asm_compiler.h
         ${CMAKE_CURRENT_SOURCE_DIR}/ast.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/numeric_constant.h
         ${CMAKE_CURRENT_SOURCE_DIR}/parser.h
         ${CMAKE_CURRENT_SOURCE_DIR}/token.h
         ${CMAKE_CURRENT_SOURCE_DIR}/operators.h
@@ -107,6 +108,7 @@ add_library(${project}
         ${${project}-sources}
         ${${project}-headers}
         ${CMAKE_CURRENT_BINARY_DIR}/all_keywords.cpp
+        numeric_constant.h
 )
 
 target_link_libraries(${project} util opcode-compilers hal)
