@@ -69,6 +69,8 @@ register_keyword(goto)
 register_keyword(fun)
 register_keyword(var)
 register_keyword(while)
+register_keyword(for)
+register_keyword(next)
 
 ########################################################################################################################
 #                 Done, no more keywords have to be added after this point in the code                                 #

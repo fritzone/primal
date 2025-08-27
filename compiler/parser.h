@@ -12,6 +12,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <iostream>
 
 namespace primal
 {
@@ -31,6 +32,9 @@ namespace primal
             while (!input.empty())
             {
                 std::string next_seq = input.next();
+
+                std::cout << "NEXT_SEQ: " << next_seq << std::endl;
+
                 if(checker(next_seq))
                 {
                     last_read = next_seq;

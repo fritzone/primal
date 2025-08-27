@@ -26,7 +26,7 @@ namespace primal
         bool compile(compiler*) override;
 
     private:
-        static uint32_t label_counter;
+        static word_t label_counter;
 
     private:
         std::string lblname = "";

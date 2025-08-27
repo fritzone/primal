@@ -240,26 +240,29 @@ void compiled_code::encountered(const label& l, bool absolute, int delta )
 
 void compiled_code::encountered(const std::string &s, bool absolute, int delta)
 {
-    if(bytes.size() > std::numeric_limits<uint32_t>::max())
+    if(bytes.size() > std::numeric_limits<word_t>::max())
     {
         throw "sorry mate, this application is too complex for me to compile";
     }
 
-    if(options::instance().generate_assembly())options::instance().asm_stream() << "\nENC: " << s << " at:" << std::dec << PRIMAL_HEADER_SIZE + static_cast<uint32_t>(delta + static_cast<int>(bytes.size()))  << std::endl;
+    if(options::instance().generate_assembly())
+    {
+        options::instance().asm_stream() << "\nENC: " << s << " at:" << std::dec << PRIMAL_HEADER_SIZE + static_cast<word_t>(delta + static_cast<int>(bytes.size()))  << std::endl;
+    }
 
     if(label_encounters.count(s) > 0)
     {
-        label_encounters[s].push_back( {absolute, static_cast<uint32_t>(delta + static_cast<int>(bytes.size())) } );
+        label_encounters[s].push_back( {absolute, static_cast<word_t>(delta + static_cast<int>(bytes.size())) } );
     }
     else
     {
-        label_encounters[s] = { {absolute, static_cast<uint32_t>(delta + static_cast<int>(bytes.size())) } };
+        label_encounters[s] = { {absolute, static_cast<word_t>(delta + static_cast<int>(bytes.size())) } };
     }
 }
 
 void compiled_code::declare_label(const label& l)
 {
-    label_declarations[l.name()] = static_cast<uint32_t>(bytes.size());
+    label_declarations[l.name()] = static_cast<word_t>(bytes.size());
 }
 
 void compiled_code::string_encountered(int strtbl_idx)
@@ -315,7 +318,9 @@ void compiled_code::finalize()
 
             if(options::instance().generate_assembly())
             {
-                options::instance().asm_stream() << std::dec << "decl:" << ldecl.first << "(@" << ldecl.second << ") " << " ref found at " << lref.second  << " patching to:" << vm_ord << std::endl;
+                options::instance().asm_stream() << std::dec << "decl:" << ldecl.first
+                                                 << "(@" << ldecl.second << ") " << " ref found at "
+                                                 << lref.second  << " patching to:" << vm_ord << std::endl;
             }
 
             memcpy( &bytes[0] + lref.second + PRIMAL_HEADER_SIZE, &vm_ord, sizeof(vm_ord));

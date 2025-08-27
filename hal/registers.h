@@ -13,11 +13,24 @@
 
 namespace primal
 {
+#if TARGET_ARCH == 32
+
     static constexpr std::array< std::pair<uint32_t, uint8_t> , 4> masks = {std::make_pair(0x000000FF, 0),
                                                                             std::make_pair(0x0000FF00, 8),
                                                                             std::make_pair(0x00FF0000, 16),
                                                                             std::make_pair(0xFF000000, 24)
     };
+#else
+    static constexpr std::array< std::pair<uint64_t, uint8_t> , 8> masks = {std::make_pair(0x00000000000000FF, 0),
+                                                                            std::make_pair(0x000000000000FF00, 8),
+                                                                            std::make_pair(0x0000000000FF0000, 16),
+                                                                            std::make_pair(0x00000000FF000000, 24),
+                                                                            std::make_pair(0x000000FF00000000, 32),
+                                                                            std::make_pair(0x0000FF0000000000, 40),
+                                                                            std::make_pair(0x00FF000000000000, 48),
+                                                                            std::make_pair(0xFF00000000000000, 56)
+    };
+#endif
 
 /**
  * This defines a structure which can be assigend a value to. When you implement your opcodes

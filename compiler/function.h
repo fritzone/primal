@@ -63,6 +63,8 @@ namespace primal {
         // returns the parameters' index. Starts from 1.
         int get_parameter_index(const parameter* p);
 
+        size_t get_parameter_count() const { return m_parameters.size(); }
+
     private:
 
         static std::map<std::string, std::shared_ptr<fun>> m_functions;

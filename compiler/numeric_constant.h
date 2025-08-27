@@ -25,7 +25,7 @@ public:
     void set_value(word_t newValue);
 
 private:
-    static uint32_t numeric_constant_counter;
+    static word_t numeric_constant_counter;
 
 private:
     word_t m_value = 0;

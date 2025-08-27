@@ -88,6 +88,43 @@ void sequence::traverse_ast(uint8_t level, const std::shared_ptr<ast>& croot, co
     }
     token::type tt = croot->data.get_type();
 
+    if (tt == token::type::TT_FUNCTION_CALL)
+    {
+        auto f = fun::get(croot->data.data());
+        if (!f) {
+            throw syntax_error("Call to undefined function: " + croot->data.data());
+        }
+
+        // 1. Evaluate and push arguments onto the stack (in reverse order).
+        // The AST for a function call stores arguments in its 'children' vector.
+        word_t pushed_params = 0;
+        if (croot->children.size() > 0) {
+            // We iterate in reverse to push the last argument first.
+            for (auto it = croot->children.rbegin(); it != croot->children.rend(); ++it) {
+                // Compile the argument expression. The result will be in r0.
+                traverse_ast(0, *it, c);
+                // Push the result onto the stack.
+                (*c->generator()) << PUSH() << reg(0);
+                pushed_params++;
+            }
+        }
+
+        // 2. Generate the CALL instruction.
+        (*c->generator()) << CALL() << label(c->get_source(), f->name());
+
+        // 3. The return value is now in r0 by convention. Move it to the
+        //    register for the current expression level.
+        (*c->generator()) << MOV() << reg(level) << reg(0);
+
+        // 4. Clean up the stack by adjusting the stack pointer.
+        if (pushed_params > 0) {
+            word_t stack_cleanup_size = pushed_params * word_size;
+            (*c->generator()) << SUB() << reg(255) // $sp
+                              << type_destination::TYPE_MOD_IMM << stack_cleanup_size;
+        }
+        return; // End processing for this node
+    }
+
     if (tt == token::type::TT_OPERATOR)
     {
         traverse_ast(level + 1, croot->left, c);

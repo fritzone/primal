@@ -75,6 +75,8 @@ sequence::prepared_type kw_let::prepare(std::vector<token> &tokens)
         }
     }
 
+    // now we should go through the tokens one by one and see which one of them is a function call
+
     return sequence::prepared_type::PT_NORMAL;
 
 }

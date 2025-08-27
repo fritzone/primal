@@ -76,6 +76,7 @@ bool vm_impl::run(const std::vector<uint8_t> &app, vm* v)
             return true;
         }
     }
+    // theoretically we never should end up here, so let's just panic
     panic();
 }
 
@@ -85,6 +86,9 @@ void vm_impl::panic()
     word_t start = std::max<word_t>(VM_MEM_SEGMENT_SIZE, m_ip - 64);
     word_t end = m_ip + std::min<word_t>(64, app_size);
     bindump("PANIC", start, end, true);
+
+    std::cout << "VM PANIC ☹ - memory dump:\n---------------------------------------------------\n";
+    memdump(m_ip - 10, m_ip + 10);
 
     throw primal::vm_panic("PANIC");
 }
