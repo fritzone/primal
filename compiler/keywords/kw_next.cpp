@@ -1,5 +1,7 @@
 #include "kw_next.h"
 
+#include <options.h>
+
 using namespace primal;
 
 sequence::prepared_type kw_next::prepare(std::vector<token>&) {
@@ -9,6 +11,13 @@ sequence::prepared_type kw_next::prepare(std::vector<token>&) {
 }
 
 bool kw_next::compile(compiler*) {
+
+
+    if(options::instance().generate_assembly())
+    {
+        options::instance().asm_stream() << "===" << m_string_seq << "===" << std::endl;
+    }
+
     // The compilation logic is entirely handled by kw_for.
     // This function does nothing.
     return true;

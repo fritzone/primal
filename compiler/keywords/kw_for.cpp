@@ -9,6 +9,8 @@
 #include "exceptions.h"
 #include "variable.h"
 
+#include <options.h>
+
 
 using namespace primal;
 using namespace primal::opcodes;
@@ -83,7 +85,15 @@ sequence::prepared_type kw_for::prepare(std::vector<token>& tokens) {
     return sequence::prepared_type::PT_CONSUMED;
 }
 
-bool kw_for::compile(compiler* c) {
+bool kw_for::compile(compiler* c)
+{
+
+
+    if(options::instance().generate_assembly())
+    {
+        options::instance().asm_stream() << "===" << m_string_seq << "===" << std::endl;
+    }
+
     // Ensure the iterator variable exists
     if (!c->has_variable(m_iterator_name)) {
         throw syntax_error("FOR loop iterator '" + m_iterator_name + "' is not declared.");

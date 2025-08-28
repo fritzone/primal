@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <memory>
 #include <sstream>
+#include <iomanip>
 
 using namespace primal;
 
@@ -111,7 +112,7 @@ bool vm::interrupt(word_t i)
     }
     else
     {
-        panic();
+        panic(std::string(("Unimplemented interrupt called: ") + std::to_string(i)).c_str());
     }
 }
 
@@ -120,8 +121,79 @@ bool vm::address_is_valid(word_t addr)
     return addr <= impl->app_size + VM_MEM_SEGMENT_SIZE && addr >= 0;
 }
 
-
-void vm::panic()
+void vm::debug(opcodes::opcode &&o, OpcodeDebugState ods)
 {
-    impl->panic();
+    if(m_debug)
+    {
+        static size_t last_debugged_ip = 0 ;
+        if(ods == OpcodeDebugState::VM_DEBUG_BEFORE)
+        {
+            size_t local_ip = impl->ip();
+            last_debugged_ip = local_ip;
+
+            std::cout << "->" << std::setw(5) << local_ip << ":";
+
+            std::cout << o.name() << " (" << o.paramcount() << ") ";
+
+            for(size_t i=0; i<o.paramcount(); i++)
+            {
+                impl->peek(local_ip);
+            }
+
+            if(o.bin() == primal::opcodes::POP().bin())
+            {
+                std::cout << " SP= ["<< impl->sp.value() <<"] ";
+            }
+            if(o.bin() == primal::opcodes::PUSH().bin())
+            {
+                std::cout << " SP= ["<< impl->sp.value() <<"] ";
+            }
+
+            std::cout << " =>> ";
+
+
+        }
+
+        if(ods == OpcodeDebugState::VM_DEBUG_AFTER)
+        {
+            size_t local_ip = last_debugged_ip;
+
+            std::cout << "->" << std::setw(5) << local_ip << ":";
+
+            std::cout << o.name() << " (" << o.paramcount() << ") ";
+
+            for(size_t i=0; i<o.paramcount(); i++)
+            {
+                impl->peek(local_ip);
+            }
+            if(o.bin() == primal::opcodes::POP().bin())
+            {
+                std::cout << " SP= ["<< impl->sp.value() <<"] ";
+            }
+            if(o.bin() == primal::opcodes::PUSH().bin())
+            {
+                std::cout << " SP= ["<< impl->sp.value() <<"] ";
+            }
+
+            std::cout << std::endl;
+        }
+
+    }
+}
+
+std::shared_ptr<vm_impl> vm::get_impl() const
+{
+    return impl;
+}
+
+void vm::set_debug(bool newDebug)
+{
+    m_debug = newDebug;
+    impl->set_debug(newDebug);
+}
+
+
+void vm::panic(const char* reason)
+{
+    impl->panic(reason);
 }

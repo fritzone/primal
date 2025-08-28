@@ -26,7 +26,7 @@ void primal::ast::build_ast(std::vector<token>& output, std::shared_ptr<ast>& cr
         {
             auto f = fun::get(t.data());
             if (!f) {
-                throw std::string("Internal compiler error: function not found in AST build: " + t.data());
+                throw syntax_error("Call to undefined function/function not found in AST build: " + t.data());
             }
 
             // For variadic functions, we can't know the number of arguments here.

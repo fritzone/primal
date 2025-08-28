@@ -34,6 +34,12 @@ sequence::prepared_type kw_asm::prepare(std::vector<token> &tokens)
 
 bool kw_asm::compile(compiler *c)
 {
+
+    if(options::instance().generate_assembly())
+    {
+        options::instance().asm_stream() << "===" << m_string_seq << "===" << std::endl;
+    }
+
     if(options::instance().generate_assembly())
     {
         options::instance().asm_stream() << std::setfill(' ') << std::right << std::setw(5) << std::dec << compiled_code::instance(c).location() + PRIMAL_HEADER_SIZE << ": ";

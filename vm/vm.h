@@ -2,11 +2,21 @@
 #define VM_H
 
 #include <hal.h>
+#include <opcode.h>
 #include <numeric_decl.h>
 #include <registers.h>
 
 #include <memory>
 #include <vector>
+#include <iostream>
+
+#define VM_DEBUG 1
+
+enum class OpcodeDebugState
+{
+    VM_DEBUG_BEFORE = 1,
+    VM_DEBUG_AFTER  = 2
+};
 
 namespace primal
 {
@@ -179,7 +189,7 @@ namespace primal
          * This method is called when the VM entered an exceptionally bad situation.
          * A dump of the memory is performed and the application will exit.
          */
-        [[noreturn]] void panic() ;
+        [[noreturn]] void panic(const char *reason) ;
 
         /**
          * @brief fetch Will return the next object from the virtual machine's memory.
@@ -235,9 +245,17 @@ namespace primal
          */
         bool address_is_valid(word_t addr);
 
-    // private:
+
+        void debug(primal::opcodes::opcode&& o, OpcodeDebugState ods);
+
+        std::shared_ptr<vm_impl> get_impl() const;
+
+        void set_debug(bool newDebug);
+
+    private:
 
         std::shared_ptr<vm_impl> impl;
+        bool m_debug = false;
 
     };
 

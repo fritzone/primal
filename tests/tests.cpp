@@ -22,7 +22,7 @@ TEST_CASE("Compiler compiles, string indexed assignment", "[compiler]")
     auto vm = primal::vm::create();
     REQUIRE(vm->run(c->bytecode()));
 
-    vm->impl->bindump();
+    vm->get_impl()->bindump();
 
     REQUIRE(vm->get_mem_byte(4) == 6);
 }
@@ -42,7 +42,7 @@ TEST_CASE("Compiler compiles, string indexed assignment - grows", "[compiler]")
     auto vm = primal::vm::create();
     REQUIRE(vm->run(c->bytecode()));
 
-    vm->impl->bindump();
+    vm->get_impl()->bindump();
 
     REQUIRE(vm->get_mem(0) == 4);
     REQUIRE(vm->get_mem_byte(4) == 6);

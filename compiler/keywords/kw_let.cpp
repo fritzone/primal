@@ -6,6 +6,7 @@
 #include "compiler.h"
 #include "exceptions.h"
 
+#include <options.h>
 #include <parser.h>
 
 using namespace primal;
@@ -84,6 +85,12 @@ sequence::prepared_type kw_let::prepare(std::vector<token> &tokens)
 
 bool kw_let::compile(compiler* c)
 {
+
+    if(options::instance().generate_assembly())
+    {
+        options::instance().asm_stream() << "===" << m_string_seq << "===" << std::endl;
+    }
+
     // now add the variable name into the variables
     if (!c->has_variable(m_name))
     {

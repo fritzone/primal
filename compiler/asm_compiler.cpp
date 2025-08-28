@@ -169,7 +169,7 @@ void asm_compiler::generate_assembly_code(const primal::opcodes::opcode& opc, co
             default:
             if(opc.family() == primal::opcodes::opcode_family::OF_JUMP)
             {
-                label l(c->get_source());
+                    label l(c->get_source());
                 l.set_name(tokens[0].data());
 
                 result.push_back(util::to_integral(type_destination ::TYPE_MOD_IMM));

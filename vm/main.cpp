@@ -42,5 +42,11 @@ int main(int argc, char **argv)
 
     auto vm = primal::vm::create();
 
+    if (input.cmdOptionExists("-d") || input.cmdOptionExists("--debug"))
+    {
+        vm->set_debug(true);
+        std::cout << "--- VM DEBUG ENABLED ---" << std::endl;
+    }
+
     vm->run(vec);
 }

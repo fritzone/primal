@@ -188,7 +188,7 @@ std::vector<token> token::identify_assembly_parameters(const std::vector<token> 
     }
     if (work_tokens.size() != opc.paramcount())
     {
-        throw syntax_error("Invalid assembler statemet");
+        throw syntax_error("Invalid assembler statement");
     }
 
     return work_tokens;

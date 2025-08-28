@@ -31,6 +31,7 @@ std::map<std::string, std::function<std::shared_ptr<sequence>(source&)>> keyword
 
 bool sequence::compile(compiler* c)
 {
+
     traverse_ast(0, m_root, c);
 
     return false;
@@ -193,4 +194,9 @@ void sequence::traverse_ast(uint8_t level, const std::shared_ptr<ast>& croot, co
     {
         (*c->generator()) << MOV() << reg(level) << c->get_variable(croot->data.data());
     }
+}
+
+void sequence::set_string_seq(const std::string &newString_seq)
+{
+    m_string_seq = newString_seq;
 }

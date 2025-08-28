@@ -8,6 +8,7 @@
 #include "types.h"
 
 #include <iostream>
+#include <options.h>
 
 using namespace primal;
 using namespace primal::opcodes;
@@ -59,5 +60,11 @@ sequence::prepared_type kw_var::prepare(std::vector<token> &tokens)
 
 bool kw_var::compile(compiler*)
 {
+
+    if(options::instance().generate_assembly())
+    {
+        options::instance().asm_stream() << "===" << m_string_seq << "===" << std::endl;
+    }
+
     return true;
 }

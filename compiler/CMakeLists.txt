@@ -71,6 +71,7 @@ register_keyword(var)
 register_keyword(while)
 register_keyword(for)
 register_keyword(next)
+register_keyword(return)
 
 ########################################################################################################################
 #                 Done, no more keywords have to be added after this point in the code                                 #
@@ -110,7 +111,6 @@ add_library(${project}
         ${${project}-sources}
         ${${project}-headers}
         ${CMAKE_CURRENT_BINARY_DIR}/all_keywords.cpp
-        numeric_constant.h
 )
 
 target_link_libraries(${project} util opcode-compilers hal)

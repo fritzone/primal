@@ -97,8 +97,15 @@ bool fun::compile(compiler* c)
     (*c->generator()) << declare_label(fun_label);
 
     // now the header for the function
-    (*c->generator()) << PUSH() << reg(254);                // save R254 somewhere
-    (*c->generator()) << MOV() << reg(254) << reg(255);     // save the SP into R254
+    (*c->generator()) << PUSH() << reg(254);                 // save R254 somewhere
+    (*c->generator()) << MOV()  << reg(254) << reg(255);     // save the SP into R254
+    (*c->generator()) << SUB()  << reg(255) <<  type_destination::TYPE_MOD_IMM <<             // Decrease the stack pointer to skip the pushed r254 and return address
+#if TARGET_ARCH == 32
+        (8);                                        // For 32 bit builds we decrease with 8
+#else
+        (16);                                       // For 64 bit builds decrease with 16
+#endif
+
 
     for(const auto& seq : m_body)
     {
@@ -107,6 +114,8 @@ bool fun::compile(compiler* c)
 
     (*c->generator()) << MOV() << reg(255) << reg(254);     // Restore the stack pointer
     (*c->generator()) << POP() << reg(254);                 // restore R254 to what it was before
+
+
 
     // and then return to the caller
     (*c->generator()) << RET();

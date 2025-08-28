@@ -51,7 +51,7 @@ struct vm_impl
         interrupts[intrn] = t;
     }
 
-    [[noreturn]] void panic() ;
+    [[noreturn]] void panic(const char *reason) ;
 
 
     void bindump(const char* title = nullptr, word_t start = -1, word_t end = -1, bool insert_addr = true);
@@ -99,8 +99,18 @@ struct vm_impl
     word_t pop();
 
 
+    void peek(size_t& ip);
+    type_destination peek_type_dest(size_t &ip) const;
+    uint8_t peek_register_index(size_t &ip) const;
+    word_t peek_immediate(size_t &ip) const;
+    uint8_t peek_byte(size_t &ip) const;
+
+
+    void set_debug(bool newDebug);
+
+
 public:
-    void memdump(word_t start, word_t end, bool insert_addr = true);
+    void memdump(word_t start, word_t end, word_t mark, bool insert_addr = true);
 
 private:
 
@@ -123,6 +133,7 @@ private:
     word_t max_used_sp = 0;
     word_t stack_offset = 0;
     reg& sp;
+    bool m_debug = false;
 };
 
 }

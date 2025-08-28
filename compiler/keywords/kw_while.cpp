@@ -9,6 +9,7 @@
 #include "kw_end.h"
 
 #include <iostream>
+#include <options.h>
 
 using namespace primal;
 using namespace primal::opcodes;
@@ -35,6 +36,12 @@ sequence::prepared_type kw_while::prepare(std::vector<token> &tokens)
 
 bool kw_while::compile(compiler* c)
 {
+
+    if(options::instance().generate_assembly())
+    {
+        options::instance().asm_stream() << "===" << m_string_seq << "===" << std::endl;
+    }
+
     label lbl_while = label::create(c->get_source());
     (*c->generator()) << declare_label(lbl_while);
 

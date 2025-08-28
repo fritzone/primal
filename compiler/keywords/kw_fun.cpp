@@ -7,6 +7,7 @@
 #include "variable.h"
 
 #include <iostream>
+#include <options.h>
 
 using namespace primal;
 
@@ -39,5 +40,11 @@ sequence::prepared_type kw_fun::prepare(std::vector<token> &tokens)
 
 bool kw_fun::compile(compiler* c)
 {
+
+    if(options::instance().generate_assembly())
+    {
+        options::instance().asm_stream() << "===" << m_string_seq << "===" << std::endl;
+    }
+
     return m_function->compile(c);
 }

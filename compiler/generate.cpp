@@ -3,6 +3,7 @@
 #include "opcodes.h"
 #include "variable.h"
 #include "registers.h"
+#include "exceptions.h"
 #include "token.h"
 #include "label.h"
 #include "options.h"
@@ -168,7 +169,8 @@ generate &generate::operator<<(const token &tok)
             break;
         }
     default:
-        throw std::string("this token cannot be generated: " + tok.data());
+
+        throw syntax_error("this token cannot be generated: " + tok.data());
 
     }
     return *this;

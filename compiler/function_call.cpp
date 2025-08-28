@@ -53,6 +53,11 @@ primal::sequence::prepared_type primal::function_call::prepare(std::vector<prima
 
 bool primal::function_call::compile(primal::compiler *c)
 {
+    if(options::instance().generate_assembly())
+    {
+        options::instance().asm_stream() << "===" << m_string_seq << "===" << std::endl;
+    }
+
     auto f = primal::fun::get(m_function_name);
     if(!f)
     {

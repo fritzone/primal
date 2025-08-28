@@ -6,6 +6,7 @@
 #include "lexer.h"
 #include "ast.h"
 #include "stringtable.h"
+#include "options.h"
 
 #include <iostream>
 #include <map>
@@ -37,6 +38,7 @@ void parser::parse(source &input, std::string &next_seq,
         }
         throw syntax_error(next_seq);
     }
+    seq->set_string_seq(next_seq);
 
     // We remove the first element of the tokens, which always is the keyword
     tokens.erase(tokens.begin());

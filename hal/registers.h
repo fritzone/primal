@@ -98,7 +98,7 @@ namespace primal
         virtual void set_value(word_t v) {m_value = v;}
 
         virtual type_destination get_type() const = 0;
-        virtual std::string debug() = 0;
+        virtual std::string debug() const = 0;
 
         word_t m_value = 0;
     };
@@ -125,7 +125,7 @@ namespace primal
 
         type_destination get_type() const override { return type_destination::TYPE_MOD_REG; }
 
-        std::string debug() override {
+        std::string debug() const override {
             std::string res = "reg" + util::to_string(m_reg_idx) + "=(" + util::to_string(m_value) + ")";
             return res;
         }
@@ -147,7 +147,7 @@ namespace primal
 
         type_destination get_type() const override { return type_destination::TYPE_MOD_MEM_REG_IDX; }
 
-        std::string debug() override { return std::string("[") + util::to_string(m_address) + "]";}
+        std::string debug() const override { return std::string("[") + util::to_string(m_address) + "]";}
 
         word_t m_address = -1;
         std::function<word_t(word_t)> m_getter;
@@ -166,7 +166,7 @@ namespace primal
         word_t value() const override { return m_getter(m_address); }
         type_destination get_type() const override { return type_destination::TYPE_MOD_MEM_REG_BYTE; }
 
-        std::string debug() override { return std::string("[") + util::to_string(m_address) + "]";}
+        std::string debug() const override { return std::string("[") + util::to_string(m_address) + "]";}
 
         word_t m_address = -1;
         std::function<uint8_t(word_t)> m_getter;
@@ -184,7 +184,7 @@ namespace primal
 
         type_destination get_type() const override { return type_destination::TYPE_MOD_REG_BYTE; }
 
-        std::string debug() override { return  std::string("@") + util::to_string((int)m_bidx) + "/" + m_r->debug(); }
+        std::string debug() const override { return  std::string("@") + util::to_string((int)m_bidx) + "/" + m_r->debug(); }
 
         reg* m_r;
         uint8_t m_bidx;
@@ -203,7 +203,7 @@ namespace primal
 
         type_destination get_type() const override { return type_destination::TYPE_MOD_IMM; }
 
-        std::string debug() override { return util::to_string(m_value); }
+        std::string debug() const override { return util::to_string(m_value); }
 
     };
 

@@ -3,6 +3,7 @@
 #include "generate.h"
 
 #include <compiler.h>
+#include <options.h>
 #include <util.h>
 
 using namespace primal;
@@ -21,6 +22,12 @@ sequence::prepared_type kw_goto::prepare(std::vector<token>& tokens)
 
 bool kw_goto::compile(compiler* c)
 {
+
+    if(options::instance().generate_assembly())
+    {
+        options::instance().asm_stream() << "===" << m_string_seq << "===" << std::endl;
+    }
+
     (*c->generator()) << DJMP() << m_label;
 
     return true;
