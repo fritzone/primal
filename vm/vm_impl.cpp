@@ -1,14 +1,30 @@
 #include "vm_impl.h"
+#include "vm.h"
 
 #include <exceptions.h>
-
+#ifdef TICKS
+#include <chrono>
+#include <thread>
+#endif
 #include <cstring>
 #include <iostream>
 #include <iomanip>
 
+
 using namespace primal;
 
-std::map<uint8_t, vm_impl::executor> vm_impl::opcode_runners;
+bool generic_panic(vm* v)
+{
+    v->panic("No opcode executor");
+    return false;
+}
+
+std::array<vm_impl::executor, 256> vm_impl::opcode_runners = []()->std::array<vm_impl::executor, 256>{
+    std::array<vm_impl::executor, 256> arr;
+    primal::vm_impl::executor panic_handler = { &generic_panic };
+    arr.fill(panic_handler);
+    return arr;
+}();
 std::map<word_t, vm_impl::executor> vm_impl::interrupts;
 
 vm_impl::vm_impl() : m_lbo(m_r[253]), sp(m_r[255])
@@ -42,40 +58,68 @@ bool vm_impl::run(const std::vector<uint8_t> &app, vm* v)
     m_r[251] = VM_MEM_SEGMENT_SIZE;
     m_r[252] = sp;
 
+#ifdef TICKS
+    using namespace std::chrono;
+    nanoseconds time_per_instruction(0);
+    if (m_clock_speed > 0) {
+        time_per_instruction = nanoseconds(1'000'000'000 / m_clock_speed);
+    }
+    auto last_tick_time = high_resolution_clock::now();
+#endif
+
     // then start running it
-    while(opcode_runners.count(ms[static_cast<size_t>(m_ip)]))
+    while (true)
     {
-        // read in an opcode
+        if(m_debug)
+        {
+            bindump("VM STATE", -1, -1, true);
+        }
+
         uint8_t opc = ms[static_cast<size_t>(m_ip++)];
+
+        // This is the primary condition for gracefully terminating the program.
+        if (opc == 0xFF) {
+            if(m_debug)
+            {
+                bindump("FINAL VM STATE", -1, -1, true);
+            }
+            return true; // Graceful program exit.
+        }
+
+        const auto& exec = opcode_runners[opc];
 
         try
         {
-            // is there a registered opcode runner for the given opcode?
-            if(!opcode_runners[ opc ].runner(v))
+            if (!exec.runner(v))
             {
-                panic(std::string("Invalid opcode:" + std::to_string(static_cast<int>(opc))).c_str() );
+                // The handler function returns false on error.
+                panic("Exc failed");
             }
         }
-        catch (const primal::vm_panic& p)
+        catch (const primal::vm_panic&)
         {
-            throw;
+            throw; // Re-throw panic to be caught by the main executable.
         }
         catch(...)
         {
-            panic("Invalid exception caught");
+            // Catch any other unexpected C++ exceptions.
+            panic("Generic exception");
         }
 
-        // is the opcode after the current one 0xFF meaning: halt the machine?
-        if(m_ip < 0)
+#ifdef TICKS
+        if (m_clock_speed > 0)
         {
-            panic(std::string("Invalid IP: " +std::to_string(m_ip)).c_str()) ;
+            auto time_since_last_tick = high_resolution_clock::now() - last_tick_time;
+            if (time_since_last_tick < time_per_instruction)
+            {
+                std::this_thread::sleep_for(time_per_instruction - time_since_last_tick);
+            }
+            last_tick_time = high_resolution_clock::now();
         }
-        if(ms[static_cast<size_t>(m_ip)] == 0xFF)
-        {
-            //bindump();
-            return true;
-        }
+#endif
+
     }
+
     // theoretically we never should end up here, so let's just panic
     panic("Run out of bytecode");
 }
@@ -87,26 +131,18 @@ const char* CYAN    = "\033[1;36m";
 const char* RESET   = "\033[0m";
 void vm_impl::panic(const char* reason)
 {
-
-
-    std::cout << YELLOW << R"(
-*********☠☠☠☠*********)" << RESET;
-
-    // Tyrannosaurus side view (colored)
+    std::cout << YELLOW << "*********☠☠☠☠*********" << RESET;
     std::cout << GREEN << R"(
              __
             /._)
      .-^^^-/ /
     /   _  _/
   _//|_| |_|)" << RESET;
-    std::cout << YELLOW << R"(
-**********************
-)" << RESET;
+    std::cout << YELLOW << "**********************" << RESET;
 
-    // Panic text
     std::cout << RED << "!!! PRIMAL VM PANIC !!!\n\n" << RESET;
 
-    std::cout << "VM PANIC -[ " << reason << "]\n" << CYAN << "-= Instruction Dump =-\n" << RESET;
+    std::cout << "[ " << reason << "]\n" << CYAN << "-= Instruction Dump =-\n" << RESET;
     word_t start = std::max<word_t>(VM_MEM_SEGMENT_SIZE, m_ip - 64);
     word_t end = VM_MEM_SEGMENT_SIZE + m_ip + std::min<word_t>(64, app_size);
     bindump("PANIC", start, end, true);

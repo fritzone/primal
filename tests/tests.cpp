@@ -34,7 +34,6 @@ TEST_CASE("Compiler compiles, string indexed assignment - grows", "[compiler]")
 
     c->compile(R"code(
                    var string a
-                   let a
                    let a[2] = "X"
                )code"
              );
@@ -191,75 +190,56 @@ TEST_CASE("Compiler compiles, write function", "[compiler]")
     auto c = primal::compiler::create();
 
     c->compile(R"code(
-               fun write(...)
+fun write(...)
 
-                    asm MOV $r249 $r255
-                    # Decrease the stack pointer to skip the pushed R254 and the return address. This is for 32 bit builds
-                    asm SUB $r255 8
+  # First: the number of parameters that came in
+  asm POP $r10
+:next_var
+  # fetch the value that needs to be printed
+  asm POP $r2
+  # This $r1 will contain the type of the variable: 1 for string, 0 for number
+  asm POP $r1
 
-                    # First: the number of parameters that came in
-                    asm POP $r10
+  # Is this a numeric value we want to print?
+  asm EQ $r1 0
+  # If yes, goto the print number location
+  asm JT print_number
+  # else goto the print string location
+  asm JMP print_string
 
-                :next_var
+:print_number
 
-                    # fetch the value that needs to be printed
-                    asm POP $r2
+  # print it out
+  asm INTR 1
+  # Move to the next variable
+  asm SUB $r10 1
+  # JT is logically equivalent to JNZ
+  asm JT next_var
+  # Done here, just return
+ asm JMP leave
 
-                    # This $r1 will contain the type of the variable: 1 for string, 0 for number
-                    asm POP $r1
+:print_string
+  # Here $r2 contains the address of the string, first character is the length
+  # Initialize $r1 with the length
+  asm MOV $r1 0
+  asm MOV $r1@0 [$r2]
+  # Get the address of the actual character data
+  asm ADD $r2 1
+  # Print it
+  asm INTR 1
+  # Move to the next variable
+  asm SUB $r10 1
+  # JT is logically equivalent to JNZ
+  asm JT next_var
+  # Done here, just return
 
-                    # Is this a numeric value we want to print?
-                    asm EQ $r1 0
+:leave
 
-                    # If yes, goto the print number location
-                    asm JT print_number
+end
 
-                    # else goto the print string location
-                    asm JMP print_string
-
-                 :print_number
-
-                    # print it out
-                    asm INTR 1
-
-                    # Move to the next variable
-                    asm SUB $r10 1
-
-                    # JT is logically equivalent to JNZ
-                    asm JT next_var
-
-                    # Done here, just return
-                    asm MOV $r255 $r249
-                    asm JMP leave
-
-                 :print_string
-
-                    # Here $r2 contains the address of the string, first character is the length
-
-                    # Initialize $r1 with the length
-                    asm MOV $r1 0
-                    asm MOV $r1@0 [$r2]
-
-                    # Get the address of the actual character data
-                    asm ADD $r2 1
-
-                    # Print it
-                    asm INTR 1
-
-                    # Move to the next variable
-                    asm SUB $r10 1
-
-                    # JT is logically equivalent to JNZ
-                    asm JT next_var
-
-                    # Done here, just return
-                    asm MOV $r255 $r249
-               :leave
-               end
-
-               write(5678, "abc", "def", 1234)
-               )code"
-             );
+write(5678, "abc", "def", 1234)
+)code"
+);
 
     auto vm = primal::vm::create();
 
@@ -747,4 +727,46 @@ TEST_CASE("Asm compiler - EQ/JT test", "[asm-compiler]")
     REQUIRE(vm->flag() != 0);
 }
 
-/**/
+TEST_CASE("Compiler handles array declaration and access", "[compiler]")
+{
+    auto c = primal::compiler::create();
+
+    c->compile(R"code(
+                   # Declare an array of 5 numbers and three scalar variables
+                   var number data[5]
+                   var number check1, check2, check3
+
+                   # Write values to specific indices
+                   let data[0] = 10
+                   let data[1] = 22
+                   let data[4] = 99
+
+                   # Read values back from the array into scalar variables
+                   let check1 = data[0]
+                   let check2 = data[1]
+                   let check3 = data[4]
+               )code"
+               );
+
+    auto vm = primal::vm::create();
+    REQUIRE(vm->run(c->bytecode()));
+
+    // --- Verification ---
+
+    // `data` is the first variable, so it starts at memory location 0.
+    // It has 5 elements, each taking up `word_size` bytes.
+    // So, data[0] is at 0, data[1] is at `word_size`, etc.
+    REQUIRE(vm->get_mem(0 * word_size) == 10);
+    REQUIRE(vm->get_mem(1 * word_size) == 22);
+    REQUIRE(vm->get_mem(2 * word_size) == 0); // Check that an uninitialized element is 0
+    REQUIRE(vm->get_mem(3 * word_size) == 0); // Check that an uninitialized element is 0
+    REQUIRE(vm->get_mem(4 * word_size) == 99);
+
+    // The `check` variables are declared after the array.
+    // The array `data` takes up 5 * word_size memory slots.
+    // So, `check1` starts at memory address `5 * word_size`.
+    word_t base_offset = 5 * word_size;
+    REQUIRE(vm->get_mem(base_offset + 0 * word_size) == 10); // check1 should be 10
+    REQUIRE(vm->get_mem(base_offset + 1 * word_size) == 22); // check2 should be 22
+    REQUIRE(vm->get_mem(base_offset + 2 * word_size) == 99); // check3 should be 99
+}

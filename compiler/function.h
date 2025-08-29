@@ -64,6 +64,16 @@ namespace primal {
         int get_parameter_index(const parameter* p);
 
         size_t get_parameter_count() const { return m_parameters.size(); }
+        void set_return_type(entity_type et) { m_return_type = et; }
+        entity_type get_return_type() const { return m_return_type; }
+
+        const std::vector<parameter>& get_parameters() const { return m_parameters; }
+
+
+        void set_address(word_t addr) { m_address = addr; }
+        word_t get_address() const { return m_address; }
+
+        static const std::map<std::string, std::shared_ptr<fun>>& get_functions();
 
     private:
 
@@ -75,6 +85,8 @@ namespace primal {
         source& m_src;
         std::vector<parameter> m_parameters;
         bool m_variadic = false;
+        entity_type m_return_type = entity_type::ET_UNKNOWN;
+        word_t m_address = 0;
     };
 
 }

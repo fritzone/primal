@@ -107,14 +107,16 @@ struct vm_impl
 
 
     void set_debug(bool newDebug);
-
+#ifdef TICKS
+    void set_speed(uint64_t hertz) { m_clock_speed = hertz; }
+#endif
 
 public:
     void memdump(word_t start, word_t end, word_t mark, bool insert_addr = true);
 
 private:
 
-    static std::map<uint8_t, executor> opcode_runners;
+    static std::array<executor, 256> opcode_runners;
     static std::map<word_t, executor> interrupts;
 
     reg m_r[VM_REG_COUNT];              // the registers of the machine
@@ -134,6 +136,9 @@ private:
     word_t stack_offset = 0;
     reg& sp;
     bool m_debug = false;
+#ifdef TICKS
+    word_t m_clock_speed = 1000;
+#endif
 };
 
 }

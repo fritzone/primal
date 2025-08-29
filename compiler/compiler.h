@@ -45,11 +45,15 @@ namespace primal
         std::shared_ptr<variable> get_variable(const std::string & name);
         std::shared_ptr<variable> create_variable(const std::string& name);
 
+
         /* sets the current working frame */
         void set_frame(fun* f);
         fun* frame() const { return m_current_frame; }
 
         std::string preprocess(const std::string& s);
+
+        void print_function_summary();
+
 
     private:
 

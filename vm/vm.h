@@ -251,6 +251,9 @@ namespace primal
         std::shared_ptr<vm_impl> get_impl() const;
 
         void set_debug(bool newDebug);
+#ifdef TICKS
+        void set_speed(uint64_t hertz);
+#endif
 
     private:
 

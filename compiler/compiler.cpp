@@ -187,12 +187,23 @@ std::shared_ptr<variable> compiler::get_variable(const std::string &name)
     return variables[m_current_frame][name];
 }
 
-std::shared_ptr<variable> compiler::create_variable(const std::string &name)
+std::shared_ptr<variable> primal::compiler::compiler::create_variable(const std::string &name)
 {
-    auto x = std::make_shared<variable>(this, name);
-    // this will create BOTH variables[m_current_frame] and also the corresponding name if there is none
-    variables[m_current_frame][name] = x;
-    return x;
+    // This function should only be called if the variable is known to be declared.
+    word_t size = variable::get_size(name);
+    if (size == 0) {
+        // This indicates the variable was not found in the static declaration list,
+        // which would be an internal compiler error.
+        throw syntax_error("Internal error: Attempted to instantiate undeclared variable '" + name + "'");
+    }
+
+    // Create the new variable object with the correct size.
+    auto new_var = std::make_shared<variable>(this, name, size);
+
+    // Store it in the compiler's instance map for the current scope.
+    variables[m_current_frame][name] = new_var;
+
+    return new_var;
 }
 
 void compiler::set_frame(fun *f)
@@ -235,6 +246,52 @@ std::string compiler::preprocess(const std::string& s)
     return result;
 }
 
+void compiler::print_function_summary() {
+    const auto& functions = fun::get_functions();
+    if (functions.empty()) {
+        return;
+    }
+
+    std::cout << "\n--- Function Summary ---" << std::endl;
+    for (const auto& pair : functions) {
+        const auto& f = pair.second;
+
+        // Print function address
+        std::cout << "@0x" << std::hex << std::setw(4) << std::setfill('0')
+                  << (f->get_address() + PRIMAL_HEADER_SIZE) << std::dec << ": ";
+
+        std::cout << "fun " << f->name() << "(";
+
+        bool first_param = true;
+        entity_type last_type = entity_type::ET_UNKNOWN;
+
+        for (const auto& param : f->get_parameters()) {
+            if (param.type != last_type) {
+                if (!first_param) {
+                    std::cout << ", ";
+                }
+                std::cout << to_string(param.type) << " ";
+                last_type = param.type;
+            } else {
+                if (!first_param) {
+                    std::cout << " ";
+                }
+            }
+            std::cout << param.name;
+            first_param = false;
+        }
+
+        std::cout << ")";
+
+        // Only print return type if it's not the default (numeric)
+        if (f->get_return_type() != entity_type::ET_NUMERIC) {
+            std::cout << " " << to_string(f->get_return_type());
+        }
+
+        std::cout << std::endl;
+    }
+    std::cout << "------------------------\n" << std::endl;
+}
 compiler::~compiler()
 {
     if(options::instance().generate_assembly())
@@ -244,6 +301,8 @@ compiler::~compiler()
         ///options::instance().asm_stream().clear();
         //options::instance().asm_stream().str(std::string());
     }
+
+    print_function_summary();
 
     compiled_code::instance(this).destroy();
     variable::reset();

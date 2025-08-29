@@ -192,6 +192,11 @@ void vm::set_debug(bool newDebug)
     impl->set_debug(newDebug);
 }
 
+void vm::set_speed(uint64_t hertz)
+{
+    impl->set_speed(hertz);
+}
+
 
 void vm::panic(const char* reason)
 {

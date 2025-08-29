@@ -7,6 +7,7 @@
 #include "compiler.h"
 #include "types.h"
 
+#include <exceptions.h>
 #include <iostream>
 #include <options.h>
 
@@ -20,15 +21,14 @@ sequence::prepared_type kw_var::prepare(std::vector<token> &tokens)
         return sequence::prepared_type::PT_INVALID;
     }
 
-    entity_type var_types = entity_type::ET_UNKNOWN;
-    // first step: see if there is a type identifier following the var: integer (default) or string
-    if((var_types = get_entity_type(tokens[0].data())) == entity_type::ET_UNKNOWN)
+    entity_type current_var_type = entity_type::ET_UNKNOWN;
+
+    if((current_var_type = get_entity_type(tokens[0].data())) == entity_type::ET_UNKNOWN)
     {
-        var_types = entity_type::ET_NUMERIC;
+        current_var_type = entity_type::ET_NUMERIC;
     }
     else
     {
-        // remove the first one, obviously it's a valid variable type
         tokens.erase(tokens.begin());
         if(tokens.empty())
         {
@@ -36,22 +36,38 @@ sequence::prepared_type kw_var::prepare(std::vector<token> &tokens)
         }
     }
 
-    // fetching the name of the token, see if it's a valid identifier or not, this can be a comma separated list
-
-    for(const auto& t : tokens)
+    for(size_t i = 0; i < tokens.size(); ++i)
     {
-        if(t.get_type() != token::type::TT_COMMA)
+        const auto& t = tokens[i];
+        if(t.get_type() == token::type::TT_COMMA)
         {
-            entity_type var_type_2 = get_entity_type(t.data());
-            if(var_type_2 == entity_type::ET_UNKNOWN) // still a variable name
-            {
-                std::string name = t.data();
-                variable::introduce_name(name, var_types, entity_origin::EO_PARAMETER);
+            continue;
+        }
+
+        entity_type type_check = get_entity_type(t.data());
+        if(type_check != entity_type::ET_UNKNOWN)
+        {
+            current_var_type = type_check;
+        }
+        else if (t.get_type() == token::type::TT_IDENTIFIER)
+        {
+            std::string name = t.data();
+            word_t array_size = 1; // Default to scalar
+
+            if (i + 1 < tokens.size() && tokens[i+1].data() == "[") {
+                if (i + 3 >= tokens.size() || tokens[i+3].data() != "]") {
+                    throw syntax_error("Malformed array declaration for '" + name + "'. Expected ']'.");
+                }
+                if (tokens[i+2].get_type() != token::type::TT_NUMBER) {
+                    throw syntax_error("Array size for '" + name + "' must be a constant integer.");
+                }
+                array_size = tokens[i+2].to_number();
+                if (array_size <= 0) {
+                    throw syntax_error("Array size for '" + name + "' must be positive.");
+                }
+                i += 3; // Consume `[`, `size`, and `]`
             }
-            else    // switched over to a new type
-            {
-                var_types = var_type_2;
-            }
+            variable::introduce_name(name, current_var_type, entity_origin::EO_VARIABLE, array_size);
         }
     }
 

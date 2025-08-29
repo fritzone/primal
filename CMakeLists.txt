@@ -9,6 +9,7 @@ if(NOT ${TEST_ENDIAN} EQUAL 1)
 endif()
 
 option(coverage-build "gcov/lcov test coverage analysis (make coverage_test)" OFF)
+option(ticks "whether to build a machine which allows timed execution based on ticks" ON)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
@@ -40,6 +41,10 @@ if(${TARGET_ARCH} EQUAL 32)
     add_definitions("-DTARGET_ARCH=32")
 elseif(${TARGET_ARCH} EQUAL 64)
     add_definitions("-DTARGET_ARCH=64")
+endif()
+
+if(${ticks})
+    add_definitions("-DTICKS=1")
 endif()
 
 # These will go into all submodules for now

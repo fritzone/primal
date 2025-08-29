@@ -85,6 +85,8 @@ sequence::prepared_type kw_let::prepare(std::vector<token> &tokens)
 
 bool kw_let::compile(compiler* c)
 {
+    entity_type var_type = variable::get_type(m_name);
+
 
     if(options::instance().generate_assembly())
     {
@@ -103,44 +105,67 @@ bool kw_let::compile(compiler* c)
 
     if(m_indexed)
     {
-        // --- Indexed Assignment Logic using the COPY instruction ---
-        // This version uses 1-based indexing as requested.
-        std::cout << "traversing" << std::endl;
-        // Step 1: Evaluate the index expression (e.g., 2) into r0, then move to r128.
-        // r128 will hold our final destination address.
-        traverse_ast(128, m_index_seq->root(), c);
+        if (var_type == entity_type::ET_STRING)
+        {
+            // --- Indexed Assignment Logic using the COPY instruction ---
+            // This version uses 1-based indexing as requested.
+            std::cout << "traversing" << std::endl;
+            // Step 1: Evaluate the index expression (e.g., 2) into r0, then move to r128.
+            // r128 will hold our final destination address.
+            traverse_ast(128, m_index_seq->root(), c);
 
-        std::cout << "generate mov reg129, m_variable" << std::endl;
-        // Step 2: Get the base address of the target string variable 'a' into r129.
-        (*c->generator()) << MOV() << reg(129) << m_variable;
+            std::cout << "generate mov reg129, m_variable" << std::endl;
+            // Step 2: Get the base address of the target string variable 'a' into r129.
+            (*c->generator()) << MOV() << reg(129) << m_variable;
 
-        // Step 3: Calculate the final destination address in r128.
-        // For 1-based indexing, the address is: base_address + index.
-        std::cout << "adding 129 to 128" << std::endl;
-        (*c->generator()) << ADD() << reg(128) << reg(129); // r128 = base_address + index
+            // Step 3: Calculate the final destination address in r128.
+            // For 1-based indexing, the address is: base_address + index.
+            std::cout << "adding 129 to 128" << std::endl;
+            (*c->generator()) << ADD() << reg(128) << reg(129); // r128 = base_address + index
 
-        // Step 4: Evaluate the RHS expression (e.g., "X"). The address of the string
-        // literal is now in r0.
-        std::cout << "evaluating RHS should go to reg0" << std::endl;
-        sequence::compile(c);
+            // Step 4: Evaluate the RHS expression (e.g., "X"). The address of the string
+            // literal is now in r0.
+            std::cout << "evaluating RHS should go to reg0" << std::endl;
+            sequence::compile(c);
 
-        // Step 5: Calculate the source character's address in r0.
-        // This is equivalent to: r0 = address_of("X") + 1 (to skip the length prefix).
-        std::cout << "increasing reg0" << std::endl;
-        (*c->generator()) << ADD() << reg(128) << token("0", token::type::TT_NUMBER); // COUNT: 1 byte to skip the first char
+            // Step 5: Calculate the source character's address in r0.
+            // This is equivalent to: r0 = address_of("X") + 1 (to skip the length prefix).
+            std::cout << "increasing reg0" << std::endl;
+            (*c->generator()) << ADD() << reg(128) << token("0", token::type::TT_NUMBER); // COUNT: 1 byte to skip the first char
 
-        (*c->generator()) << INC() << reg(0);
+            (*c->generator()) << INC() << reg(0);
 
 
 
-        std::cout << "copystuff" << std::endl;
-        // Step 6: Generate the COPY instruction.
-        // COPY <dest_addr_in_reg>, <src_addr_in_reg>, <count_immediate>
-        (*c->generator()) << COPY()
-                          << reg(128) // DEST: The calculated destination address
-                          << reg(0)   // SRC: The source character's address
-                          << token("1", token::type::TT_NUMBER); // COUNT: 1 byte
+            std::cout << "copystuff" << std::endl;
+            // Step 6: Generate the COPY instruction.
+            // COPY <dest_addr_in_reg>, <src_addr_in_reg>, <count_immediate>
+            (*c->generator()) << COPY()
+                              << reg(128) // DEST: The calculated destination address
+                              << reg(0)   // SRC: The source character's address
+                              << token("1", token::type::TT_NUMBER); // COUNT: 1 byte
+
+        }
+        else if (var_type == entity_type::ET_NUMERIC && m_variable->is_array()) {
+            // --- Array element write ---
+            sequence::compile(c);
+            (*c->generator()) << MOV() << reg(1) << reg(0);
+
+            // r0 = index, r1 = value
+            // Calculate offset: index * word_size. Store in r0.
+            (*c->generator()) << MUL() << reg(0) << token(std::to_string(word_size), token::type::TT_NUMBER);
+
+            // Get base address of array into r129
+            (*c->generator()) << MOV() << reg(129) << m_variable;
+            // Add base address to offset to get final address in r0
+            (*c->generator()) << ADD() << reg(0) << reg(129);
+            // Move value (from r1) into destination memory
+            (*c->generator()) << MOV() << type_destination::TYPE_MOD_MEM_REG_IDX << (uint8_t)0 << reg(1);
+        } else {
+            throw syntax_error("Variable '" + m_name + "' is not an array or string and cannot be indexed.");
+        }
     }
+
     else
     {
         // Original logic for non-indexed assignment.
