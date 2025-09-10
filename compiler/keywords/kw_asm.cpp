@@ -16,6 +16,8 @@ sequence::prepared_type kw_asm::prepare(std::vector<token> &tokens)
         return sequence::prepared_type::PT_INVALID;
     }
 
+    token::remove_commas(tokens);
+
     // fetching the opcode
     std::string opcode = tokens[0].data();
     tokens.erase(tokens.begin());

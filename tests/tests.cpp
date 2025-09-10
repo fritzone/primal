@@ -24,7 +24,10 @@ TEST_CASE("Compiler compiles, string indexed assignment", "[compiler]")
 
     vm->get_impl()->bindump();
 
-    REQUIRE(vm->get_mem_byte(4) == 6);
+    // STRING_TABLE_INDEX_IN_MEM + 0 => Length
+    // STRING_TABLE_INDEX_IN_MEM + 1 => 'A'
+    // STRING_TABLE_INDEX_IN_MEM + 2 => 'B' that was changed to 'X'
+    REQUIRE(vm->get_mem_byte(STRING_TABLE_INDEX_IN_MEM + 2) == 'X');
 }
 
 TEST_CASE("Compiler compiles, string indexed assignment - grows", "[compiler]")
@@ -43,8 +46,10 @@ TEST_CASE("Compiler compiles, string indexed assignment - grows", "[compiler]")
 
     vm->get_impl()->bindump();
 
-    REQUIRE(vm->get_mem(0) == 4);
-    REQUIRE(vm->get_mem_byte(4) == 6);
+    // the length
+    REQUIRE(vm->get_mem_byte(STRING_TABLE_INDEX_IN_MEM) == 3);
+    // the character
+    REQUIRE(vm->get_mem_byte(STRING_TABLE_INDEX_IN_MEM + 2) == 'X');
 }
 
 TEST_CASE("Compiler compiles, string assignment", "[compiler]")
@@ -246,6 +251,35 @@ write(5678, "abc", "def", 1234)
     REQUIRE(vm->run(c->bytecode()));
 
 }
+
+TEST_CASE("Compiler compiles, extern function", "[compiler]")
+{
+    auto c = primal::compiler::create();
+
+    c->compile(R"code(
+                   fun something(string blaa) int extern
+                   end
+
+                   var string a
+                   let a = "ABCDEF"
+
+                   something(a)
+
+               )code"
+               );
+
+    auto vm = primal::vm::create();
+    vm->register_function("something", [](std::string a) -> word_t {
+        std::cout  << "something called with " << a << std::endl;
+        return 42;
+    });
+
+
+
+    REQUIRE(vm->run(c->bytecode()));
+    REQUIRE(vm->get_mem(0) == 5);
+}
+
 
 TEST_CASE("Compiler compiles, simple goto", "[compiler]")
 {
@@ -654,12 +688,12 @@ TEST_CASE("ASM compiler - basic operations", "[asm-compiler]")
     auto vm = primal::vm::create();
     REQUIRE(vm->run(c->bytecode()));
 
-    REQUIRE(vm->r(1) == 20);
+    REQUIRE(vm->r(1).value() == 20);
     REQUIRE(vm->r(3).value() == 0x0000000900);
     REQUIRE(vm->get_mem(0) == 20);
     REQUIRE(vm->get_mem(word_size) == 20);
     REQUIRE(vm->get_mem(word_size) != 21);
-    REQUIRE(vm->r(4) == 0x00090000);
+    REQUIRE(vm->r(4).value() == 0x00090000);
     REQUIRE(vm->r(6).value() == 101);
     REQUIRE(vm->r(7).value() == 1);
     REQUIRE(vm->r(2).value() == 24);

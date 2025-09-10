@@ -176,6 +176,19 @@ void vm::debug(opcodes::opcode &&o, OpcodeDebugState ods)
             }
 
             std::cout << std::endl;
+
+            const char* GREEN   = "\033[1;32m";
+            const char* RESET   = "\033[0m";
+
+
+            std::cout << GREEN << "$ " << RESET ;
+
+            auto c = getchar();
+            if(c == 'q')
+            {
+                exit(1);
+            }
+
         }
 
     }

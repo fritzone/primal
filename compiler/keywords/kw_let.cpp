@@ -147,11 +147,21 @@ bool kw_let::compile(compiler* c)
 
         }
         else if (var_type == entity_type::ET_NUMERIC && m_variable->is_array()) {
-            // --- Array element write ---
+            // --- Array element write
+
+
+            // get the right hand side into r0
             sequence::compile(c);
+
+            // get the right hand side into r1
+            // r1 = value
             (*c->generator()) << MOV() << reg(1) << reg(0);
 
-            // r0 = index, r1 = value
+            // r0 = index
+
+            // calculate the index, put it in r0
+            traverse_ast(0, m_index_seq->root(), c);
+
             // Calculate offset: index * word_size. Store in r0.
             (*c->generator()) << MUL() << reg(0) << token(std::to_string(word_size), token::type::TT_NUMBER);
 

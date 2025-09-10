@@ -11,6 +11,10 @@ endif()
 option(coverage-build "gcov/lcov test coverage analysis (make coverage_test)" OFF)
 option(ticks "whether to build a machine which allows timed execution based on ticks" ON)
 
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_CXX_STANDARD 20)
@@ -80,7 +84,8 @@ endif()
 # the files actually
 add_subdirectory(compiler)
 add_subdirectory(vm)
-
+add_subdirectory(primdis)
+add_subdirectory(interface)
 add_subdirectory(tests)
 enable_testing()
 

@@ -99,8 +99,6 @@ void parser::parse(source &input, std::string &next_seq,
     }
 }
 
-// In parser.cpp
-
 std::vector<token> parser::shuntyard(std::vector<token>& tokens)
 {
     std::vector<token> result;
@@ -121,10 +119,9 @@ std::vector<token> parser::shuntyard(std::vector<token>& tokens)
             }
             result.insert(result.begin(), t);
         }
-        // NEW: Check for a function call (identifier followed by parenthesis)
         else if (tt == token::type::TT_IDENTIFIER && i + 1 < tokens.size() && tokens[i+1].get_type() == token::type::TT_OPEN_PARENTHESES)
         {
-            t.set_type(token::type::TT_FUNCTION_CALL); // Re-type the token
+            t.set_type(token::type::TT_FUNCTION_CALL);
             stck.push(t);
         }
         else
@@ -133,13 +130,12 @@ std::vector<token> parser::shuntyard(std::vector<token>& tokens)
             {
                 stck.push(t);
             }
-            else if (tt == token::type::TT_OPERATOR || tt == token::type::TT_COMPARISON || tt == token::type::TT_LOGICAL) // is this an operator?
+            else if (tt == token::type::TT_OPERATOR || tt == token::type::TT_COMPARISON || tt == token::type::TT_LOGICAL)
             {
                 while (!stck.empty())
                 {
                     auto t2 = stck.top();
-                    // Function calls have higher precedence than other operators
-                    if (t2.get_type() != token::type::TT_OPEN_PARENTHESES && t2.get_type() != token::type::TT_FUNCTION_CALL && (operators[t2.data()]->precedence >= operators[s]->precedence))
+                    if (t2.get_type() != token::type::TT_OPEN_PARENTHESES && t2.get_type() != token::type::TT_OPEN_BRACKET && t2.get_type() != token::type::TT_FUNCTION_CALL && (operators[t2.data()]->precedence >= operators[s]->precedence))
                     {
                         result.insert(result.begin(), stck.top());
                         stck.pop();
@@ -151,23 +147,29 @@ std::vector<token> parser::shuntyard(std::vector<token>& tokens)
             }
             else
             {
-                if (tt == token::type::TT_OPEN_PARENTHESES)
+                if (tt == token::type::TT_OPEN_PARENTHESES || tt == token::type::TT_OPEN_BRACKET)
                 {
-                    stck.push(t);
+                    // Special case: if open bracket follows an identifier, it's an indexing operator
+                    if (tt == token::type::TT_OPEN_BRACKET) {
+                        stck.push(token("[", token::type::TT_OPERATOR));
+                    } else {
+                        stck.push(t);
+                    }
                 }
-                if (tt == token::type::TT_CLOSE_PARENTHESES)
+                if (tt == token::type::TT_CLOSE_PARENTHESES || tt == token::type::TT_CLOSE_BRACKET)
                 {
-                    while (!stck.empty() && stck.top().get_type() != token::type::TT_OPEN_PARENTHESES)
+                    token::type open_bracket = (tt == token::type::TT_CLOSE_PARENTHESES) ? token::type::TT_OPEN_PARENTHESES : token::type::TT_OPERATOR;
+
+                    while (!stck.empty() && (stck.top().get_type() != open_bracket || (open_bracket == token::type::TT_OPERATOR && stck.top().data() != "[")))
                     {
                         auto c = stck.top();
                         result.insert(result.begin(), c);
                         stck.pop();
                     }
                     if (!stck.empty()) {
-                        stck.pop(); // Pop the '('
+                        stck.pop(); // Pop the '(' or '['
                     }
 
-                    // If the token on top of the stack is a function call, pop it to the output queue.
                     if (!stck.empty() && stck.top().get_type() == token::type::TT_FUNCTION_CALL) {
                         result.insert(result.begin(), stck.top());
                         stck.pop();

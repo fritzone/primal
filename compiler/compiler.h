@@ -6,11 +6,11 @@
 #include <map>
 
 #include "source.h"
+#include "function.h"
 
 namespace primal
 {
     class generate;
-    class fun;
     class variable;
 
     /* The wrapper of the compilers' notion */
@@ -52,8 +52,8 @@ namespace primal
 
         std::string preprocess(const std::string& s);
 
-        void print_function_summary();
-
+        std::map<std::string, std::shared_ptr<fun> > print_function_summary();
+        std::vector<fun::summary_pod> get_function_summaries() const;
 
     private:
 

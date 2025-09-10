@@ -5,10 +5,12 @@
 #include <opcode.h>
 #include <numeric_decl.h>
 #include <registers.h>
+#include <interface.h>
 
 #include <memory>
 #include <vector>
 #include <iostream>
+#include <functional>
 
 #define VM_DEBUG 1
 
@@ -249,6 +251,12 @@ namespace primal
         void debug(primal::opcodes::opcode&& o, OpcodeDebugState ods);
 
         std::shared_ptr<vm_impl> get_impl() const;
+
+        template<typename C>
+        void register_function(std::string name, C func)
+        {
+            FunctionRegistry::instance().add(name, func);
+        }
 
         void set_debug(bool newDebug);
 #ifdef TICKS

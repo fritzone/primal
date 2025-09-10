@@ -35,6 +35,7 @@ sequence::prepared_type kw_fun::prepare(std::vector<token> &tokens)
     m_function->identify_parameters(param_tokens);
 
     // Check for an optional return type specifier after the parameter list.
+    {
     auto it_ret = it_close + 1;
     if (it_ret != tokens.end()) {
         entity_type ret_type = get_entity_type(it_ret->data());
@@ -43,10 +44,33 @@ sequence::prepared_type kw_fun::prepare(std::vector<token> &tokens)
         } else {
             throw syntax_error("Invalid return type specified for function " + m_function->name());
         }
+
+        // move it one forward, if there is an extern specifier too
+        it_close ++;
+    }
     }
 
-    // Parse the function body.
-    m_function->parse();
+    {
+    // Check for an optional extern specifier after the parameter list.
+    auto it_extr = it_close + 1;
+    if (it_extr != tokens.end()) {
+        if(it_extr->data() == "extern")
+        {
+            m_function->set_extern(true);
+        }
+        else
+        {
+            throw syntax_error("Invalid specifier for function " + m_function->name() + " " + it_extr->data());
+        }
+    }
+    }
+
+    //  if(!m_function->is_extern())
+    {
+
+        // Parse the function body.
+        m_function->parse();
+    }
     variable::leave_function();
 
     return sequence::prepared_type::PT_FUNCTION_DECL;
@@ -60,5 +84,13 @@ bool kw_fun::compile(compiler* c)
         options::instance().asm_stream() << "===" << m_string_seq << "===" << std::endl;
     }
 
-    return m_function->compile(c);
+
+    //if(!m_function->is_extern())
+    {
+        return m_function->compile(c);
+    }
+    //else
+    {
+        return true;
+    }
 }

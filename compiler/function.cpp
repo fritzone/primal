@@ -156,16 +156,24 @@ bool fun::compile(compiler* c)
         (16);                                       // For 64 bit builds decrease with 16
 #endif
 
-
-    for(const auto& seq : m_body)
+    if(!is_extern())
     {
-        seq->compile(c);
+        for(const auto& seq : m_body)
+        {
+            seq->compile(c);
+        }
+    }
+    else
+    {
+        //compiled_code::instance(c).string_encountered(m_name);
+
+        (*c->generator()) << MOV() << reg(249) << reg(250);
+        (*c->generator()) << SUB() << reg(249) << type_destination::TYPE_MOD_IMM  << (20);
+        (*c->generator()) << INTR() << type_destination::TYPE_MOD_IMM << (2);
     }
 
     (*c->generator()) << MOV() << reg(255) << reg(254);     // Restore the stack pointer
     (*c->generator()) << POP() << reg(254);                 // restore R254 to what it was before
-
-
 
     // and then return to the caller
     (*c->generator()) << RET();
@@ -197,4 +205,14 @@ int fun::get_parameter_index(const parameter *p)
 
 const std::map<std::string, std::shared_ptr<fun>>& fun::get_functions() {
     return m_functions;
+}
+
+bool fun::is_extern() const
+{
+    return m_extern;
+}
+
+void fun::set_extern(bool newExtern)
+{
+    m_extern = newExtern;
 }

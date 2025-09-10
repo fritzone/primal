@@ -120,7 +120,7 @@ private:
     static std::map<word_t, executor> interrupts;
 
     reg m_r[VM_REG_COUNT];              // the registers of the machine
-    word_t m_ip = 0;               // the instructions pointer
+    reg& m_ip;               // the instructions pointer
     std::unique_ptr<uint8_t[]> ms;      // the memory segment
 
     reg_subbyte t1 {&this->m_r[0], 0};

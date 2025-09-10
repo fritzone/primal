@@ -104,6 +104,8 @@ namespace primal
     };
 
 /* This class represents a concrete register that can be found in the system */
+    // ... existing code in hal/registers.h ...
+    /* This class represents a concrete register that can be found in the system */
     struct reg final : public valued
     {
         reg()                   : m_reg_idx(0) {}
@@ -116,6 +118,24 @@ namespace primal
 
         bool operator == (const reg& v) const { return m_value == v.m_value; }
         using valued::operator==;
+
+        // Post-increment operator
+        reg operator++(int) {
+            reg temp = *this;
+            m_value++;
+            return temp;
+        }
+
+        // Post-decrement operator
+        reg operator--(int) {
+            reg temp = *this;
+            m_value--;
+            return temp;
+        }
+
+        operator word_t() const {
+            return m_value;
+        }
 
         void set_value(const reg& ov) {m_value = ov.m_value;}
         using valued::set_value;
@@ -132,6 +152,9 @@ namespace primal
 
         uint8_t m_reg_idx;
     };
+
+    // ... rest of the code in hal/registers.h ...
+
 
 /* This class represents a memory address that can be used in the system */
     struct memaddress final : public valued

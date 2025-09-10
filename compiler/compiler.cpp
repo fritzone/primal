@@ -13,6 +13,8 @@
 
 #include <all_keywords.h>
 
+#include <cstring>
+
 #include <fstream>
 #include <streambuf>
 #include <iomanip>
@@ -246,11 +248,8 @@ std::string compiler::preprocess(const std::string& s)
     return result;
 }
 
-void compiler::print_function_summary() {
+std::map<std::string, std::shared_ptr<fun>> compiler::print_function_summary() {
     const auto& functions = fun::get_functions();
-    if (functions.empty()) {
-        return;
-    }
 
     std::cout << "\n--- Function Summary ---" << std::endl;
     for (const auto& pair : functions) {
@@ -284,13 +283,57 @@ void compiler::print_function_summary() {
         std::cout << ")";
 
         // Only print return type if it's not the default (numeric)
-        if (f->get_return_type() != entity_type::ET_NUMERIC) {
+        if (f->get_return_type() == entity_type::ET_STRING || f->get_return_type() == entity_type::ET_NUMERIC) {
             std::cout << " " << to_string(f->get_return_type());
+        }
+
+        // is this extern?
+        if (f->is_extern()) {
+            std::cout << " EXTERN ";
         }
 
         std::cout << std::endl;
     }
     std::cout << "------------------------\n" << std::endl;
+
+    return functions;
+}
+
+std::vector<primal::fun::summary_pod> compiler::get_function_summaries() const {
+    std::vector<fun::summary_pod> summaries;
+    const auto& functions = fun::get_functions();
+    summaries.reserve(functions.size());
+
+    for (const auto& pair : functions) {
+        const auto& f = pair.second;
+        fun::summary_pod summary = {}; // Zero-initialize the struct
+
+        // Copy the function name, ensuring it is null-terminated
+        strncpy(summary.name, f->name().c_str(), MAX_FUNCTION_NAME_LEN - 1);
+        summary.name[MAX_FUNCTION_NAME_LEN - 1] = '\0'; // Ensure null termination
+
+        summary.address = f->get_address();
+        summary.is_extern = f->is_extern();
+        summary.return_type = static_cast<uint8_t>(f->get_return_type());
+
+        const auto& params = f->get_parameters();
+        summary.parameter_count = static_cast<uint8_t>(params.size());
+
+        if (summary.parameter_count > MAX_FUNCTION_PARAMS) {
+            // Optional: Log a warning if a function has too many parameters
+            std::cerr << "Warning: Function '" << f->name() << "' has more than "
+                      << MAX_FUNCTION_PARAMS << " parameters. Truncating for summary." << std::endl;
+            summary.parameter_count = MAX_FUNCTION_PARAMS;
+        }
+
+        // Copy the parameter types
+        for (uint8_t i = 0; i < summary.parameter_count; ++i) {
+            summary.parameter_types[i] = static_cast<uint8_t>(params[i].type);
+        }
+
+        summaries.push_back(summary);
+    }
+    return summaries;
 }
 compiler::~compiler()
 {
@@ -301,8 +344,6 @@ compiler::~compiler()
         ///options::instance().asm_stream().clear();
         //options::instance().asm_stream().str(std::string());
     }
-
-    print_function_summary();
 
     compiled_code::instance(this).destroy();
     variable::reset();

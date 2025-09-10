@@ -205,6 +205,10 @@ generate &generate::operator<<(declare_label &&dl)
 
 generate &generate::operator <<(type_destination td)
 {
+    if(options::instance().generate_assembly()) {
+        options::instance().asm_stream() << to_string(td) << "[" << static_cast<int>(static_cast<uint8_t>(util::to_integral(td))) << "]";
+    }
+
     compiled_code::instance(m_compiler).append(static_cast<uint8_t>(util::to_integral(td)));
     return *this;
 }
@@ -279,25 +283,50 @@ void compiled_code::string_encountered(int strtbl_idx)
     }
 }
 
+/*
+ * Format:
+ *
+ * .P10<int64_t:funtable><int64_t:stack_segment_start><int64_t:stringtable>
+ * 0   +4 (8)            +12 (8)                      +20 (8)
+ * The reserved is patched to the function table
+ *
+ */
 void compiled_code::finalize()
 {
+    // get the functions
+    auto fun_map = m_compiler->get_function_summaries();
+
     // insert the offset of the string table bytes
+    std::cout << "!Stringtable: ";
     for(size_t i=0; i<word_size; i++)
     {
         bytes.insert(bytes.begin(), 0xFF);
+        std::cout  << "0xFF ";
     }
+    std::cout << std::endl;
+
+    std::cout << "!StackSegment: ";
     // insert the index of the stack segments' start
     for(size_t i=0; i<word_size; i++)
     {
         bytes.insert(bytes.begin(), 0xFF);
+        std::cout  << "0xFF ";
     }
-    // insert the reserved bytes
+    std::cout << std::endl;
+
+    std::cout << "!StackSegment: ";
+    // insert the reserved bytes for function table location
     for(size_t i=0; i<word_size; i++)
     {
         bytes.insert(bytes.begin(), 0xFF);
+        std::cout  << "0xFF ";
     }
+    std::cout << std::endl;
+
     // insert the version 1.0 and .P to mark it as a primal compiled script
     bytes.insert(bytes.begin(), '0');bytes.insert(bytes.begin(), '1');bytes.insert(bytes.begin(), 'P');bytes.insert(bytes.begin(), '.');
+
+    std::cout <<"!Occupied:" << bytes.size() <<  std::endl;
 
     // finalize the labels
     for(const auto& ldecl : label_declarations)
@@ -334,14 +363,14 @@ void compiled_code::finalize()
     {
     word_t l = bytes.size();
     word_t vm_l = htovm(l);
-    memcpy( &bytes[4], &vm_l, sizeof(vm_l));
+    memcpy( &bytes[20], &vm_l, sizeof(vm_l));
     }
 
     // fix the stack start offset
     {
     word_t l = m_compiler->last_varcount(nullptr);
     word_t vm_l = htovm(l);
-    memcpy( &bytes[8], &vm_l, sizeof(vm_l));
+    memcpy( &bytes[12], &vm_l, sizeof(vm_l));
     }
 
     // finalize the stringtable
@@ -369,7 +398,54 @@ void compiled_code::finalize()
         }
     }
 
+    // Now, fix the reserved bytes to point to the function table
+    {
+        word_t l = bytes.size();
+        word_t vm_l = htovm(l);
+        memcpy( &bytes[4], &vm_l, sizeof(vm_l));
+    }
+    // Place in the function map towards the end of it
+    unsigned char *ptr = (unsigned char *)".fun";
+    bytes.insert(bytes.end(), ptr, ptr + 4);
+
+    auto summaries = m_compiler->get_function_summaries();
+
+    {
+        word_t function_table_count = static_cast<word_t>(summaries.size());
+        word_t ft_count = htovm(function_table_count);
+        for (size_t i = 0; i < sizeof(ft_count); ++i) {
+            bytes.push_back( * (reinterpret_cast<uint8_t *>(&ft_count) + i));
+        }
+    }
+
+    for (const auto& f: summaries) {
+        // 1. Function Name (Length-prefixed)
+        uint8_t name_len = static_cast<uint8_t>(strlen(f.name));
+        bytes.push_back(name_len);
+        bytes.insert(bytes.end(), std::begin(f.name), std::begin(f.name) + name_len);
+
+        // 2. Address
+        word_t address = htovm(f.address);
+        word_t ft_addr_bytes = htovm(address);
+        for (size_t i = 0; i < sizeof(ft_addr_bytes); ++i) {
+            bytes.push_back( * (reinterpret_cast<uint8_t *>(&ft_addr_bytes) + i));
+        }
+
+        // 3. Is Extern Flag
+        bytes.push_back(static_cast<uint8_t>(f.is_extern));
+
+        // 4. Return Type
+        bytes.push_back(static_cast<uint8_t>(f.return_type));
+
+        // 5. Parameter Types (Length-prefixed)
+        uint8_t param_count = static_cast<uint8_t>(f.parameter_count);
+        bytes.push_back(param_count);
+        for (size_t i = 0; i<static_cast<size_t>(param_count); i++ ) {
+            bytes.push_back(static_cast<uint8_t>(*(f.parameter_types + i)));
+        }
+    }
     // all done theoretically
+
 }
 
 void compiled_code::append_number(word_t v)

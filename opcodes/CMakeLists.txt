@@ -27,7 +27,7 @@ endfunction()
 ########################################################################################################################
 # Register all the opcodes and the corresponding binary value the keywords, add yours and extend here if necessary.    #
 #                                                                                                                      #
-#              Register the keyword by using: register_opcode(NEW_OPCODE BINARY_VALUE PARAMCOUNT)                      #
+#              Register the keyword by using: register_opcode(NEW_OPCODE BINARY_VALUE PARAMCOUNT OPCODE_FAMILY)        #
 #                                                                                                                      #
 #       Do not forget to provide the implementation in the impl directory to perform the required operations.          #
 #                                                                                                                      #
@@ -120,7 +120,10 @@ foreach(opcode ${registered_opcodes})
 endforeach()
 file(APPEND ${OPCC} "}\n\n }\n")
 
-include_directories(${CMAKE_CURRENT_BINARY_DIR})
+include_directories(
+    ${CMAKE_CURRENT_BINARY_DIR}
+    ${CMAKE_SOURCE_DIR}/interface/include
+)
 
 set(${project}-sources ${OPCH} ${OPCC} ${opcode-sources})
 add_library(opcode-compilers ${opcode-compiler-sources} ${OPCC})

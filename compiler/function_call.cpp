@@ -37,7 +37,7 @@ primal::sequence::prepared_type primal::function_call::prepare(std::vector<prima
     {
         std::vector<primal::token> current_par_toks;
         while(i < m_tokens.size() && m_tokens[i].get_type() != primal::token::type::TT_COMMA
-              && m_tokens[i].get_type() != primal::token::type::TT_CLOSE_PARENTHESES)
+               && m_tokens[i].get_type() != primal::token::type::TT_CLOSE_PARENTHESES)
         {
             current_par_toks.push_back(m_tokens[i]);
             i++;
@@ -61,7 +61,7 @@ bool primal::function_call::compile(primal::compiler *c)
     auto f = primal::fun::get(m_function_name);
     if(!f)
     {
-        return false;
+        throw syntax_error(std::string("error, cannot find function to call:") + m_function_name);
     }
 
     word_t pushed_params = 0;
@@ -69,20 +69,21 @@ bool primal::function_call::compile(primal::compiler *c)
     for(auto ri = m_params.rbegin(); ri != m_params.rend(); ++ri)
     {
         auto& riroot = ri->root();
+
+        // Case 1: non-string literal/variable/indexed variable
         if(riroot->data.get_type() != token::type::TT_STRING)
         {
-            // firstly: compile the parameter
+            // compile parameter expression -> result in reg0
             sequence::traverse_ast(0, ri->root(), c);
-            // then push reg0 to the stack, since that contains the value of the parameter
 
-            if(f->has_variadic_parameters())
+            if(f->has_variadic_parameters() || f->is_extern())
             {
                 if(riroot->data.get_type() == token::type::TT_VARIABLE)
                 {
                     entity_type et = variable::get_type(riroot->data.data());
                     if(et == entity_type::ET_STRING)
                     {
-                        // now mov int reg 0 the actual address of the string
+                        // load actual address of string variable
                         auto v = c->get_variable(riroot->data.data());
                         if(!v)
                         {
@@ -91,32 +92,44 @@ bool primal::function_call::compile(primal::compiler *c)
 
                         (*c->generator()) << MOV() << reg(0) << c->get_variable(riroot->data.data());
 
-
-                        // send ot the string type
                         (*c->generator()) << PUSH()
-                                          << type_destination ::TYPE_MOD_IMM
+                                          << type_destination::TYPE_MOD_IMM
                                           << static_cast<word_t>(util::to_integral(entity_type::ET_STRING));
-                        pushed_params ++;
+                        pushed_params++;
                     }
                     else
                     {
                         (*c->generator()) << opcodes::PUSH()
-                                          << type_destination ::TYPE_MOD_IMM
-                                          << static_cast<word_t>(util::to_integral(entity_type::ET_NUMERIC));
-                        pushed_params ++;
+                        << type_destination::TYPE_MOD_IMM
+                        << static_cast<word_t>(util::to_integral(entity_type::ET_NUMERIC));
+                        pushed_params++;
                     }
                 }
-                else    // just a normal literal number
+                else if(riroot->data.get_type() == token::type::TT_VARIABLE && !riroot->children.empty())
                 {
+                    // Indexed variable, e.g. arr[3]
+                    entity_type et = variable::get_type(riroot->data.data());
+
                     (*c->generator()) << opcodes::PUSH()
-                                      << type_destination ::TYPE_MOD_IMM
+                                      << type_destination::TYPE_MOD_IMM
+                                      << static_cast<word_t>(util::to_integral(et));
+                    pushed_params++;
+                }
+                else
+                {
+                    // numeric literal or expression
+                    (*c->generator()) << opcodes::PUSH()
+                                      << type_destination::TYPE_MOD_IMM
                                       << static_cast<word_t>(util::to_integral(entity_type::ET_NUMERIC));
-                    pushed_params ++;
+                    pushed_params++;
                 }
             }
-            pushed_params ++;
+
+            // push actual computed value in reg0
+            pushed_params++;
             (*c->generator()) << opcodes::PUSH() << reg(0);
         }
+        // Case 2: string literal
         else
         {
             if(ri->tokens().empty())
@@ -124,46 +137,48 @@ bool primal::function_call::compile(primal::compiler *c)
                 throw "internal compiler error";
             }
 
-            if(f->has_variadic_parameters())
+            if(f->has_variadic_parameters() || f->is_extern())
             {
                 (*c->generator()) << opcodes::PUSH()
-                                  << type_destination ::TYPE_MOD_IMM
-                                  << static_cast<word_t>(util::to_integral(entity_type::ET_STRING));
-                pushed_params ++;
-
+                    << type_destination::TYPE_MOD_IMM
+                    << static_cast<word_t>(util::to_integral(entity_type::ET_STRING));
+                pushed_params++;
             }
 
-            // send out a PUSH with the bogus memory address of the string, which will be fixed in the finalize phase
-            (*c->generator()) << opcodes::PUSH() << type_destination ::TYPE_MOD_IMM;
-            if(options::instance().generate_assembly()) { options::instance().asm_stream() << "# S." << std::dec << ri->tokens()[0].get_extra_info() << std::endl; }
+            // placeholder address of the string (fixed later in finalize)
+            (*c->generator()) << opcodes::PUSH() << type_destination::TYPE_MOD_IMM;
+            if(options::instance().generate_assembly())
+            {
+                options::instance().asm_stream() << "# S." << std::dec << ri->tokens()[0].get_extra_info() << std::endl;
+            }
 
-            pushed_params ++;
+            pushed_params++;
 
-            // notify the compiled code we have a future string reference here
             compiled_code::instance(c).string_encountered(ri->tokens()[0].get_extra_info());
-
             for(size_t i=0; i<word_size; i++)
             {
-                compiled_code::instance(c).append (0xFF);
+                compiled_code::instance(c).append(0xFF);
             }
-
         }
     }
 
-    // now, if variadic function push the number of parameters
-    if(f->has_variadic_parameters())
+    // if variadic, push parameter count
+    if(f->has_variadic_parameters() || f->is_extern())
     {
         (*c->generator()) << opcodes::PUSH()
-                          << type_destination ::TYPE_MOD_IMM << pushed_params / 2;
-        pushed_params ++;
+        << type_destination::TYPE_MOD_IMM
+        << pushed_params / 2;
+        pushed_params++;
     }
 
-    // and now actually call the function
+    // perform the actual call
     (*c->generator()) << opcodes::CALL() << label(c->get_source(), f->name());
 
-    // and now actually remove the pushed elements from the stack
-    (*c->generator()) << opcodes::SUB() << reg(255) << type_destination::TYPE_MOD_IMM << (pushed_params * word_size);
-
+    // clean up stack
+    (*c->generator()) << opcodes::SUB()
+                      << reg(255)
+                      << type_destination::TYPE_MOD_IMM
+                      << (pushed_params * word_size);
 
     return true;
 }

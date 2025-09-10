@@ -27,7 +27,7 @@ std::array<vm_impl::executor, 256> vm_impl::opcode_runners = []()->std::array<vm
 }();
 std::map<word_t, vm_impl::executor> vm_impl::interrupts;
 
-vm_impl::vm_impl() : m_lbo(m_r[253]), sp(m_r[255])
+vm_impl::vm_impl() : m_lbo(m_r[253]), sp(m_r[255]), m_ip(m_r[250])
 {
     for(uint8_t i = 0; i<255; i++)
     {
@@ -50,13 +50,16 @@ bool vm_impl::run(const std::vector<uint8_t> &app, vm* v)
     // then copy over the data from app to the end of the memory segment
     std::copy(app.begin(), app.end(), ms.get() + VM_MEM_SEGMENT_SIZE);
     // set the IP and SP to point to the correct location
-    m_ip = VM_MEM_SEGMENT_SIZE + PRIMAL_HEADER_SIZE; // will grow upwards, will skip .P10 and the stringtable loc entry
-    stack_offset = *reinterpret_cast<word_t*>(ms.get() + VM_MEM_SEGMENT_SIZE + 8);
+    word_t ip = VM_MEM_SEGMENT_SIZE + PRIMAL_HEADER_SIZE; // will grow upwards, will skip .P10 and the stringtable loc entry
+    stack_offset = *reinterpret_cast<word_t*>(ms.get() + VM_MEM_SEGMENT_SIZE + 4 + sizeof(word_t));
     sp = stack_offset * word_size;   // will grow upwards
 
     // set the size of the memory into reg 251
     m_r[251] = VM_MEM_SEGMENT_SIZE;
     m_r[252] = sp;
+    m_r[250] = ip;
+
+
 
 #ifdef TICKS
     using namespace std::chrono;
@@ -137,18 +140,21 @@ void vm_impl::panic(const char* reason)
             /._)
      .-^^^-/ /
     /   _  _/
-  _//|_| |_|)" << RESET;
-    std::cout << YELLOW << "**********************" << RESET;
+  _//|_| |_|
+)" << RESET;
+    std::cout << YELLOW << "**********************\n" << RESET;
 
     std::cout << RED << "!!! PRIMAL VM PANIC !!!\n\n" << RESET;
 
     std::cout << "[ " << reason << "]\n" << CYAN << "-= Instruction Dump =-\n" << RESET;
-    word_t start = std::max<word_t>(VM_MEM_SEGMENT_SIZE, m_ip - 64);
+    word_t start = std::max<word_t>(VM_MEM_SEGMENT_SIZE, m_ip |- 64);
     word_t end = VM_MEM_SEGMENT_SIZE + m_ip + std::min<word_t>(64, app_size);
     bindump("PANIC", start, end, true);
 
     std::cout << CYAN << "\n-= Memory Dump =--\n" << RESET;
     memdump(m_ip - 10, m_ip + 10, m_ip);
+
+    getchar();
 
     throw primal::vm_panic(reason);
 }
@@ -265,11 +271,17 @@ void vm_impl::bindump(const char *title, word_t start, word_t end, bool insert_a
     }
     std::cout << ss.str();
 
-    std::cout << "IP=" << std::dec << m_ip << "[:" << m_ip - VM_MEM_SEGMENT_SIZE << "] (" << std::hex << m_ip << ")" << std::endl;
+    std::cout << CYAN << "\n-= Strings =-" << RESET << std::endl;
+    memdump(STRING_TABLE_INDEX_IN_MEM, STRING_TABLE_INDEX_IN_MEM + (word_t)32, 0);
+
+
+    std::cout << CYAN << "\n-= Registers =-" << RESET << std::endl;
+    std::cout << "IP=" << std::dec << m_ip.value() << "[:" << m_ip - VM_MEM_SEGMENT_SIZE << "] (" << std::hex << m_ip.value() << ")" << std::endl;
     std::cout << "SP=" << std::dec << sp.value() << " (" << std::hex << sp.value() << ")" << std::endl;
     std::cout << std::endl;
-}
 
+
+}
 
 reg_subbyte* vm_impl::rsb(uint8_t ridx, uint8_t bidx)
 {
@@ -642,7 +654,7 @@ void vm_impl::peek(size_t&ip)
 }
 
 
-word_t &vm_impl::ip()      {return m_ip;}
+word_t &vm_impl::ip()      {return m_ip.m_value;}
 
 word_t vm_impl::ip() const {return m_ip;}
 
