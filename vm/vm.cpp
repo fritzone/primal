@@ -18,37 +18,38 @@
 using namespace primal;
 
 
-vm::vm() : impl(new vm_impl)
+vm::vm() : m_impl(new vm_impl)
 {
 }
 
 bool vm::run(const std::vector<uint8_t> &app)
 {
-    return impl->run(app, this);
+    m_functions = load_function_table(app);
+    return m_impl->run(app, this);
 }
 
-word_t &vm::ip()      {return impl->ip();}
+word_t &vm::ip()      {return m_impl->ip();}
 
-word_t vm::ip() const {return impl->ip();}
+word_t vm::ip() const {return m_impl->ip();}
 
 void vm::set_mem(word_t address, word_t new_value)
 {
-    impl->set_mem(address, new_value);
+    m_impl->set_mem(address, new_value);
 }
 
 word_t vm::get_mem(word_t address)
 {
-    return impl->get_mem(address);
+    return m_impl->get_mem(address);
 }
 
 void vm::set_mem_byte(word_t address, uint8_t b)
 {
-    impl->set_mem_byte(address, b);
+    m_impl->set_mem_byte(address, b);
 }
 
 uint8_t vm::get_mem_byte(word_t address)
 {
-    return impl->get_mem_byte(address);
+    return m_impl->get_mem_byte(address);
 }
 
 std::shared_ptr<vm> vm::create()
@@ -63,52 +64,52 @@ std::shared_ptr<vm> vm::create()
 
 valued *vm::fetch()
 {
-    return impl->fetch();
+    return m_impl->fetch();
 }
 
-reg &vm::r(uint8_t i)             { return impl->m_r[i];}
-const reg &vm::r(uint8_t i) const { return impl->m_r[i];}
+reg &vm::r(uint8_t i)             { return m_impl->m_r[i];}
+const reg &vm::r(uint8_t i) const { return m_impl->m_r[i];}
 
 bool vm::copy(word_t dest, word_t src, word_t cnt)
 {
-    return impl->copy(dest, src, cnt);
+    return m_impl->copy(dest, src, cnt);
 }
 
 bool vm::push(const valued *v)
 {
-    return impl->push(v);
+    return m_impl->push(v);
 }
 
 bool vm::push(const word_t v)
 {
-    return impl->push(v);
+    return m_impl->push(v);
 }
 
 word_t vm::pop()
 {
-    return impl->pop();
+    return m_impl->pop();
 }
 
 
-word_t vm::flag() const {return impl->flag();}
+word_t vm::flag() const {return m_impl->flag();}
 
 void vm::set_flag(word_t v)
 {
-    impl->m_r[253].set_value( v );
+    m_impl->m_r[253].set_value( v );
 }
 
 bool vm::jump(word_t v)
 {
-    impl->m_ip = v;
-    return impl->m_ip < VM_MEM_SEGMENT_SIZE + impl->app_size;
+    m_impl->m_ip = v;
+    return m_impl->m_ip < VM_MEM_SEGMENT_SIZE + m_impl->app_size;
 }
 
 bool vm::interrupt(word_t i)
 {
     std::function<bool(vm*)> fun;
-    if(impl->interrupts.count(i) > 0)
+    if(m_impl->interrupts.count(i) > 0)
     {
-        return impl->interrupts[i].runner(this);
+        return m_impl->interrupts[i].runner(this);
     }
     else
     {
@@ -118,7 +119,7 @@ bool vm::interrupt(word_t i)
 
 bool vm::address_is_valid(word_t addr)
 {
-    return addr <= impl->app_size + VM_MEM_SEGMENT_SIZE && addr >= 0;
+    return addr <= m_impl->app_size + VM_MEM_SEGMENT_SIZE && addr >= 0;
 }
 
 void vm::debug(opcodes::opcode &&o, OpcodeDebugState ods)
@@ -128,25 +129,25 @@ void vm::debug(opcodes::opcode &&o, OpcodeDebugState ods)
         static size_t last_debugged_ip = 0 ;
         if(ods == OpcodeDebugState::VM_DEBUG_BEFORE)
         {
-            size_t local_ip = impl->ip();
+            size_t local_ip = m_impl->ip();
             last_debugged_ip = local_ip;
 
-            std::cout << "->" << std::setw(5) << local_ip << ":";
+            std::cout << "->" << std::setw(5) << std::dec << local_ip << ":";
 
             std::cout << o.name() << " (" << o.paramcount() << ") ";
 
-            for(size_t i=0; i<o.paramcount(); i++)
+            for(word_t i=0; i<o.paramcount(); i++)
             {
-                impl->peek(local_ip);
+                m_impl->peek(local_ip);
             }
 
             if(o.bin() == primal::opcodes::POP().bin())
             {
-                std::cout << " SP= ["<< impl->sp.value() <<"] ";
+                std::cout << " SP= ["<< m_impl->sp.value() <<"] ";
             }
             if(o.bin() == primal::opcodes::PUSH().bin())
             {
-                std::cout << " SP= ["<< impl->sp.value() <<"] ";
+                std::cout << " SP= ["<< m_impl->sp.value() <<"] ";
             }
 
             std::cout << " =>> ";
@@ -158,21 +159,21 @@ void vm::debug(opcodes::opcode &&o, OpcodeDebugState ods)
         {
             size_t local_ip = last_debugged_ip;
 
-            std::cout << "->" << std::setw(5) << local_ip << ":";
+            std::cout << "->" << std::setw(5) << std::dec << local_ip << ":";
 
             std::cout << o.name() << " (" << o.paramcount() << ") ";
 
-            for(size_t i=0; i<o.paramcount(); i++)
+            for(word_t i=0; i<o.paramcount(); i++)
             {
-                impl->peek(local_ip);
+                m_impl->peek(local_ip);
             }
             if(o.bin() == primal::opcodes::POP().bin())
             {
-                std::cout << " SP= ["<< impl->sp.value() <<"] ";
+                std::cout << " SP= ["<< m_impl->sp.value() <<"] ";
             }
             if(o.bin() == primal::opcodes::PUSH().bin())
             {
-                std::cout << " SP= ["<< impl->sp.value() <<"] ";
+                std::cout << " SP= ["<< m_impl->sp.value() <<"] ";
             }
 
             std::cout << std::endl;
@@ -183,10 +184,31 @@ void vm::debug(opcodes::opcode &&o, OpcodeDebugState ods)
 
             std::cout << GREEN << "$ " << RESET ;
 
-            auto c = getchar();
-            if(c == 'q')
+            std::string cmd;
+            std::getline(std::cin, cmd);
+
+            if(!cmd.empty())
             {
-                exit(1);
+                if(cmd == "q")
+                {
+                    exit(1);
+                }
+                if(cmd.starts_with("p")) // print something
+                {
+                    cmd = cmd.substr(1, cmd.size() - 1);
+                    if(!cmd.empty())
+                    {
+                        if(cmd.starts_with("r")) // print a register
+                        {
+                            cmd = cmd.substr(1, cmd.size() - 1);
+                            if(!cmd.empty())
+                            {
+                                int rig = std::stoi(cmd);
+                                std::cout << " =" << r(rig).value() << std::endl;
+                            }
+                        }
+                    }
+                }
             }
 
         }
@@ -196,22 +218,27 @@ void vm::debug(opcodes::opcode &&o, OpcodeDebugState ods)
 
 std::shared_ptr<vm_impl> vm::get_impl() const
 {
-    return impl;
+    return m_impl;
 }
 
 void vm::set_debug(bool newDebug)
 {
     m_debug = newDebug;
-    impl->set_debug(newDebug);
+    m_impl->set_debug(newDebug);
 }
 
 void vm::set_speed(uint64_t hertz)
 {
-    impl->set_speed(hertz);
+    m_impl->set_speed(hertz);
+}
+
+std::vector<loaded_function> vm::functions() const
+{
+    return m_functions;
 }
 
 
 void vm::panic(const char* reason)
 {
-    impl->panic(reason);
+    m_impl->panic(reason);
 }

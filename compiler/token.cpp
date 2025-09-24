@@ -46,6 +46,7 @@ token::type token::identify_type(char c)
     if (util::is_operator(c)) return token::type::TT_OPERATOR;
     if (util::is_integer(c)) return token::type::TT_NUMBER;
     if (util::is_identifier_char(c)) return token::type::TT_IDENTIFIER;
+    if (c == '%') return token::type::TT_NUMBER_BYTE;
     if (c == '(') return token::type::TT_OPEN_PARENTHESES;
     if (c == ')') return token::type::TT_CLOSE_PARENTHESES;
     if (c == '[') return token::type::TT_OPEN_BRACKET;   // NEW
@@ -143,7 +144,7 @@ std::vector<token> token::identify_assembly_parameters(const std::vector<token> 
             }
         }
     }
-    if (work_tokens.size() != opc.paramcount())
+    if (static_cast<word_t>(work_tokens.size()) != opc.paramcount())
     {
         throw syntax_error("Invalid assembler statement");
     }

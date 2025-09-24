@@ -25,7 +25,11 @@ enum class type_destination : uint8_t
     TYPE_MOD_MEM_IMM                = 0x05,     // what follows is the address of a memory cell, numeric_t value
     TYPE_MOD_MEM_IMM_BYTE           = 0x06,     // what follows is the address of a memory cell, numeric_t value
     TYPE_MOD_MEM_REG_IDX_OFFS       = 0x07,     // The number from the memory at the value of the the given register + an offset
-    TYPE_MOD_MEM_REG_IDX_REG_OFFS   = 0x08      // The number from the memory at the value of the the given register + an offset with the value of another register
+    TYPE_MOD_MEM_REG_IDX_REG_OFFS   = 0x08,     // The number from the memory at the value of the the given register + an offset with the value of another register
+    TYPE_MOD_IMM_BYTE               = 0x09,     // what follows is a 8 bit integer value
+
+    TYPE_MOD_UNKNOWN                = 0xFF,     // Unknownd for now
+
 };
 
 std::string to_string(type_destination dst);

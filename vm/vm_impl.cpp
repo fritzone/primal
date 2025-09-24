@@ -27,7 +27,7 @@ std::array<vm_impl::executor, 256> vm_impl::opcode_runners = []()->std::array<vm
 }();
 std::map<word_t, vm_impl::executor> vm_impl::interrupts;
 
-vm_impl::vm_impl() : m_lbo(m_r[253]), sp(m_r[255]), m_ip(m_r[250])
+vm_impl::vm_impl() :  m_ip(m_r[250]), m_lbo(m_r[253]), sp(m_r[255])
 {
     for(uint8_t i = 0; i<255; i++)
     {
@@ -134,7 +134,7 @@ const char* CYAN    = "\033[1;36m";
 const char* RESET   = "\033[0m";
 void vm_impl::panic(const char* reason)
 {
-    std::cout << YELLOW << "*********☠☠☠☠*********" << RESET;
+    std::cout << YELLOW << "***********************" << RESET;
     std::cout << GREEN << R"(
              __
             /._)
@@ -142,9 +142,9 @@ void vm_impl::panic(const char* reason)
     /   _  _/
   _//|_| |_|
 )" << RESET;
-    std::cout << YELLOW << "**********************\n" << RESET;
+    std::cout << YELLOW << "***********************\n" << RESET;
 
-    std::cout << RED << "!!! PRIMAL VM PANIC !!!\n\n" << RESET;
+    std::cout << RED <<    "!!! PRIMAL VM PANIC !!!\n\n" << RESET;
 
     std::cout << "[ " << reason << "]\n" << CYAN << "-= Instruction Dump =-\n" << RESET;
     word_t start = std::max<word_t>(VM_MEM_SEGMENT_SIZE, m_ip |- 64);
@@ -404,6 +404,10 @@ valued *vm_impl::fetch()
     auto dst = fetch_type_dest();
     switch(dst)
     {
+    case type_destination::TYPE_MOD_IMM_BYTE:
+    {
+        return imm(fetch_byte());
+    }
     case type_destination::TYPE_MOD_IMM:
     {
         return imm(fetch_immediate());
@@ -509,6 +513,12 @@ valued *vm_impl::fetch()
         {
             return mem_byte( m_r[ridx].value() / m_r[ridx2].value() );
         }
+        break;
+    }
+
+    case type_destination::TYPE_MOD_UNKNOWN:
+    {
+        panic("Cannot fetch an unknow TD");
     }
     }
 
@@ -574,7 +584,7 @@ void vm_impl::peek(size_t&ip)
     {
         uint8_t ridx = peek_register_index(ip);
         unsigned byte_off = static_cast<uint8_t>(dst) - static_cast<uint8_t>(type_destination::TYPE_MOD_REG_BYTE0);
-        std::cout << "REG_BYTE" << byte_off << " r" << unsigned(ridx) << " ";
+        std::cout << "REG_BYTE" << byte_off << " $r" << unsigned(ridx) << " ";
         break;
     }
 
@@ -582,7 +592,7 @@ void vm_impl::peek(size_t&ip)
     {
         uint8_t ridx = peek_register_index(ip);
         const auto rdx = m_r[ridx];
-        std::cout << "REG r" << unsigned(ridx) << " {" << rdx.debug() << "} " ;
+        std::cout << "REG $r" << std::dec << unsigned(ridx) << " {" << rdx.debug() << "} " ;
         break;
     }
 
@@ -597,10 +607,10 @@ void vm_impl::peek(size_t&ip)
     case type_destination::TYPE_MOD_MEM_REG_IDX:
     {
         uint8_t ridx = peek_register_index(ip);
-        std::cout << "MEM[ r" << unsigned(ridx) << " ] ";
+        std::cout << "MEM[ $r" << std::dec << unsigned(ridx) << " ] ";
         const auto rdx = m_r[ridx];
 
-        std::cout << "REG r" << unsigned(ridx) << " {" << rdx.debug() << "} " ;
+        std::cout << "REG $r" << std::dec << unsigned(ridx) << " {" << rdx.debug() << "} " ;
         word_t vaddr = rdx.m_value;
         memdump(vaddr - 4,vaddr + 4, vaddr);
 
@@ -610,7 +620,7 @@ void vm_impl::peek(size_t&ip)
     case type_destination::TYPE_MOD_MEM_REG_BYTE:
     {
         uint8_t ridx = peek_register_index(ip);
-        std::cout << "MEM_BYTE[ r" << unsigned(ridx) << " ] ";
+        std::cout << "MEM_BYTE[ $r" << std::dec << unsigned(ridx) << " ] ";
         break;
     }
 
@@ -629,7 +639,7 @@ void vm_impl::peek(size_t&ip)
         ip++;
         word_t vaddr = peek_immediate(ip);
 
-        std::cout << "MEM_BYTE[ r" << unsigned(ridx) << " "
+        std::cout << "MEM_BYTE[ $r" << std::dec << unsigned(ridx) << " "
                   << static_cast<char>(op) << " " << vaddr << " ] ";
         break;
     }
@@ -642,8 +652,8 @@ void vm_impl::peek(size_t&ip)
         ip++;
         uint8_t ridx2 = peek_register_index(ip);
 
-        std::cout << "MEM_REG_IDX_REG_OFFS[ r" << unsigned(ridx) << " "
-                  << static_cast<char>(op) << " r" << unsigned(ridx2) << " ] ";
+        std::cout << "MEM_REG_IDX_REG_OFFS[ $r" << std::dec << unsigned(ridx) << " "
+                  << static_cast<char>(op) << " $r" << std::dec << unsigned(ridx2) << " ] ";
         break;
     }
 

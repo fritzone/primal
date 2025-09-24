@@ -1,12 +1,6 @@
-cmake_minimum_required (VERSION 2.8.11)
+cmake_minimum_required (VERSION 3.30)
 
 project(primal)
-include (TestBigEndian)
-
-if(NOT ${TEST_ENDIAN} EQUAL 1)
-    message("Compiling on a little nedian machine")
-    add_definitions( -DCOMPILED_ON_LITTLE_ENDIAN )
-endif()
 
 option(coverage-build "gcov/lcov test coverage analysis (make coverage_test)" OFF)
 option(ticks "whether to build a machine which allows timed execution based on ticks" ON)
@@ -87,6 +81,8 @@ add_subdirectory(vm)
 add_subdirectory(primdis)
 add_subdirectory(interface)
 add_subdirectory(tests)
+add_subdirectory(static_vm)
+add_subdirectory(debugger)
 enable_testing()
 
 add_test(NAME primal_test COMMAND primal_test)

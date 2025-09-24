@@ -36,6 +36,7 @@ public:
         TT_LOGICAL              = 19,
         TT_OPEN_BRACKET         = 20,
         TT_CLOSE_BRACKET        = 21,
+        TT_NUMBER_BYTE          = 22,
         TT_UNKNOWN              = 255
     };
     token(const std::string& s, type t);

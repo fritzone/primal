@@ -87,7 +87,7 @@ bool primal::function_call::compile(primal::compiler *c)
                         auto v = c->get_variable(riroot->data.data());
                         if(!v)
                         {
-                            throw primal::syntax_error("Internal compiler error. Lost a variable.");
+                            throw primal::syntax_error("Internal compiler error. Lost a variable:" + riroot->data.data());
                         }
 
                         (*c->generator()) << MOV() << reg(0) << c->get_variable(riroot->data.data());
@@ -134,7 +134,7 @@ bool primal::function_call::compile(primal::compiler *c)
         {
             if(ri->tokens().empty())
             {
-                throw "internal compiler error";
+                throw std::runtime_error("internal compiler error: lost a token");
             }
 
             if(f->has_variadic_parameters() || f->is_extern())

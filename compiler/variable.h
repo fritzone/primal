@@ -47,6 +47,7 @@ namespace primal
         bool is_array() const { return m_size > 1; }
         static word_t get_size(const std::string& name);
 
+        static const std::vector<std::tuple<std::string, entity_type, entity_origin, word_t>>& get_declarations();
 
     private:
 

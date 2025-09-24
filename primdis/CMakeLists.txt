@@ -1,8 +1,5 @@
 set(project primdis)
 
-# Find necessary libraries from the parent project
-find_package(Catch2 3.4.0)
-
 # Executable definition
 add_executable(${project} main.cpp)
 
@@ -16,3 +13,5 @@ target_include_directories(${project} PRIVATE
     ${CMAKE_SOURCE_DIR}/util
     ${CMAKE_BINARY_DIR}/opcodes
 )
+
+install(TARGETS ${project} DESTINATION ${CMAKE_INSTALL_BINDIR})

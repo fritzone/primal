@@ -107,7 +107,7 @@ bool kw_let::compile(compiler* c)
     {
         if (var_type == entity_type::ET_STRING)
         {
-            // --- Indexed Assignment Logic using the COPY instruction ---
+            // Indexed Assignment Logic using the COPY instruction
             // This version uses 1-based indexing as requested.
             std::cout << "traversing" << std::endl;
             // Step 1: Evaluate the index expression (e.g., 2) into r0, then move to r128.
@@ -147,7 +147,7 @@ bool kw_let::compile(compiler* c)
 
         }
         else if (var_type == entity_type::ET_NUMERIC && m_variable->is_array()) {
-            // --- Array element write
+            // Array element write
 
 
             // get the right hand side into r0

@@ -6,6 +6,8 @@
 #define @OPCODE@_H_INCLUDED
 
 #include "../hal/opcode.h"
+#include "../hal/numeric_decl.h"
+
 #include "token.h"
 
 #include <vector>
@@ -21,7 +23,7 @@ namespace primal
         {
             uint8_t bin() const override {return @OPCODE_CODE@; }
             std::string name() const override {return "@OPCODE@";}
-            size_t paramcount() const override { return @PARAMCOUNT@; }
+            word_t paramcount() const override { return @PARAMCOUNT@; }
             virtual opcode_family family() const override { return primal::opcodes::opcode_family::@FAMILY@; };
         };
     }

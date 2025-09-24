@@ -72,7 +72,6 @@ int main(int argc, char **argv)
         std::cout << "--- VM DEBUG ENABLED ---" << std::endl;
     }
 
-    // MODIFIED: Check for the --speed flag and set the VM's clock speed.
     const std::string& speed_str = input.getCmdOption("--speed");
     if (!speed_str.empty()) {
         try {

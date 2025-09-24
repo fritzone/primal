@@ -100,17 +100,17 @@ bool kw_for::compile(compiler* c)
     }
     m_iterator = c->get_variable(m_iterator_name);
 
-    // --- Initialization ---
+    // Initialization
     // let i = initial_value
     m_initial_seq->compile(c);
     (*c->generator()) << MOV() << m_iterator << reg(0);
 
-    // --- Loop structure ---
+    // Loop structure
     label lbl_loop_start = label::create(c->get_source());
     label lbl_loop_body = label::create(c->get_source());
     label lbl_loop_end = label::create(c->get_source());
 
-    // --- Condition Check ---
+    // Condition Check
     (*c->generator()) << declare_label(lbl_loop_start);
     // Evaluate end value and store it (e.g., in r128)
     traverse_ast(128, m_end_seq->root(), c);
@@ -123,22 +123,22 @@ bool kw_for::compile(compiler* c)
     // Jump to end if false
     (*c->generator()) << DJMP() << lbl_loop_end;
 
-    // --- Loop Body ---
+    // Loop Body
     (*c->generator()) << declare_label(lbl_loop_body);
     for (const auto& seq : m_for_body) {
         seq->compile(c);
     }
 
-    // --- Increment Step ---
+    // Increment Step
     // i = i + step_value
 
     traverse_ast(128, m_step_seq->root(), c);
     (*c->generator()) << ADD() << m_iterator << reg(128);
 
-    // --- Jump back to start ---
+    // Jump back to start
     (*c->generator()) << DJMP() << lbl_loop_start;
 
-    // --- End of Loop ---
+    // End of Loop
     (*c->generator()) << declare_label(lbl_loop_end);
 
     return true;

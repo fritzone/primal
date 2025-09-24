@@ -59,5 +59,8 @@ uint16_t htovm_16(uint16_t s)
     res.c[mask.c[1]] = p[1];
     return res.s;
 }
-
+#else
+uint16_t htovm_16(uint16_t s) {return s; }
+uint32_t htovm_32(uint32_t l) {return l; }
+uint64_t htovm_64(uint64_t ll){return ll;}
 #endif

@@ -23,6 +23,8 @@ std::string to_string(type_destination dst)
     case type_destination::TYPE_MOD_MEM_IMM_BYTE:         return "TYPE_MOD_MEM_IMM_BYTE";
     case type_destination::TYPE_MOD_MEM_REG_IDX_OFFS:     return "TYPE_MOD_MEM_REG_IDX_OFFS";
     case type_destination::TYPE_MOD_MEM_REG_IDX_REG_OFFS: return "TYPE_MOD_MEM_REG_IDX_REG_OFFS";
+    case type_destination::TYPE_MOD_IMM_BYTE:             return "TYPE_MOD_IMM_BYTE";
+    case type_destination::TYPE_MOD_UNKNOWN:              return "TYPE_MOD_UNKNOWN";
     }
     return "UNKNOWN";
 }

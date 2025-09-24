@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.30)
 project(interface)
 
 # Define the interface library. This tells CMake that the library is header-only
@@ -18,7 +18,7 @@ target_include_directories(interface
         $<INSTALL_INTERFACE:include>
 )
 
-# --- Optional: Installation Rules ---
+# Optional: Installation Rules
 # This part is needed if you plan to install the library so it can be found
 # by other CMake projects using find_package().
 
@@ -26,5 +26,5 @@ target_include_directories(interface
 # 'include' directory (e.g., /usr/local/include).
 install(
     DIRECTORY include/
-    DESTINATION include
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/primal
 )

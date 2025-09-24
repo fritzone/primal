@@ -1,6 +1,8 @@
 #ifndef PRIMITIVE_OPCODE_H
 #define PRIMITIVE_OPCODE_H
 
+#include "numeric_decl.h"
+
 #include <string>
 #include <cstdint>
 #include <functional>
@@ -28,7 +30,7 @@ namespace primal
             virtual ~opcode() = default;
             virtual uint8_t bin() const = 0;
             virtual std::string name() const = 0;
-            virtual size_t paramcount() const = 0;
+            virtual word_t paramcount() const = 0;
             virtual opcode_family family() const = 0;
         };
     }

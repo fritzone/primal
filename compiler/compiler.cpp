@@ -8,6 +8,7 @@
 #include "options.h"
 #include "variable.h"
 #include "hal.h"
+#include "function.h"
 
 #include <opcodes.h>
 
@@ -18,6 +19,7 @@
 #include <fstream>
 #include <streambuf>
 #include <iomanip>
+#include <algorithm>
 
 using namespace primal;
 
@@ -61,7 +63,7 @@ bool compiler::compile(const std::string &s)
         kw_fun* f = dynamic_cast<kw_fun*>(seq.get());
         if(!f)
         {
-            throw "internal compiler error";
+            throw std::runtime_error("internal compiler error, lost a function");
         }
         set_frame(f->function().get());
         f->compile(this);
@@ -160,18 +162,19 @@ bool compiler::has_variable(const std::string &name)
 
 std::shared_ptr<variable> compiler::get_variable(const std::string &name)
 {
-    if(variables.count(m_current_frame) == 0)
-    {
-        return std::shared_ptr<variable>();
-    }
 
-    // is this a paremeter to current frame?
+    // is this a parameter to current frame?
     if(m_current_frame)
     {
         if(m_current_frame->get_parameter(name) && variables[m_current_frame].count(name) == 0)
         {
             return create_variable(name);
         }
+    }
+
+    if(variables.count(m_current_frame) == 0)
+    {
+        return std::shared_ptr<variable>();
     }
 
     if(variables[m_current_frame].count(name) == 0)
@@ -194,9 +197,32 @@ std::shared_ptr<variable> primal::compiler::compiler::create_variable(const std:
     // This function should only be called if the variable is known to be declared.
     word_t size = variable::get_size(name);
     if (size == 0) {
-        // This indicates the variable was not found in the static declaration list,
-        // which would be an internal compiler error.
-        throw syntax_error("Internal error: Attempted to instantiate undeclared variable '" + name + "'");
+
+        // let's see if this is a parameter to a function or not
+        auto&& p = m_current_frame->get_parameter(name);
+
+        if(!p)
+        {
+            // This indicates the variable was not found in the static declaration list, nor a parameter
+            // which would be an internal compiler error.
+            throw syntax_error("Internal error: Attempted to instantiate undeclared variable '" + name + "'");
+        }
+
+        switch(p->type) {
+            case primal::entity_type::ET_NUMERIC:
+            {
+                size = 0;
+                break;
+            }
+            case primal::entity_type::ET_STRING:
+            {
+                size = 256;
+                break;
+            }
+
+            default:
+                throw syntax_error("Internal error: Attempted to instantiate a non typed variable '" + name + "'");
+        }
     }
 
     // Create the new variable object with the correct size.
@@ -299,14 +325,14 @@ std::map<std::string, std::shared_ptr<fun>> compiler::print_function_summary() {
     return functions;
 }
 
-std::vector<primal::fun::summary_pod> compiler::get_function_summaries() const {
-    std::vector<fun::summary_pod> summaries;
+std::vector<summary_pod> compiler::get_function_summaries() const {
+    std::vector<summary_pod> summaries;
     const auto& functions = fun::get_functions();
     summaries.reserve(functions.size());
 
     for (const auto& pair : functions) {
         const auto& f = pair.second;
-        fun::summary_pod summary = {}; // Zero-initialize the struct
+        summary_pod summary = {}; // Zero-initialize the struct
 
         // Copy the function name, ensuring it is null-terminated
         strncpy(summary.name, f->name().c_str(), MAX_FUNCTION_NAME_LEN - 1);
@@ -335,17 +361,170 @@ std::vector<primal::fun::summary_pod> compiler::get_function_summaries() const {
     }
     return summaries;
 }
+
 compiler::~compiler()
 {
     if(options::instance().generate_assembly())
     {
-        //std::string s = options::instance().asm_stream().str();
         std::cout << "-------------------------------------------------" << std::endl << std::endl;
-        ///options::instance().asm_stream().clear();
-        //options::instance().asm_stream().str(std::string());
+    }
+
+    print_function_summary();
+
+    if (!m_interface_header_path.empty()) {
+        try {
+            generate_variable_interface();
+            std::cout << "Successfully generated C++ interface header: " << m_interface_header_path << std::endl;
+        } catch (const std::exception& e) {
+            std::cerr << "Error generating C++ interface header: " << e.what() << std::endl;
+        }
     }
 
     compiled_code::instance(this).destroy();
     variable::reset();
     fun::reset();
 }
+
+void compiler::set_interface_header_path(const std::string& path, const std::string& script_name) {
+    m_interface_header_path = path;
+    m_script_name = script_name;
+}
+
+// Generates a C++-safe class name from a filename.
+std::string script_name_to_class_name(const std::string& script_name) {
+    std::string base_name = script_name;
+    size_t last_slash = base_name.find_last_of("/\\");
+    if (last_slash != std::string::npos) {
+        base_name = base_name.substr(last_slash + 1);
+    }
+    size_t first_dot = base_name.find('.');
+    if (first_dot != std::string::npos) {
+        base_name = base_name.substr(0, first_dot);
+    }
+    if (base_name.empty()) {
+        return "PrimalScript";
+    }
+    // Capitalize first letter
+    base_name[0] = static_cast<char>(toupper(base_name[0]));
+    // Replace invalid characters
+    std::replace_if(base_name.begin() + 1, base_name.end(), [](char c) {
+        return !isalnum(c);
+    }, '_');
+    return base_name;
+}
+
+void compiler::generate_variable_interface() const {
+    std::ofstream header_file(m_interface_header_path);
+    if (!header_file.is_open()) {
+        throw std::runtime_error("Failed to open file for writing: " + m_interface_header_path);
+    }
+
+    std::string class_name = script_name_to_class_name(m_script_name);
+
+    header_file << "// Generated by the Primal Compiler for script '" << m_script_name << "' - Do not edit!\n";
+    header_file << "#ifndef " << util::to_upper(class_name) << "_PRIM_H\n";
+    header_file << "#define " << util::to_upper(class_name) << "_PRIM_H\n";
+
+    header_file << "#define TARGET_ARCH " << TARGET_ARCH<< "\n";
+
+    header_file << "#include <numeric_decl.h>\n";
+    header_file << "#include <vm.h>\n";
+    header_file << "#include <interface.h>\n";
+    header_file << "#include <string>\n";
+    header_file << "#include <stdexcept>\n";
+    header_file << "#include <vector>\n";
+    header_file << "#include <cstdint>\n\n";
+
+    header_file << "class " << class_name << " {\n";
+    header_file << "private:\n";
+    header_file << "    std::shared_ptr<primal::vm> m_vm;\n";
+
+    // Embed bytecode
+    const auto bc = compiled_code::instance(const_cast<compiler*>(this)).bytecode();
+    header_file << "    static const unsigned char s_bytecode[];\n";
+    header_file << "    static const size_t s_bytecode_len = " << bc.size() << ";\n\n";
+
+    header_file << "public:\n";
+    header_file << "    " << class_name << "() {";
+    header_file << "        m_vm = primal::vm::create();\n}\n\n";
+
+    // FFI Registration
+    header_file << "    template<typename Callable>\n";
+    header_file << "    void register_function(const std::string& name, Callable func) {\n";
+    header_file << "        m_vm->register_function(name, func);\n";
+    header_file << "    }\n\n";
+
+    // Run Method
+    header_file << "    bool run() {\n";
+    header_file << "        std::vector<uint8_t> bytecode_vec(s_bytecode, s_bytecode + s_bytecode_len);\n";
+    header_file << "        return m_vm->run(bytecode_vec);\n";
+    header_file << "    }\n\n";
+
+    header_file << "    // --- Generated Accessors ---\n\n";
+
+    word_t current_location = 0;
+    for (const auto& var_info : variable::get_declarations()) {
+        const auto& name = std::get<0>(var_info);
+        const auto& type = std::get<1>(var_info);
+        const auto& origin = std::get<2>(var_info);
+        const auto& size = std::get<3>(var_info);
+
+        if (origin == entity_origin::EO_VARIABLE && name.find(':') == std::string::npos) { // It's a global variable
+
+            word_t base_address = current_location * word_size;
+
+            if (size > 1) { // It's an array
+                header_file << "    // Array: var " << to_string(type) << " " << name << "[" << size << "]\n";
+                if (type == entity_type::ET_NUMERIC) {
+                    header_file << "    word_t get_" << name << "(size_t index) {\n";
+                    header_file << "        if (index >= " << size << ") { throw std::out_of_range(\"Index out of bounds for array '" << name << "'.\"); }\n";
+                    header_file << "        return m_vm->get_mem(" << base_address << " + index * word_size);\n";
+                    header_file << "    }\n\n";
+                    header_file << "    void set_" << name << "(size_t index, word_t value) {\n";
+                    header_file << "        if (index >= " << size << ") { throw std::out_of_range(\"Index out of bounds for array '" << name << "'.\"); }\n";
+                    header_file << "        m_vm->set_mem(" << base_address << " + index * word_size, value);\n";
+                    header_file << "    }\n\n";
+                }
+                // Note: Setters for string arrays are complex and omitted for now.
+            } else { // It's a scalar variable
+                header_file << "    // Scalar: var " << to_string(type) << " " << name << "\n";
+                if (type == entity_type::ET_NUMERIC) {
+                    header_file << "    word_t get_" << name << "() {\n";
+                    header_file << "        return m_vm->get_mem(" << base_address << ");\n";
+                    header_file << "    }\n\n";
+                    header_file << "    void set_" << name << "(word_t value) {\n";
+                    header_file << "        m_vm->set_mem(" << base_address << ", value);\n";
+                    header_file << "    }\n\n";
+                } else if (type == entity_type::ET_STRING) {
+                    header_file << "    std::string get_" << name << "() {\n";
+                    header_file << "        word_t string_addr = m_vm->get_mem(" << base_address << ");\n";
+                    header_file << "        if (string_addr == 0) return \"\"; // Uninitialized string\n";
+                    header_file << "        uint8_t len = m_vm->get_mem_byte(string_addr);\n";
+                    header_file << "        std::string result;\n";
+                    header_file << "        result.reserve(len);\n";
+                    header_file << "        for (uint8_t i = 0; i < len; ++i) {\n";
+                    header_file << "            result += static_cast<char>(m_vm->get_mem_byte(string_addr + 1 + i));\n";
+                    header_file << "        }\n";
+                    header_file << "        return result;\n";
+                    header_file << "    }\n\n";
+                    // Note: A setter for strings would require memory allocation inside the VM, which is complex.
+                }
+            }
+            current_location += size;
+        }
+    }
+
+    header_file << "}; // class " << class_name << "\n\n";
+
+    // Write bytecode definition
+    header_file << "const unsigned char " << class_name << "::s_bytecode[] = {\n    ";
+    for (size_t i = 0; i < bc.size(); ++i) {
+        header_file << "0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(bc[i]);
+        if (i != bc.size() - 1) {
+            header_file << ", ";
+        }
+        if ((i + 1) % 16 == 0) {
+            header_file << "\n    ";
+        }
+    }
+    header_file << "\n};\n#endif\n";}

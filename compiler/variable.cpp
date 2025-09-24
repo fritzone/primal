@@ -101,3 +101,7 @@ word_t variable::get_size(const std::string& name) {
     if (it == variables.rend()) return 0; // Or throw an error
     return std::get<3>(*it);
 }
+
+const std::vector<std::tuple<std::string, entity_type, entity_origin, word_t>>& variable::get_declarations() {
+    return variables;
+}

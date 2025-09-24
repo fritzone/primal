@@ -13,17 +13,7 @@
 #include <types.h>    // For to_string(entity_type)
 #include <opcodes.h> // Includes all opcode definition headers
 
-// Helper to read a value of a specific type from a bytecode vector
-template<typename T>
-T read_value(const std::vector<uint8_t>& bytecode, size_t& offset) {
-    if (offset + sizeof(T) > bytecode.size()) {
-        throw std::runtime_error("Unexpected end of file while reading value.");
-    }
-    T value;
-    memcpy(&value, &bytecode[offset], sizeof(T));
-    offset += sizeof(T);
-    return value;
-}
+#include <util.h>
 
 std::string xml_escape(const std::string& str) {
     std::string escaped;
@@ -41,21 +31,9 @@ std::string xml_escape(const std::string& str) {
     return escaped;
 }
 
-
-// Helper to read a length-prefixed string
-std::string read_lp_string(const std::vector<uint8_t>& bytecode, size_t& offset) {
-    uint8_t len = read_value<uint8_t>(bytecode, offset);
-    if (offset + len > bytecode.size()) {
-        throw std::runtime_error("Unexpected end of file while reading string.");
-    }
-    std::string value(reinterpret_cast<const char*>(&bytecode[offset]), len);
-    offset += len;
-    return value;
-}
-
 void print_header(const std::vector<uint8_t>& bytecode) {
     std::cout << "--- Header Information ---" << std::endl;
-    size_t offset = 0;
+    word_t offset = 0;
 
     // 1. Signature
     std::string signature(reinterpret_cast<const char*>(&bytecode[offset]), 4);
@@ -65,15 +43,15 @@ void print_header(const std::vector<uint8_t>& bytecode) {
         std::cerr << "Warning: Invalid or unknown file signature." << std::endl;
     }
     // 2. Function Table Offset
-    word_t func_table_offset = (read_value<word_t>(bytecode, offset));
+    word_t func_table_offset = (util::read_value<word_t>(bytecode, offset));
     std::cout << "Function Table Offset:0x" << std::hex << func_table_offset << std::dec << std::endl;
 
     // 3. Stack Start Offset (in words)
-    word_t stack_start_words = (read_value<word_t>(bytecode, offset));
+    word_t stack_start_words = (util::read_value<word_t>(bytecode, offset));
     std::cout << "Stack Start (words):  " << stack_start_words << " (at " << stack_start_words * word_size << " bytes)" << std::endl;
 
     // 4. String Table Offset
-    word_t string_table_offset = (read_value<word_t>(bytecode, offset));
+    word_t string_table_offset = (util::read_value<word_t>(bytecode, offset));
     std::cout << "String Table Offset:  0x" << std::hex << string_table_offset << std::dec << std::endl;
 
 
@@ -118,40 +96,40 @@ OpcodeMap create_opcode_map() {
 }
 
 // Decodes and returns a string for a single parameter from the bytecode stream.
-std::string disassemble_parameter(const std::vector<uint8_t>& bytecode, size_t& ip) {
+std::string disassemble_parameter(const std::vector<uint8_t>& bytecode, word_t& ip) {
     std::stringstream ss;
-    auto type = static_cast<type_destination>(read_value<uint8_t>(bytecode, ip));
+    auto type = static_cast<type_destination>(util::read_value<uint8_t>(bytecode, ip));
     switch (type) {
     case type_destination::TYPE_MOD_IMM: {
-        word_t val = htovm(read_value<word_t>(bytecode, ip));
+        word_t val = htovm(util::read_value<word_t>(bytecode, ip));
         ss << "0x" << std::hex << val << " (" << std::dec << val << ")";
         break;
     }
     case type_destination::TYPE_MOD_REG:
-        ss << "$r" << static_cast<int>(read_value<uint8_t>(bytecode, ip));
+        ss << "$r" << static_cast<int>(util::read_value<uint8_t>(bytecode, ip));
         break;
     case type_destination::TYPE_MOD_MEM_IMM: {
-        word_t val = htovm(read_value<word_t>(bytecode, ip));
+        word_t val = htovm(util::read_value<word_t>(bytecode, ip));
         ss << "[0x" << std::hex << val << " (" << std::dec << val << ")]";
         break;
     }
     case type_destination::TYPE_MOD_MEM_REG_IDX:
-        ss << "[$r" << static_cast<int>(read_value<uint8_t>(bytecode, ip)) << "]";
+        ss << "[$r" << static_cast<int>(util::read_value<uint8_t>(bytecode, ip)) << "]";
         break;
     case type_destination::TYPE_MOD_MEM_REG_BYTE:
-        ss << "[@$r" << static_cast<int>(read_value<uint8_t>(bytecode, ip)) << "]";
+        ss << "[@$r" << static_cast<int>(util::read_value<uint8_t>(bytecode, ip)) << "]";
         break;
     case type_destination::TYPE_MOD_MEM_REG_IDX_OFFS: {
-        uint8_t reg_idx = read_value<uint8_t>(bytecode, ip);
-        char op = read_value<char>(bytecode, ip);
-        word_t offset = htovm(read_value<word_t>(bytecode, ip));
+        uint8_t reg_idx = util::read_value<uint8_t>(bytecode, ip);
+        char op = util::read_value<char>(bytecode, ip);
+        word_t offset = htovm(util::read_value<word_t>(bytecode, ip));
         ss << "[$r" << static_cast<int>(reg_idx) << op << "0x" << std::hex << offset << " (" << std::dec << offset << ")]";
         break;
     }
     case type_destination::TYPE_MOD_MEM_REG_IDX_REG_OFFS: {
-        uint8_t reg1_idx = read_value<uint8_t>(bytecode, ip);
-        char op = read_value<char>(bytecode, ip);
-        uint8_t reg2_idx = read_value<uint8_t>(bytecode, ip);
+        uint8_t reg1_idx = util::read_value<uint8_t>(bytecode, ip);
+        char op = util::read_value<char>(bytecode, ip);
+        uint8_t reg2_idx = util::read_value<uint8_t>(bytecode, ip);
         ss << "[$r" << static_cast<int>(reg1_idx) << op << "$r" << static_cast<int>(reg2_idx) << "]";
         break;
     }
@@ -167,15 +145,15 @@ std::string disassemble_parameter(const std::vector<uint8_t>& bytecode, size_t& 
 void disassemble_bytecode(const std::vector<uint8_t>& bytecode) {
     const auto opcode_map = create_opcode_map();
 
-    size_t header_offset = 4 + word_size + word_size; // Skip to string table offset
-    word_t string_table_offset = htovm(read_value<word_t>(bytecode, header_offset));
+    word_t header_offset = 4 + word_size + word_size; // Skip to string table offset
+    word_t string_table_offset = htovm(util::read_value<word_t>(bytecode, header_offset));
 
     std::cout << "--- Disassembly ---" << std::endl;
 
-    size_t ip = PRIMAL_HEADER_SIZE;
+    word_t ip = PRIMAL_HEADER_SIZE;
     while (ip < string_table_offset) {
         size_t line_start_ip = ip;
-        uint8_t opcode_val = read_value<uint8_t>(bytecode, ip);
+        uint8_t opcode_val = util::read_value<uint8_t>(bytecode, ip);
 
         // Print Address
         std::cout << "0x" << std::setw(8) << std::setfill('0') << std::hex << (line_start_ip - PRIMAL_HEADER_SIZE) << ":  ";
@@ -195,7 +173,7 @@ void disassemble_bytecode(const std::vector<uint8_t>& bytecode) {
 
         // Get parameters as a string
         std::stringstream params_ss;
-        for (size_t i = 0; i < opcode_obj->paramcount(); ++i) {
+        for (word_t i = 0; i < opcode_obj->paramcount(); ++i) {
             params_ss << disassemble_parameter(bytecode, ip) << " ";
         }
         size_t line_end_ip = ip;
@@ -216,43 +194,43 @@ void disassemble_bytecode(const std::vector<uint8_t>& bytecode) {
 
 
 void print_function_table(const std::vector<uint8_t>& bytecode) {
-    size_t header_offset = 0;
+    word_t header_offset = 0;
     // Read offsets from header to find the function table
     header_offset += 4; // Skip to function table offset, jump over .P10
-    word_t func_table_offset = htovm(read_value<word_t>(bytecode, header_offset));
+    word_t func_table_offset = htovm(util::read_value<word_t>(bytecode, header_offset));
     std::cout << "--- Function Symbol Table  @ " << func_table_offset << std::endl;
-    size_t funcs_offs = func_table_offset + 4;
-    word_t func_table_count = htovm(read_value<word_t>(bytecode, funcs_offs));
+    word_t funcs_offs = func_table_offset + 4;
+    word_t func_table_count = htovm(util::read_value<word_t>(bytecode, funcs_offs));
 
     std::cout << "--- Function Symbol Table (" << func_table_count << " entries) ---" << std::endl;
 
-    size_t current_offset = funcs_offs;
+    word_t current_offset = funcs_offs;
     for (word_t i = 0; i < func_table_count; ++i) {
         std::cout << "Function #" << i + 1 << ":" << std::endl;
 
         // 1. Name
-        std::string name = read_lp_string(bytecode, current_offset);
+        std::string name = util::read_lp_string(bytecode, current_offset);
         std::cout << "  Name:    " << name << std::endl;
 
         // 2. Address
-        word_t address = htovm(read_value<word_t>(bytecode, current_offset));
-        std::cout << "  Address: 0x" << std::hex << address << std::dec << std::endl;
+        word_t address = htovm(util::read_value<word_t>(bytecode, current_offset));
+        std::cout << "  Address: 0x" << std::hex << address << std::dec << "(" << address << ")" << std::endl;
 
         // 3. Is Extern
-        bool is_extern = read_value<uint8_t>(bytecode, current_offset);
+        bool is_extern = util::read_value<uint8_t>(bytecode, current_offset);
         std::cout << "  Extern:  " << (is_extern ? "Yes" : "No") << std::endl;
 
         // 4. Return Type
-        auto return_type = static_cast<primal::entity_type>(read_value<uint8_t>(bytecode, current_offset));
+        auto return_type = static_cast<primal::entity_type>(util::read_value<uint8_t>(bytecode, current_offset));
         std::cout << "  Return:  " << primal::to_string(return_type) << std::endl;
 
         // 5. Parameters
-        uint8_t param_count = read_value<uint8_t>(bytecode, current_offset);
+        uint8_t param_count = util::read_value<uint8_t>(bytecode, current_offset);
         std::cout << "  Params (" << (int)param_count << "):";
         if (param_count > 0) {
             std::cout << " ";
             for (uint8_t p = 0; p < param_count; ++p) {
-                auto param_type = static_cast<primal::entity_type>(read_value<uint8_t>(bytecode, current_offset));
+                auto param_type = static_cast<primal::entity_type>(util::read_value<uint8_t>(bytecode, current_offset));
                 std::cout << primal::to_string(param_type) << (p == param_count - 1 ? "" : ", ");
             }
         }
@@ -262,21 +240,21 @@ void print_function_table(const std::vector<uint8_t>& bytecode) {
 }
 
 void print_string_table(const std::vector<uint8_t>& bytecode) {
-    size_t header_offset = 0;
+    word_t header_offset = 0;
     // Read offsets from header to find the function table
     header_offset += 4; // Skip to function table offset, jump over .P10
-    size_t func_table_offset = htovm(read_value<word_t>(bytecode, header_offset));
+    word_t func_table_offset = htovm(util::read_value<word_t>(bytecode, header_offset));
     header_offset += word_size; // Skip to string table offset
-    word_t string_table_offset = htovm(read_value<word_t>(bytecode, header_offset));
+    word_t string_table_offset = htovm(util::read_value<word_t>(bytecode, header_offset));
 
 
     std::cout << "--- String Table ---" << std::endl;
 
-    size_t current_offset = string_table_offset;
+    word_t current_offset = string_table_offset;
     int str_index = 0;
     while (current_offset < func_table_offset) {
         word_t str_addr = current_offset;
-        std::string str = read_lp_string(bytecode, current_offset);
+        std::string str = util::read_lp_string(bytecode, current_offset);
         std::cout << std::setw(4) << str_index++ << " [0x" << std::hex << str_addr << std::dec << "]: \"" << str << "\"" << std::endl;
     }
     std::cout << "--------------------\n" << std::endl;
@@ -301,49 +279,49 @@ void print_bytecode_dump(const std::vector<uint8_t>& bytecode) {
 // XML printers
 void print_header_xml(std::ostream& os, const std::vector<uint8_t>& bytecode) {
     os << "  <Header>\n";
-    size_t offset = 0;
+    word_t offset = 0;
     std::string signature(reinterpret_cast<const char*>(&bytecode[offset]), 4);
     offset += 4;
     os << "    <Signature>" << xml_escape(signature) << "</Signature>\n";
     offset += word_size; // Skip reserved
-    word_t stack_start_words = htovm(read_value<word_t>(bytecode, offset));
+    word_t stack_start_words = htovm(util::read_value<word_t>(bytecode, offset));
     os << "    <StackStart words=\"" << stack_start_words << "\" bytes=\"" << stack_start_words * word_size << "\"/>\n";
-    word_t string_table_offset = htovm(read_value<word_t>(bytecode, offset));
+    word_t string_table_offset = htovm(util::read_value<word_t>(bytecode, offset));
     os << "    <StringTableOffset>0x" << std::hex << string_table_offset << std::dec << "</StringTableOffset>\n";
-    word_t func_table_offset = htovm(read_value<word_t>(bytecode, offset));
+    word_t func_table_offset = htovm(util::read_value<word_t>(bytecode, offset));
     os << "    <FunctionTableOffset>0x" << std::hex << func_table_offset << std::dec << "</FunctionTableOffset>\n";
-    word_t func_table_count = htovm(read_value<word_t>(bytecode, offset));
+    word_t func_table_count = htovm(util::read_value<word_t>(bytecode, offset));
     os << "    <FunctionCount>" << func_table_count << "</FunctionCount>\n";
     os << "  </Header>\n";
 }
 
 void print_function_table_xml(std::ostream& os, const std::vector<uint8_t>& bytecode) {
 
-    size_t header_offset = 0;
+    word_t header_offset = 0;
     // Read offsets from header to find the function table
     header_offset += 4; // Skip to function table offset, jump over .P10
-    word_t func_table_offset = htovm(read_value<word_t>(bytecode, header_offset));
+    word_t func_table_offset = htovm(util::read_value<word_t>(bytecode, header_offset));
     std::cout << "--- Function Symbol Table  @ " << func_table_offset << std::endl;
-    size_t funcs_offs = func_table_offset + 4;
-    word_t func_table_count = htovm(read_value<word_t>(bytecode, funcs_offs));
+    word_t funcs_offs = func_table_offset + 4;
+    word_t func_table_count = htovm(util::read_value<word_t>(bytecode, funcs_offs));
 
     std::cout << "--- Function Symbol Table (" << func_table_count << " entries) ---" << std::endl;
 
-    size_t current_offset = funcs_offs;
+    word_t current_offset = funcs_offs;
     for (word_t i = 0; i < func_table_count; ++i) {
         os << "    <Function id=\"" << i + 1 << "\">\n";
-        std::string name = read_lp_string(bytecode, current_offset);
+        std::string name = util::read_lp_string(bytecode, current_offset);
         os << "      <Name>" << xml_escape(name) << "</Name>\n";
-        word_t address = htovm(read_value<word_t>(bytecode, current_offset));
+        word_t address = htovm(util::read_value<word_t>(bytecode, current_offset));
         os << "      <Address>0x" << std::hex << address << std::dec << "</Address>\n";
-        bool is_extern = read_value<uint8_t>(bytecode, current_offset);
+        bool is_extern = util::read_value<uint8_t>(bytecode, current_offset);
         os << "      <Extern>" << (is_extern ? "true" : "false") << "</Extern>\n";
-        auto return_type = static_cast<primal::entity_type>(read_value<uint8_t>(bytecode, current_offset));
+        auto return_type = static_cast<primal::entity_type>(util::read_value<uint8_t>(bytecode, current_offset));
         os << "      <Return type=\"" << primal::to_string(return_type) << "\"/>\n";
-        uint8_t param_count = read_value<uint8_t>(bytecode, current_offset);
+        uint8_t param_count = util::read_value<uint8_t>(bytecode, current_offset);
         os << "      <Parameters count=\"" << (int)param_count << "\">\n";
         for (uint8_t p = 0; p < param_count; ++p) {
-            auto param_type = static_cast<primal::entity_type>(read_value<uint8_t>(bytecode, current_offset));
+            auto param_type = static_cast<primal::entity_type>(util::read_value<uint8_t>(bytecode, current_offset));
             os << "        <Parameter id=\"" << (int)p << "\" type=\"" << primal::to_string(param_type) << "\"/>\n";
         }
         os << "      </Parameters>\n";
@@ -353,23 +331,20 @@ void print_function_table_xml(std::ostream& os, const std::vector<uint8_t>& byte
 }
 
 void print_string_table_xml(std::ostream& os, const std::vector<uint8_t>& bytecode) {
-
-
-
-    size_t header_offset = 0;
+    word_t header_offset = 0;
     // Read offsets from header to find the function table
     header_offset += 4; // Skip to function table offset, jump over .P10
-    size_t func_table_offset = htovm(read_value<word_t>(bytecode, header_offset));
+    word_t func_table_offset = htovm(util::read_value<word_t>(bytecode, header_offset));
     header_offset += word_size; // Skip to string table offset
-    word_t string_table_offset = htovm(read_value<word_t>(bytecode, header_offset));
+    word_t string_table_offset = htovm(util::read_value<word_t>(bytecode, header_offset));
     os << "  <StringTable>\n";
 
 
-    size_t current_offset = string_table_offset;
+    word_t current_offset = string_table_offset;
     int str_index = 0;
     while (current_offset < func_table_offset) {
         word_t str_addr = current_offset;
-        std::string str = read_lp_string(bytecode, current_offset);
+        std::string str = util::read_lp_string(bytecode, current_offset);
         os << "    <String id=\"" << str_index++ << "\" address=\"0x" << std::hex << str_addr << std::dec << "\">" << xml_escape(str) << "</String>\n";
     }
     os << "  </StringTable>\n";
@@ -377,9 +352,9 @@ void print_string_table_xml(std::ostream& os, const std::vector<uint8_t>& byteco
 
 }
 
-void print_parameter_xml(std::ostream& os, const std::vector<uint8_t>& bytecode, size_t& ip) {
-    size_t start_ip = ip;
-    auto type = static_cast<type_destination>(read_value<uint8_t>(bytecode, ip));
+void print_parameter_xml(std::ostream& os, const std::vector<uint8_t>& bytecode, word_t& ip) {
+    word_t start_ip = ip;
+    auto type = static_cast<type_destination>(util::read_value<uint8_t>(bytecode, ip));
     std::string value_str = disassemble_parameter(bytecode, start_ip);
     ip = start_ip;
 
@@ -388,14 +363,14 @@ void print_parameter_xml(std::ostream& os, const std::vector<uint8_t>& bytecode,
 
 void disassemble_bytecode_xml(std::ostream& os, const std::vector<uint8_t>& bytecode) {
     const auto opcode_map = create_opcode_map();
-    size_t header_offset = 4 + word_size + word_size;
-    word_t string_table_offset = htovm(read_value<word_t>(bytecode, header_offset));
+    word_t header_offset = 4 + word_size + word_size;
+    word_t string_table_offset = htovm(util::read_value<word_t>(bytecode, header_offset));
 
     os << "  <Disassembly>\n";
-    size_t ip = PRIMAL_HEADER_SIZE;
+    word_t ip = PRIMAL_HEADER_SIZE;
     while (ip < string_table_offset) {
-        size_t line_start_ip = ip;
-        uint8_t opcode_val = read_value<uint8_t>(bytecode, ip);
+        word_t line_start_ip = ip;
+        uint8_t opcode_val = util::read_value<uint8_t>(bytecode, ip);
 
         std::stringstream bytes_ss;
         bytes_ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(opcode_val);
@@ -414,12 +389,12 @@ void disassemble_bytecode_xml(std::ostream& os, const std::vector<uint8_t>& byte
         const auto& opcode_obj = it->second;
         os << "    <Instruction address=\"0x" << std::hex << (line_start_ip - PRIMAL_HEADER_SIZE) << std::dec << "\" mnemonic=\"" << opcode_obj->name() << "\">\n";
 
-        for (size_t i = 0; i < opcode_obj->paramcount(); ++i) {
+        for (word_t i = 0; i < opcode_obj->paramcount(); ++i) {
             print_parameter_xml(os, bytecode, ip);
         }
 
-        size_t line_end_ip = ip;
-        for (size_t i = line_start_ip + 1; i < line_end_ip; ++i) {
+        word_t line_end_ip = ip;
+        for (word_t i = line_start_ip + 1; i < line_end_ip; ++i) {
             bytes_ss << " " << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(bytecode[i]);
         }
         os << "      <Bytes>" << bytes_ss.str() << "</Bytes>\n";

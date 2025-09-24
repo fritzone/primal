@@ -22,31 +22,6 @@ namespace primal {
     {
     public:
 
-        /**
-         * @brief A plain, serializable structure to hold a function's summary.
-         *
-         * This can be written directly into the bytecode to form a symbol table.
-         */
-        struct summary_pod {
-            // The name of the function. max 255
-            char name[MAX_FUNCTION_NAME_LEN] = {0};
-
-            // The address of the function within the bytecode.
-            word_t address;
-
-            // The number of parameters this function takes.
-            uint8_t parameter_count {0};
-
-            // A flag indicating if the function is a C++ extern call.
-            uint8_t is_extern {0};
-
-            // The return type of the function, encoded as entity_type.
-            uint8_t return_type {0};
-
-            // The types of each parameter, encoded as entity_type.
-            uint8_t parameter_types[255] = {0};
-        };
-
         static std::shared_ptr<fun> register_function(const std::string& name, source& src)
         {
             if(get(name))

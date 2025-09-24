@@ -4,6 +4,11 @@ string(TIMESTAMP now)
 set(${project}-sources
     ${CMAKE_CURRENT_SOURCE_DIR}/vm.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/vm_impl.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/vm.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/vm_impl.h
+
+    ${CMAKE_CURRENT_SOURCE_DIR}/loaded_function.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/loaded_function.cpp
 )
 
 set(registered_interrupts "")
@@ -84,3 +89,14 @@ target_include_directories(primv
     PRIVATE
     ${CMAKE_SOURCE_DIR}/interface/include
 )
+
+install(TARGETS ${project}
+    EXPORT primal-targets
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+install(FILES
+    vm.h
+    loaded_function.h
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/primal
+)
+install(TARGETS primv DESTINATION ${CMAKE_INSTALL_BINDIR})

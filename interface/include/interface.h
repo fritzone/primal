@@ -9,15 +9,21 @@
 #include <variant>
 #include <stdexcept>
 #include <tuple>
-#include <type_traits>
-#include <numeric_decl.h> // For word_t
+#include <utility> // For std::index_sequence
 
-// --- Unified type for script values ---
-using ScriptValue = std::variant<std::monostate, word_t, std::string>;
-using ScriptArgs = std::vector<ScriptValue>;
+// Forward declaration for Primal numeric type
+#include <numeric_decl.h>
+#include <vm.h>
 
-// --- Helper for printing ScriptValue ---
-inline std::ostream& operator<<(std::ostream& os, const ScriptValue& v) {
+namespace primal
+{
+
+// Unified type for script values
+using script_value = std::variant<std::monostate, word_t, std::string>;
+using script_args = std::vector<script_value>;
+
+// Helper for printing script_value
+inline std::ostream& operator<<(std::ostream& os, const script_value& v) {
     std::visit([&os](auto&& arg) {
         using T = std::decay_t<decltype(arg)>;
         if constexpr (std::is_same_v<T, std::monostate>) {
@@ -31,21 +37,20 @@ inline std::ostream& operator<<(std::ostream& os, const ScriptValue& v) {
     return os;
 }
 
-inline std::string get_value_type_name(const ScriptValue& v) {
+inline std::string get_value_type_name(const script_value& v) {
     if (std::holds_alternative<std::monostate>(v)) return "void";
     if (std::holds_alternative<word_t>(v)) return "number";
     if (std::holds_alternative<std::string>(v)) return "string";
     return "unknown";
 }
 
-
-// --- The Core of the System: The Function Registry ---
-class FunctionRegistry {
+// The Function Registry
+class function_registry {
 public:
-    using GenericFunc = std::function<ScriptValue(const ScriptArgs&)>;
+    using generic_func = std::function<script_value(const script_args&)>;
 
 private:
-    // --- Metaprogramming helper to deduce function signatures ---
+    // Metaprogramming helper to deduce function signatures from any callable
     template <typename T>
     struct function_traits : function_traits<decltype(&T::operator())> {};
 
@@ -65,9 +70,9 @@ private:
     template <typename C, typename Ret, typename... Args>
     struct function_traits<Ret(C::*)(Args...) const> : function_traits<Ret(Args...)> {};
 
-    // --- Helpers for argument unpacking ---
+    // Helper to get a typed argument from the script_args variant vector
     template <typename T>
-    static T get_arg(const ScriptArgs& args, std::size_t index, const std::string& func_name) {
+    static T get_arg(const script_args& args, std::size_t index, const std::string& func_name) {
         if (index >= args.size()) {
             throw std::runtime_error("Argument index out of bounds for function '" + func_name + "'.");
         }
@@ -81,10 +86,12 @@ private:
         }
     }
 
-    template <typename... Args, std::size_t... Is>
-    static std::tuple<Args...> unpack_args(const ScriptArgs& args, const std::string& func_name, std::index_sequence<Is...>) {
-        return std::make_tuple(get_arg<Args>(args, Is, func_name)...);
+    // A single, robust helper to unpack script arguments into a C++ tuple
+    template <typename Tuple, std::size_t... Is>
+    static Tuple unpack_args_helper(const script_args& args, const std::string& func_name, std::index_sequence<Is...>) {
+        return std::make_tuple(get_arg<std::tuple_element_t<Is, Tuple>>(args, Is, func_name)...);
     }
+
 
 public:
     /**
@@ -96,7 +103,7 @@ public:
         using ArgsTuple = typename traits::args_tuple;
         using Ret = typename traits::return_type;
 
-        functions[name] = [func = std::move(func), name](const ScriptArgs& args) -> ScriptValue {
+        functions[name] = [func = std::move(func), name](const script_args& args) -> script_value {
             if (traits::arity != args.size()) {
                 throw std::runtime_error(
                     "Error calling '" + name + "': Expected " +
@@ -106,7 +113,7 @@ public:
             }
 
             // Create a tuple of C++ arguments by unpacking the variant vector
-            auto cpp_args_tuple = unpack_args_from_tuple<ArgsTuple>(args, name, std::make_index_sequence<traits::arity>{});
+            auto cpp_args_tuple = unpack_args_helper<ArgsTuple>(args, name, std::make_index_sequence<traits::arity>{});
 
             if constexpr (std::is_void_v<Ret>) {
                 std::apply(func, cpp_args_tuple);
@@ -117,7 +124,7 @@ public:
         };
     }
 
-    ScriptValue call(const std::string& name, const ScriptArgs& args) {
+    script_value call(const std::string& name, const script_args& args) {
         auto it = functions.find(name);
         if (it == functions.end()) {
             throw std::runtime_error("Function not found: " + name);
@@ -125,26 +132,16 @@ public:
         return it->second(args);
     }
 
-    static FunctionRegistry& instance() {
-        static FunctionRegistry registry;
+    static function_registry& instance() {
+        static function_registry registry;
         return registry;
     }
 
 private:
-    FunctionRegistry() = default;
-    std::map<std::string, GenericFunc> functions;
-
-    // Helper to bridge the parameter-pack based unpack_args with the tuple from function_traits
-    template<typename Tuple, typename... Args, std::size_t... Is>
-    static Tuple unpack_args_from_tuple_impl(const ScriptArgs& args, const std::string& func_name, std::index_sequence<Is...>) {
-        return std::make_tuple(get_arg<std::tuple_element_t<Is, Tuple>>(args, Is, func_name)...);
-    }
-
-    template<typename Tuple>
-    static Tuple unpack_args_from_tuple(const ScriptArgs& args, const std::string& func_name, std::index_sequence_for<std::tuple_element_t<0, Tuple>> seq = {}) {
-        return unpack_args_from_tuple_impl<Tuple>(args, func_name, std::make_index_sequence<std::tuple_size_v<Tuple>>{});
-    }
+    function_registry() = default;
+    std::map<std::string, generic_func> functions;
 };
 
-#endif // FUNCTION_REGISTRY_H
+}
 
+#endif // FUNCTION_REGISTRY_H

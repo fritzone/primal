@@ -1,7 +1,11 @@
-#pragma once
+#ifndef _UTIL_H_
+#define _UTIL_H_
+
+#include "numeric_decl.h"
 
 #include <string>
 #include <cctype>
+#include <cstring>
 #include <memory>
 #include <algorithm>
 #include <functional>
@@ -122,5 +126,23 @@ namespace util
         }
         return num;
     }
+
+    // Helper to read a value of a specific type from a bytecode vector
+    template<typename T>
+    T read_value(const std::vector<uint8_t>& bytecode, word_t& offset)
+    {
+        if (offset + sizeof(T) > bytecode.size())
+        {
+            throw std::runtime_error("Unexpected end of file while reading value.");
+        }
+        T value;
+        memcpy(&value, &bytecode[offset], sizeof(T));
+        offset += sizeof(T);
+        return value;
+    }
+
+    // Helper to read a length-prefixed string
+    std::string read_lp_string(const std::vector<uint8_t>& bytecode, word_t &offset);
 }
 
+#endif

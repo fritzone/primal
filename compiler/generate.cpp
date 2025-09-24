@@ -248,7 +248,7 @@ void compiled_code::encountered(const std::string &s, bool absolute, int delta)
 {
     if(bytes.size() > std::numeric_limits<word_t>::max())
     {
-        throw "sorry mate, this application is too complex for me to compile";
+        throw std::runtime_error("application complexity exceeded compiler capacity");
     }
 
     if(options::instance().generate_assembly())
@@ -297,36 +297,26 @@ void compiled_code::finalize()
     auto fun_map = m_compiler->get_function_summaries();
 
     // insert the offset of the string table bytes
-    std::cout << "!Stringtable: ";
     for(size_t i=0; i<word_size; i++)
     {
         bytes.insert(bytes.begin(), 0xFF);
         std::cout  << "0xFF ";
     }
-    std::cout << std::endl;
-
-    std::cout << "!StackSegment: ";
     // insert the index of the stack segments' start
     for(size_t i=0; i<word_size; i++)
     {
         bytes.insert(bytes.begin(), 0xFF);
         std::cout  << "0xFF ";
     }
-    std::cout << std::endl;
-
-    std::cout << "!StackSegment: ";
     // insert the reserved bytes for function table location
     for(size_t i=0; i<word_size; i++)
     {
         bytes.insert(bytes.begin(), 0xFF);
         std::cout  << "0xFF ";
     }
-    std::cout << std::endl;
 
     // insert the version 1.0 and .P to mark it as a primal compiled script
     bytes.insert(bytes.begin(), '0');bytes.insert(bytes.begin(), '1');bytes.insert(bytes.begin(), 'P');bytes.insert(bytes.begin(), '.');
-
-    std::cout <<"!Occupied:" << bytes.size() <<  std::endl;
 
     // finalize the labels
     for(const auto& ldecl : label_declarations)
@@ -355,7 +345,15 @@ void compiled_code::finalize()
             }
 
             memcpy( &bytes[0] + lref.second + PRIMAL_HEADER_SIZE, &vm_ord, sizeof(vm_ord));
-
+            // let's see if we have a function at ldecl.second
+            for(auto& f : fun_map)
+            {
+                if(f.address == ldecl.second)
+                {
+                    std::cout << "!! - found ref:" << f.name << std::endl;
+                    f.address = vm_ord - VM_MEM_SEGMENT_SIZE;
+                }
+            }
         }
     }
 
@@ -408,7 +406,7 @@ void compiled_code::finalize()
     unsigned char *ptr = (unsigned char *)".fun";
     bytes.insert(bytes.end(), ptr, ptr + 4);
 
-    auto summaries = m_compiler->get_function_summaries();
+    auto summaries = fun_map;
 
     {
         word_t function_table_count = static_cast<word_t>(summaries.size());
@@ -446,6 +444,7 @@ void compiled_code::finalize()
     }
     // all done theoretically
 
+    std::cout << std::endl;
 }
 
 void compiled_code::append_number(word_t v)

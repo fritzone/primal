@@ -18,7 +18,7 @@ using namespace primal;
 void asm_compiler::generate_assembly_code(const primal::opcodes::opcode& opc, const std::vector<token>& tokens, std::vector<uint8_t>& result, compiler *c)
 {
 
-    // the opcode for COPY
+    // the opcode for the operation
     result.push_back(opc.bin());
 
     for(const token &t : tokens)

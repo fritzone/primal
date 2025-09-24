@@ -3,13 +3,13 @@
 
 #include "numeric_decl.h"
 #include "type_destination_decl.h"
-#include "util.h"
 
 #include <stdint.h>
 
 #include <map>
 #include <functional>
 #include <array>
+#include <stdexcept>
 
 namespace primal
 {
@@ -145,10 +145,7 @@ namespace primal
 
         type_destination get_type() const override { return type_destination::TYPE_MOD_REG; }
 
-        std::string debug() const override {
-            std::string res = "reg" + util::to_string(m_reg_idx) + "=(" + util::to_string(m_value) + ")";
-            return res;
-        }
+        std::string debug() const override;
 
         uint8_t m_reg_idx;
     };
@@ -170,7 +167,7 @@ namespace primal
 
         type_destination get_type() const override { return type_destination::TYPE_MOD_MEM_REG_IDX; }
 
-        std::string debug() const override { return std::string("[") + util::to_string(m_address) + "]";}
+        std::string debug() const override;
 
         word_t m_address = -1;
         std::function<word_t(word_t)> m_getter;
@@ -189,7 +186,7 @@ namespace primal
         word_t value() const override { return m_getter(m_address); }
         type_destination get_type() const override { return type_destination::TYPE_MOD_MEM_REG_BYTE; }
 
-        std::string debug() const override { return std::string("[") + util::to_string(m_address) + "]";}
+        std::string debug() const override ;
 
         word_t m_address = -1;
         std::function<uint8_t(word_t)> m_getter;
@@ -207,7 +204,7 @@ namespace primal
 
         type_destination get_type() const override { return type_destination::TYPE_MOD_REG_BYTE; }
 
-        std::string debug() const override { return  std::string("@") + util::to_string((int)m_bidx) + "/" + m_r->debug(); }
+        std::string debug() const override;
 
         reg* m_r;
         uint8_t m_bidx;
@@ -221,13 +218,28 @@ namespace primal
 
         void set_value(word_t) override
         {
-            throw "cannot do this";
+            throw std::runtime_error("invalid binary: cannot assign to a numeric value");
         }
 
         type_destination get_type() const override { return type_destination::TYPE_MOD_IMM; }
 
-        std::string debug() const override { return util::to_string(m_value); }
+        std::string debug() const override;
 
+    };
+
+    struct immediate_byte : public valued
+    {
+        immediate_byte() = default;
+        explicit immediate_byte(word_t p) { m_value = p; }
+
+        void set_value(word_t) override
+        {
+            throw std::runtime_error("invalid binary: cannot assign to a numeric value");
+        }
+
+        type_destination get_type() const override { return type_destination::TYPE_MOD_IMM_BYTE; }
+
+        std::string debug() const override;
     };
 
 }

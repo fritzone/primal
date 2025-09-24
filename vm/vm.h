@@ -3,9 +3,11 @@
 
 #include <hal.h>
 #include <opcode.h>
-#include <numeric_decl.h>
+#include "numeric_decl.h"
 #include <registers.h>
 #include <interface.h>
+
+#include "loaded_function.h"
 
 #include <memory>
 #include <vector>
@@ -255,7 +257,7 @@ namespace primal
         template<typename C>
         void register_function(std::string name, C func)
         {
-            FunctionRegistry::instance().add(name, func);
+            function_registry::instance().add(name, func);
         }
 
         void set_debug(bool newDebug);
@@ -263,11 +265,14 @@ namespace primal
         void set_speed(uint64_t hertz);
 #endif
 
+        std::vector<loaded_function> functions() const;
+
     private:
 
-        std::shared_ptr<vm_impl> impl;
+        std::shared_ptr<vm_impl> m_impl;
         bool m_debug = false;
 
+        std::vector<loaded_function> m_functions;
     };
 
 }

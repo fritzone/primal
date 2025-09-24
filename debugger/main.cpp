@@ -1,23 +1,3 @@
-/**
- * @file font_display.c
- * @brief An SDL2 program implementing a scrollable, resizable, virtual text-mode screen.
- *
- * This program loads a classic DOS bitmap font and provides an API to "print"
- * characters to a large in-memory buffer. A smaller portion of this buffer (the viewport)
- * is rendered to the screen. The user can scroll this viewport using the mouse wheel
- * or by dragging the OS/2-style scrollbars.
- *
- * How it works:
- * 1.  The scrollbars are now a UI overlay drawn directly to the renderer, separate
- * from the main text content buffer. This fixes the "scrollbar trail" bug.
- * 2.  The virtual `TextScreen` holds only the content, not UI elements.
- * 3.  The main loop handles mouse events to update scrollbar state.
- * 4.  A `draw_scrollbars` function is now responsible for both drawing the UI
- * and calculating the clickable thumb rectangles for mouse detection.
- * 5.  The `render_text_screen` function is simplified to only render the
- * visible portion of the text buffer.
- */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h> // For round() and ceil()

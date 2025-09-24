@@ -19,10 +19,9 @@ FetchContent_MakeAvailable(catch2)
 
 # Add the test executable
 add_executable(${project} tests.cpp)
-target_link_libraries(${project} util compiler vm )
 
 # Link Catch2 to the test executable
-target_link_libraries(${project} PRIVATE Catch2::Catch2WithMain)
+target_link_libraries(${project} PRIVATE Catch2::Catch2WithMain compiler vm)
 
 # Register the test with CTest
 include(Catch)

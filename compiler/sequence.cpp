@@ -161,7 +161,7 @@ void sequence::traverse_ast(uint8_t level, const std::shared_ptr<ast>& croot, co
             return; // We are done for this branch
         }
 
-        // --- Existing operator logic ---
+        // Existing operator logic
         traverse_ast(level + 1, croot->left, c);
         (*c->generator()) << MOV() << reg(level) << reg(level + 1);
         traverse_ast(level + 1, croot->right, c);
@@ -191,9 +191,15 @@ void sequence::traverse_ast(uint8_t level, const std::shared_ptr<ast>& croot, co
             else
                 if(tt == token::type::TT_STRING)
                 {
-                    word_t after_variables = (variable::global_variable_count() - 1) * word_size + STRING_TABLE_INDEX_IN_MEM + stringtable::instance().e(croot->data.get_extra_info()).in_mem_location;
-                    (*c->generator()) << MOV() << reg(level) << type_destination::TYPE_MOD_IMM << after_variables;
-                    (*c->generator()) << COPY() << type_destination::TYPE_MOD_IMM << after_variables
+                    auto nr_of_strings = stringtable::instance().count();
+                    auto in_mem_loc = stringtable::instance().e(croot->data.get_extra_info()).in_mem_location;
+
+                    word_t in_vm_mem_loc = /*(nr_of_strings - 1) * word_size
+                                           + */STRING_TABLE_INDEX_IN_MEM
+                                           + in_mem_loc;
+
+                    (*c->generator()) << MOV() << reg(level) << type_destination::TYPE_MOD_IMM << in_vm_mem_loc;
+                    (*c->generator()) << COPY() << type_destination::TYPE_MOD_IMM << in_vm_mem_loc
                                       << type_destination::TYPE_MOD_IMM;
                     compiled_code::instance(c).string_encountered(croot->data.get_extra_info());
                     for(size_t i=0; i<word_size; i++)
@@ -219,7 +225,12 @@ void sequence::traverse_ast(uint8_t level, const std::shared_ptr<ast>& croot, co
 
     if (tt == token::type::TT_VARIABLE)
     {
-        (*c->generator()) << MOV() << reg(level) << c->get_variable(croot->data.data());
+        auto&& v = c->get_variable(croot->data.data());
+        if(!v)
+        {
+            throw std::runtime_error("cannot locate a variable:" + croot->data.data());
+        }
+        (*c->generator()) << MOV() << reg(level) << v;
     }
 }
 

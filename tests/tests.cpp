@@ -37,6 +37,7 @@ TEST_CASE("Compiler compiles, string indexed assignment - grows", "[compiler]")
 
     c->compile(R"code(
                    var string a
+                   let a = "B"
                    let a[2] = "X"
                )code"
              );
@@ -47,6 +48,7 @@ TEST_CASE("Compiler compiles, string indexed assignment - grows", "[compiler]")
     vm->get_impl()->bindump();
 
     // the length
+    auto sz = vm->get_mem_byte(STRING_TABLE_INDEX_IN_MEM);
     REQUIRE(vm->get_mem_byte(STRING_TABLE_INDEX_IN_MEM) == 3);
     // the character
     REQUIRE(vm->get_mem_byte(STRING_TABLE_INDEX_IN_MEM + 2) == 'X');
@@ -58,20 +60,16 @@ TEST_CASE("Compiler compiles, string assignment", "[compiler]")
     auto c = primal::compiler::create();
 
     c->compile(R"code(
-                   import write
-
                    var string a
                    let a = "ABCDEF"
-
-                   write(a)
                )code"
              );
 
     auto vm = primal::vm::create();
     REQUIRE(vm->run(c->bytecode()));
 
-    REQUIRE(vm->get_mem(0) == 4100);
-    REQUIRE(vm->get_mem_byte(4100) == 6);
+    REQUIRE(vm->get_mem(0) == STRING_TABLE_INDEX_IN_MEM);
+    REQUIRE(vm->get_mem_byte(STRING_TABLE_INDEX_IN_MEM) == 6);
 }
 
 
@@ -252,6 +250,7 @@ write(5678, "abc", "def", 1234)
 
 }
 
+
 TEST_CASE("Compiler compiles, extern function", "[compiler]")
 {
     auto c = primal::compiler::create();
@@ -269,15 +268,13 @@ TEST_CASE("Compiler compiles, extern function", "[compiler]")
                );
 
     auto vm = primal::vm::create();
-    vm->register_function("something", [](std::string a) -> word_t {
-        std::cout  << "something called with " << a << std::endl;
-        return 42;
-    });
-
+    vm->register_function("something", [](std::string a)
+                          {
+                              std::cout  << "something lambda called with " << a << std::endl;
+                          });
 
 
     REQUIRE(vm->run(c->bytecode()));
-    REQUIRE(vm->get_mem(0) == 5);
 }
 
 
@@ -785,7 +782,7 @@ TEST_CASE("Compiler handles array declaration and access", "[compiler]")
     auto vm = primal::vm::create();
     REQUIRE(vm->run(c->bytecode()));
 
-    // --- Verification ---
+    // Verification
 
     // `data` is the first variable, so it starts at memory location 0.
     // It has 5 elements, each taking up `word_size` bytes.

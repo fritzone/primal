@@ -168,7 +168,7 @@ bool fun::compile(compiler* c)
         //compiled_code::instance(c).string_encountered(m_name);
 
         (*c->generator()) << MOV() << reg(249) << reg(250);
-        (*c->generator()) << SUB() << reg(249) << type_destination::TYPE_MOD_IMM  << (20);
+        (*c->generator()) << SUB() << reg(249) << type_destination::TYPE_MOD_IMM  << (25);
         (*c->generator()) << INTR() << type_destination::TYPE_MOD_IMM << (2);
     }
 

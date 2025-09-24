@@ -118,3 +118,18 @@ target_link_libraries(${project} util opcode-compilers hal)
 add_executable(primc ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp )
 
 target_link_libraries(primc ${project})
+
+install(TARGETS ${project}
+    EXPORT primal-targets
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+#install(FILES ${${project}-headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/primal/compiler)
+install(TARGETS primc DESTINATION ${CMAKE_INSTALL_BINDIR})
+
+
+install(FILES
+    types.h
+    compiler.h
+    source.h
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/primal
+)
