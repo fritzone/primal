@@ -14,7 +14,7 @@ namespace primal
     struct parameter
     {
         std::string name;
-        primal::entity_type pt;
+        primal::entity_type type;
     };
 
     /**

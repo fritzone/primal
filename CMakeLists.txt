@@ -1,18 +1,17 @@
-cmake_minimum_required (VERSION 2.8.11)
+cmake_minimum_required (VERSION 3.30)
 
 project(primal)
-include (TestBigEndian)
-
-if(NOT ${TEST_ENDIAN} EQUAL 1)
-    message("Compiling on a little nedian machine")
-    add_definitions( -DCOMPILED_ON_LITTLE_ENDIAN )
-endif()
 
 option(coverage-build "gcov/lcov test coverage analysis (make coverage_test)" OFF)
+option(ticks "whether to build a machine which allows timed execution based on ticks" ON)
+
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -31,7 +30,7 @@ else()
 endif()
 
 # To specify the word size of the VM: 32 bit or 64 bit
-set(TARGET_ARCH "32" CACHE STRING "The selected architecture's size")
+set(TARGET_ARCH "64" CACHE STRING "The selected architecture's size")
 set_property(CACHE TARGET_ARCH PROPERTY STRINGS "32" "64")
 
 message(Building: ${TARGET_ARCH} bit machine)
@@ -40,6 +39,10 @@ if(${TARGET_ARCH} EQUAL 32)
     add_definitions("-DTARGET_ARCH=32")
 elseif(${TARGET_ARCH} EQUAL 64)
     add_definitions("-DTARGET_ARCH=64")
+endif()
+
+if(${ticks})
+    add_definitions("-DTICKS=1")
 endif()
 
 # These will go into all submodules for now
@@ -75,8 +78,11 @@ endif()
 # the files actually
 add_subdirectory(compiler)
 add_subdirectory(vm)
-
+add_subdirectory(primdis)
+add_subdirectory(interface)
 add_subdirectory(tests)
+add_subdirectory(static_vm)
+add_subdirectory(debugger)
 enable_testing()
 
 add_test(NAME primal_test COMMAND primal_test)

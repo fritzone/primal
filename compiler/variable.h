@@ -9,18 +9,20 @@
 #include <memory>
 #include <vector>
 
+
 namespace primal
 {
 
     class compiler;
     class fun;
+    struct reg;
 
     /* This class will hold the variables and their associated memory adresses */
     class variable
     {
     public:
 
-        variable(compiler* c, const std::string& name);
+        variable(compiler* c, const std::string& name, word_t size = 1);
         word_t location() const;
         fun* frame() const;
 
@@ -29,19 +31,46 @@ namespace primal
         /* Tells us if the variable with the given name was created or not */
         static bool has_variable(const std::string& name);
 
+        /* will give us the number of global variables */
+        static word_t global_variable_count();
+
         /* when done with the current compilation shut it down */
         static void reset();
-        static void introduce_name(const std::string &name, entity_type et, entity_origin eo);
+        static void introduce_name(const std::string &name, entity_type et, entity_origin eo, word_t size = 1);
         static void enter_function(const std::string& function_name);
         static void leave_function();
+
+        /* returns the type of the variable */
+        static entity_type get_type(const std::string& name);
+
+        word_t size() const { return m_size; }
+        bool is_array() const { return m_size > 1; }
+        static word_t get_size(const std::string& name);
+
+        static const std::vector<std::tuple<std::string, entity_type, entity_origin, word_t>>& get_declarations();
 
     private:
 
         std::string m_name;
+        word_t m_size;
         word_t m_location;
-        static std::vector<std::tuple<std::string, entity_type, entity_origin>> variables;
+
+        // the string contains the name of the function the variable is to be found in separated by ":"
+        static std::vector<std::tuple<std::string, entity_type, entity_origin, word_t>> variables;
         static std::string working_function;
+
         fun* m_frame;
+
+
+        compiler* m_compiler;
+
+        static word_t global_var_cnt;
+    };
+
+    struct indexed_variable_access
+    {
+        std::shared_ptr<variable> m_var;
+        const reg& m_index;
     };
 
 }

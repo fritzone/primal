@@ -1,17 +1,33 @@
 #include "vm_impl.h"
+#include "vm.h"
 
 #include <exceptions.h>
-
+#ifdef TICKS
+#include <chrono>
+#include <thread>
+#endif
 #include <cstring>
 #include <iostream>
 #include <iomanip>
 
+
 using namespace primal;
 
-std::map<uint8_t, vm_impl::executor> vm_impl::opcode_runners;
+bool generic_panic(vm* v)
+{
+    v->panic("No opcode executor");
+    return false;
+}
+
+std::array<vm_impl::executor, 256> vm_impl::opcode_runners = []()->std::array<vm_impl::executor, 256>{
+    std::array<vm_impl::executor, 256> arr;
+    primal::vm_impl::executor panic_handler = { &generic_panic };
+    arr.fill(panic_handler);
+    return arr;
+}();
 std::map<word_t, vm_impl::executor> vm_impl::interrupts;
 
-vm_impl::vm_impl() : m_lbo(m_r[253]), sp(m_r[255])
+vm_impl::vm_impl() :  m_ip(m_r[250]), m_lbo(m_r[253]), sp(m_r[255])
 {
     for(uint8_t i = 0; i<255; i++)
     {
@@ -34,74 +50,121 @@ bool vm_impl::run(const std::vector<uint8_t> &app, vm* v)
     // then copy over the data from app to the end of the memory segment
     std::copy(app.begin(), app.end(), ms.get() + VM_MEM_SEGMENT_SIZE);
     // set the IP and SP to point to the correct location
-    m_ip = VM_MEM_SEGMENT_SIZE + PRIMAL_HEADER_SIZE; // will grow upwards, will skip .P10 and the stringtable loc entry
-    stack_offset = *reinterpret_cast<word_t*>(ms.get() + VM_MEM_SEGMENT_SIZE + 8);
+    word_t ip = VM_MEM_SEGMENT_SIZE + PRIMAL_HEADER_SIZE; // will grow upwards, will skip .P10 and the stringtable loc entry
+    stack_offset = *reinterpret_cast<word_t*>(ms.get() + VM_MEM_SEGMENT_SIZE + 4 + sizeof(word_t));
     sp = stack_offset * word_size;   // will grow upwards
 
     // set the size of the memory into reg 251
     m_r[251] = VM_MEM_SEGMENT_SIZE;
     m_r[252] = sp;
+    m_r[250] = ip;
+
+
+
+#ifdef TICKS
+    using namespace std::chrono;
+    nanoseconds time_per_instruction(0);
+    if (m_clock_speed > 0) {
+        time_per_instruction = nanoseconds(1'000'000'000 / m_clock_speed);
+    }
+    auto last_tick_time = high_resolution_clock::now();
+#endif
 
     // then start running it
-    while(opcode_runners.count(ms[static_cast<size_t>(m_ip)]))
+    while (true)
     {
-        // read in an opcode
+        if(m_debug)
+        {
+            bindump("VM STATE", -1, -1, true);
+        }
+
         uint8_t opc = ms[static_cast<size_t>(m_ip++)];
+
+        // This is the primary condition for gracefully terminating the program.
+        if (opc == 0xFF) {
+            if(m_debug)
+            {
+                bindump("FINAL VM STATE", -1, -1, true);
+            }
+            return true; // Graceful program exit.
+        }
+
+        const auto& exec = opcode_runners[opc];
 
         try
         {
-            // is there a registered opcode runner for the given opcode?
-            if(!opcode_runners[ opc ].runner(v))
+            if (!exec.runner(v))
             {
-                panic();
+                // The handler function returns false on error.
+                panic("Exc failed");
             }
         }
         catch (const primal::vm_panic&)
         {
-            throw;
+            throw; // Re-throw panic to be caught by the main executable.
         }
         catch(...)
         {
-            panic();
+            // Catch any other unexpected C++ exceptions.
+            panic("Generic exception");
         }
 
-        // is the opcode after the current one 0xFF meaning: halt the machine?
-        if(m_ip < 0)
+#ifdef TICKS
+        if (m_clock_speed > 0)
         {
-            panic();
+            auto time_since_last_tick = high_resolution_clock::now() - last_tick_time;
+            if (time_since_last_tick < time_per_instruction)
+            {
+                std::this_thread::sleep_for(time_per_instruction - time_since_last_tick);
+            }
+            last_tick_time = high_resolution_clock::now();
         }
-        if(ms[static_cast<size_t>(m_ip)] == 0xFF)
-        {
-            //bindump();
-            return true;
-        }
+#endif
+
     }
-    panic();
-}
 
-void vm_impl::panic()
+    // theoretically we never should end up here, so let's just panic
+    panic("Run out of bytecode");
+}
+const char* RED     = "\033[1;31m";
+const char* GREEN   = "\033[1;32m";
+const char* YELLOW  = "\033[1;33m";
+const char* WHITE   = "\033[1;37m";
+const char* CYAN    = "\033[1;36m";
+const char* RESET   = "\033[0m";
+void vm_impl::panic(const char* reason)
 {
-    std::cout << "VM PANIC ☹ - instruction dump:\n---------------------------------------------------\n";
-    word_t start = std::max<word_t>(VM_MEM_SEGMENT_SIZE, m_ip - 64);
-    word_t end = m_ip + std::min<word_t>(64, app_size);
+    std::cout << YELLOW << "***********************" << RESET;
+    std::cout << GREEN << R"(
+             __
+            /._)
+     .-^^^-/ /
+    /   _  _/
+  _//|_| |_|
+)" << RESET;
+    std::cout << YELLOW << "***********************\n" << RESET;
+
+    std::cout << RED <<    "!!! PRIMAL VM PANIC !!!\n\n" << RESET;
+
+    std::cout << "[ " << reason << "]\n" << CYAN << "-= Instruction Dump =-\n" << RESET;
+    word_t start = std::max<word_t>(VM_MEM_SEGMENT_SIZE, m_ip |- 64);
+    word_t end = VM_MEM_SEGMENT_SIZE + m_ip + std::min<word_t>(64, app_size);
     bindump("PANIC", start, end, true);
 
-    throw primal::vm_panic("PANIC");
+    std::cout << CYAN << "\n-= Memory Dump =--\n" << RESET;
+    memdump(m_ip - 10, m_ip + 10, m_ip);
+
+    getchar();
+
+    throw primal::vm_panic(reason);
 }
 
-void vm_impl::bindump(const char *title, word_t start, word_t end, bool insert_addr)
+void vm_impl::memdump(word_t start, word_t end, word_t mark, bool insert_addr)
 {
-
-    if(start == -1) start = VM_MEM_SEGMENT_SIZE; //std::max<word_t>(VM_MEM_SEGMENT_SIZE, m_ip - 64);
-    if(end == -1) end = VM_MEM_SEGMENT_SIZE + app_size;
-
-    std::stringstream ss;
     std::string s;
+    std::stringstream ss;
 
-    if(title)
-    {
-        std::cout << "----" << title << "----" << std::endl;
-    }
+    std::cout << "Dump Start:" << start << " End:" << end << std::endl;
 
     for(word_t i = start; i <  end; i++)
     {
@@ -118,6 +181,14 @@ void vm_impl::bindump(const char *title, word_t start, word_t end, bool insert_a
         {
             ss << " ";
         }
+        if(i == mark)
+        {
+            ss << "{";
+        }
+        else
+        {
+            ss << " ";
+        }
         ss << std::setfill('0') << std::setw(2) << std::hex << std::uppercase  << static_cast<int>(ms[static_cast<size_t>(i)]) ;
 
         if(ms[static_cast<size_t>(i)] > 32 && ms[static_cast<size_t>(i)] < 255)
@@ -129,6 +200,14 @@ void vm_impl::bindump(const char *title, word_t start, word_t end, bool insert_a
             s += '.';
         }
 
+        if(i == mark)
+        {
+            ss << "}";
+        }
+        else
+        {
+            ss << " ";
+        }
         if(i == m_ip)
         {
             ss << "<";
@@ -137,7 +216,7 @@ void vm_impl::bindump(const char *title, word_t start, word_t end, bool insert_a
         {
             ss << " ";
         }
-        if(ss.str().length() > 80)
+        if(ss.str().length() >= 80)
         {
             std::cout << ss.str() << " | " << s << std::endl;
             s = "";
@@ -150,26 +229,41 @@ void vm_impl::bindump(const char *title, word_t start, word_t end, bool insert_a
     std::string sttrs = ss.str();
     while(sttrs.length() < 80) sttrs += " ";
 
-    std::cout << sttrs << "    | " << s << std::endl;
-    ss.clear();
-    ss.str(std::string());
+    std::cout << sttrs << "  | " << s << std::endl << std::endl;
+}
+
+void vm_impl::bindump(const char *title, word_t start, word_t end, bool insert_addr)
+{
+    if(start == -1) start = VM_MEM_SEGMENT_SIZE; //std::max<word_t>(VM_MEM_SEGMENT_SIZE, m_ip - 64);
+    if(end == -1) end = VM_MEM_SEGMENT_SIZE + app_size;
+
+    std::stringstream ss;
+
+    if(title)
+    {
+        std::cout << "----" << title << "----" << std::endl;
+    }
+
+    memdump(start, end, m_ip, true);
+
+    std::cout << CYAN << "-= VM Address  / Value =-" << RESET << std::endl;
 
     // memory dump
     for(word_t i=0; i<stack_offset * word_size; i += word_size)
     {
-        ss << std::right << " [" << std::setfill('0') << std::setw(8) << std::dec << i << "] = ";
+        ss << std::right << "    [" << std::setfill('0') << std::setw(8) << std::dec << i << "] = ";
         ss << get_mem(i) << std::endl;
     }
-    ss << "-"; // indicates the stack start
+    ss << "STC" << RED << "↓" << RESET; // indicates the stack start
     for(word_t i = stack_offset * word_size; i<max_used_sp + 4*word_size; i += word_size)
     {
         if(i == sp.value())
         {
-            ss <<">" ; // current stack position
+            ss << RED << " SP→" << RESET; // current stack position
         }
         else
         {
-            if (i > stack_offset * word_size) ss << " ";
+            if (i > stack_offset * word_size) ss << "    ";
         }
 
         ss << std::right << "[" << std::setfill('0') << std::setw(8) << std::dec << i << "] = ";
@@ -177,11 +271,17 @@ void vm_impl::bindump(const char *title, word_t start, word_t end, bool insert_a
     }
     std::cout << ss.str();
 
-    std::cout << "IP=" << std::dec << m_ip << "[:" << m_ip - VM_MEM_SEGMENT_SIZE << "] (" << std::hex << m_ip << ")" << std::endl;
+    std::cout << CYAN << "\n-= Strings =-" << RESET << std::endl;
+    memdump(STRING_TABLE_INDEX_IN_MEM, STRING_TABLE_INDEX_IN_MEM + (word_t)32, 0);
+
+
+    std::cout << CYAN << "\n-= Registers =-" << RESET << std::endl;
+    std::cout << "IP=" << std::dec << m_ip.value() << "[:" << m_ip - VM_MEM_SEGMENT_SIZE << "] (" << std::hex << m_ip.value() << ")" << std::endl;
     std::cout << "SP=" << std::dec << sp.value() << " (" << std::hex << sp.value() << ")" << std::endl;
     std::cout << std::endl;
-}
 
+
+}
 
 reg_subbyte* vm_impl::rsb(uint8_t ridx, uint8_t bidx)
 {
@@ -194,7 +294,7 @@ void vm_impl::set_mem(word_t address, word_t new_value)
 {
     if(address > VM_MEM_SEGMENT_SIZE + app_size || address < 0)
     {
-        panic();
+        panic(std::string("Memory overflow/underflow error. Invalid set at:" + std::to_string(address)).c_str() );
     }
 
     std::memcpy( &ms[0] + address, &new_value, sizeof(new_value));
@@ -204,7 +304,7 @@ word_t vm_impl::get_mem(word_t address)
 {
     if(address > VM_MEM_SEGMENT_SIZE + app_size || address < 0)
     {
-        panic();
+        panic(std::string("Memory overflow/underflow error. Invalid get at:" + std::to_string(address)).c_str() );
     }
 
     word_t v = 0;
@@ -216,7 +316,7 @@ void vm_impl::set_mem_byte(word_t address, uint8_t b)
 {
     if(address > VM_MEM_SEGMENT_SIZE + app_size || address < 0)
     {
-        panic();
+        panic(std::string("Memory overflow/underflow error. Invalid set byte at:" + std::to_string(address)).c_str() );
     }
     ms[static_cast<size_t>(address)] = b;
 }
@@ -225,7 +325,7 @@ uint8_t vm_impl::get_mem_byte(word_t address)
 {
     if(address > VM_MEM_SEGMENT_SIZE + app_size || address < 0)
     {
-        panic();
+        panic(std::string("Memory overflow/underflow error. Invalid get byte at:" + std::to_string(address)).c_str() );
     }
     return ms[static_cast<size_t>(address)];
 }
@@ -269,7 +369,7 @@ memaddress_byte_ref* vm_impl::mem_byte(word_t address)
 
 immediate *vm_impl::imm(word_t v)
 {
-    mi_i++; if(mi_i == 3) mi_i = 1;
+    mi_i++; if(mi_i == 3) mi_i = 0;
 
     imv[mi_i].m_value = v;
     return &imv[mi_i];
@@ -304,6 +404,10 @@ valued *vm_impl::fetch()
     auto dst = fetch_type_dest();
     switch(dst)
     {
+    case type_destination::TYPE_MOD_IMM_BYTE:
+    {
+        return imm(fetch_byte());
+    }
     case type_destination::TYPE_MOD_IMM:
     {
         return imm(fetch_immediate());
@@ -319,6 +423,12 @@ valued *vm_impl::fetch()
     case type_destination::TYPE_MOD_REG_BYTE1:
     case type_destination::TYPE_MOD_REG_BYTE2:
     case type_destination::TYPE_MOD_REG_BYTE3:
+#if TARGET_ARCH == 64
+    case type_destination::TYPE_MOD_REG_BYTE4:
+    case type_destination::TYPE_MOD_REG_BYTE5:
+    case type_destination::TYPE_MOD_REG_BYTE6:
+    case type_destination::TYPE_MOD_REG_BYTE7:
+#endif
     {
         uint8_t ridx = fetch_register_index();
         return rsb(ridx, static_cast<uint8_t>(dst) - static_cast<uint8_t>(type_destination::TYPE_MOD_REG_BYTE0));
@@ -403,14 +513,158 @@ valued *vm_impl::fetch()
         {
             return mem_byte( m_r[ridx].value() / m_r[ridx2].value() );
         }
+        break;
+    }
+
+    case type_destination::TYPE_MOD_UNKNOWN:
+    {
+        panic("Cannot fetch an unknow TD");
     }
     }
 
-    panic();
+    panic(std::string("Unimplemented operation:" + to_string(dst)).c_str() );
 
 }
 
-word_t &vm_impl::ip()      {return m_ip;}
+// Peek functions – do NOT modify m_ip, take a local ip instead
+type_destination vm_impl::peek_type_dest(size_t& ip) const
+{
+    return static_cast<type_destination>(ms[static_cast<size_t>(ip ++)]) ;
+}
+
+uint8_t vm_impl::peek_register_index(size_t&ip) const
+{
+    return ms[static_cast<size_t>(ip ++)];
+}
+
+word_t vm_impl::peek_immediate(size_t& ip) const
+{
+    word_t retv = htovm(*(reinterpret_cast<word_t*>(ms.get() + ip)));
+    ip += word_size;
+    return retv;
+}
+
+uint8_t vm_impl::peek_byte(size_t& ip) const
+{
+    return ms[static_cast<size_t>(ip ++)];
+}
+
+
+void vm_impl::peek(size_t&ip)
+{
+    auto dst = peek_type_dest(ip);
+
+    switch(dst)
+    {
+    case type_destination::TYPE_MOD_IMM:
+    {
+        word_t val = peek_immediate(ip);
+        std::cout << "IMM {" << val << "} ";
+        break;
+    }
+
+    case type_destination::TYPE_MOD_REG_BYTE:
+    {
+        uint8_t ridx = peek_register_index(ip);
+        const auto rdx = m_r[ridx];
+        std::cout << "REG_BYTE r" << unsigned(ridx) << " {" << rdx.debug() << "} " ;
+        break;
+    }
+
+    case type_destination::TYPE_MOD_REG_BYTE0:  // [[fallthrough]]
+    case type_destination::TYPE_MOD_REG_BYTE1:
+    case type_destination::TYPE_MOD_REG_BYTE2:
+    case type_destination::TYPE_MOD_REG_BYTE3:
+#if TARGET_ARCH == 64
+    case type_destination::TYPE_MOD_REG_BYTE4:
+    case type_destination::TYPE_MOD_REG_BYTE5:
+    case type_destination::TYPE_MOD_REG_BYTE6:
+    case type_destination::TYPE_MOD_REG_BYTE7:
+#endif
+    {
+        uint8_t ridx = peek_register_index(ip);
+        unsigned byte_off = static_cast<uint8_t>(dst) - static_cast<uint8_t>(type_destination::TYPE_MOD_REG_BYTE0);
+        std::cout << "REG_BYTE" << byte_off << " $r" << unsigned(ridx) << " ";
+        break;
+    }
+
+    case type_destination::TYPE_MOD_REG:
+    {
+        uint8_t ridx = peek_register_index(ip);
+        const auto rdx = m_r[ridx];
+        std::cout << "REG $r" << std::dec << unsigned(ridx) << " {" << rdx.debug() << "} " ;
+        break;
+    }
+
+    case type_destination::TYPE_MOD_MEM_IMM:
+    {
+        word_t vaddr = peek_immediate(ip);
+        std::cout << "MEM[IMM " << vaddr << "] ";
+        memdump(vaddr - 4,vaddr + 4, vaddr);
+        break;
+    }
+
+    case type_destination::TYPE_MOD_MEM_REG_IDX:
+    {
+        uint8_t ridx = peek_register_index(ip);
+        std::cout << "MEM[ $r" << std::dec << unsigned(ridx) << " ] ";
+        const auto rdx = m_r[ridx];
+
+        std::cout << "REG $r" << std::dec << unsigned(ridx) << " {" << rdx.debug() << "} " ;
+        word_t vaddr = rdx.m_value;
+        memdump(vaddr - 4,vaddr + 4, vaddr);
+
+        break;
+    }
+
+    case type_destination::TYPE_MOD_MEM_REG_BYTE:
+    {
+        uint8_t ridx = peek_register_index(ip);
+        std::cout << "MEM_BYTE[ $r" << std::dec << unsigned(ridx) << " ] ";
+        break;
+    }
+
+    case type_destination::TYPE_MOD_MEM_IMM_BYTE:
+    {
+        word_t vaddr = peek_immediate(ip);
+        std::cout << "MEM_BYTE[IMM " << vaddr << "] ";
+        break;
+    }
+
+    case type_destination::TYPE_MOD_MEM_REG_IDX_OFFS:
+    {
+        uint8_t ridx = peek_register_index(ip);
+        ip++;
+        uint8_t op = peek_byte(ip);
+        ip++;
+        word_t vaddr = peek_immediate(ip);
+
+        std::cout << "MEM_BYTE[ $r" << std::dec << unsigned(ridx) << " "
+                  << static_cast<char>(op) << " " << vaddr << " ] ";
+        break;
+    }
+
+    case type_destination::TYPE_MOD_MEM_REG_IDX_REG_OFFS:
+    {
+        uint8_t ridx = peek_register_index(ip);
+        ip++;
+        uint8_t op = peek_byte(ip);
+        ip++;
+        uint8_t ridx2 = peek_register_index(ip);
+
+        std::cout << "MEM_REG_IDX_REG_OFFS[ $r" << std::dec << unsigned(ridx) << " "
+                  << static_cast<char>(op) << " $r" << std::dec << unsigned(ridx2) << " ] ";
+        break;
+    }
+
+    default:
+        std::cout << "!!!UNKNOWN TYPE!!!" << static_cast<int>(dst) << " ";
+        break;
+    }
+}
+
+
+word_t &vm_impl::ip()      {return m_ip.m_value;}
 
 word_t vm_impl::ip() const {return m_ip;}
 
@@ -426,7 +680,7 @@ bool vm_impl::push(const valued *v)
     if(sp > max_used_sp) max_used_sp = sp.value();
     if(sp.value() > VM_MEM_SEGMENT_SIZE)
     {
-        panic();
+        panic("Stack Overflow Error");
     }
 
     return true;
@@ -442,7 +696,7 @@ word_t vm_impl::pop()
 {
     if(sp.value() - word_size < 0)
     {
-        panic();
+        panic("Stack Underflow Error");
     }
     word_t v = get_mem(sp.value() - word_size);
     sp -= word_size;
@@ -451,10 +705,30 @@ word_t vm_impl::pop()
 
 bool vm_impl::copy(word_t dest, word_t src, word_t cnt)
 {
-    if(dest + cnt > VM_MEM_SEGMENT_SIZE || src < 0 || dest < 0 || src > VM_MEM_SEGMENT_SIZE)
+    if(dest + cnt > VM_MEM_SEGMENT_SIZE || src < 0 || dest < 0)
     {
         return false;
     }
+    if(m_debug)
+    {
+        std::cout << "************************************" << std::endl;
+        std::cout << "COPY: src=" << src << " dest=" << dest << " cnt=" << cnt << std::endl;
+        memdump(src-4, src + cnt, src);
+        std::cout << "************************************" << std::endl;
+    }
+
     std::memmove(&ms[static_cast<size_t>(dest)], &ms[static_cast<size_t>(src)], static_cast<size_t>(cnt));
+
+    if(m_debug)
+    {
+        std::cout << "************************************" << std::endl;
+        memdump(dest - 4, dest + 10 + cnt, dest);
+        std::cout << "************************************" << std::endl;
+    }
     return true;
+}
+
+void vm_impl::set_debug(bool newDebug)
+{
+    m_debug = newDebug;
 }

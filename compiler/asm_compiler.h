@@ -38,7 +38,7 @@ namespace primal
         {
             if(!have_opcode(opc))
             {
-                throw "opcode not registered for compilation: " + opc;
+                throw std::runtime_error("opcode not registered for compilation: " + opc);
             }
             return opcode_compilers[opc];
         }

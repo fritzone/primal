@@ -19,6 +19,8 @@ namespace primal
         std::shared_ptr<ast> left;
         token data;
 
+        std::vector<std::shared_ptr<ast>> children;
+
         /* Builds the AST of the given input token vector inf RPN */
         static void build_ast(std::vector<token>& output, std::shared_ptr<ast>& croot);
 

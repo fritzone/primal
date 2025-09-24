@@ -22,6 +22,7 @@ namespace primal
     private:
 
         std::vector<std::shared_ptr<sequence>> m_if_body;
+        std::vector<std::shared_ptr<sequence>> m_else_body;
     };
 }
 

@@ -4,6 +4,11 @@ string(TIMESTAMP now)
 set(${project}-sources
     ${CMAKE_CURRENT_SOURCE_DIR}/vm.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/vm_impl.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/vm.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/vm_impl.h
+
+    ${CMAKE_CURRENT_SOURCE_DIR}/loaded_function.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/loaded_function.cpp
 )
 
 set(registered_interrupts "")
@@ -17,7 +22,7 @@ function(enable_interrupt nr)
     set(interrupt_file ${CMAKE_CURRENT_SOURCE_DIR}/intr/intr_${nr}.cpp)
     if(EXISTS "${interrupt_file}")
        set(registered_interrupts "${registered_interrupts};${nr}" PARENT_SCOPE)
-       set(registered_interrupt_files "${registered_interrupts};${interrupt_file}" PARENT_SCOPE)
+       set(registered_interrupt_files "${registered_interrupt_files};${interrupt_file}" PARENT_SCOPE)
     else()
         message(FATAL_ERROR "Interrupt ${nr} was requeste however ${interrupt_file} is not to be found")
     endif()
@@ -28,6 +33,7 @@ endfunction()
 #
 
 enable_interrupt(1)
+enable_interrupt(2)
 
 
 # Background works to enable interrupts
@@ -69,8 +75,28 @@ add_library(${project} STATIC
         ${INTRCPP}
 )
 
-target_link_libraries(${project} hal opcode-impl util)
-target_include_directories(${project} PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+# MODIFIED: Link vm library against the interface
+target_link_libraries(${project} hal opcode-impl util interface)
+target_include_directories(${project}
+    PRIVATE
+    ${CMAKE_CURRENT_BINARY_DIR}
+    ${CMAKE_SOURCE_DIR}/interface/include
+)
 
 add_executable(primv ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
 target_link_libraries(primv ${project})
+target_include_directories(primv
+    PRIVATE
+    ${CMAKE_SOURCE_DIR}/interface/include
+)
+
+install(TARGETS ${project}
+    EXPORT primal-targets
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+install(FILES
+    vm.h
+    loaded_function.h
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/primal
+)
+install(TARGETS primv DESTINATION ${CMAKE_INSTALL_BINDIR})

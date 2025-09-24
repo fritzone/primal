@@ -5,6 +5,7 @@
 
 bool primal::impl_ADD(primal::vm* v)
 {
+    v->debug(opcodes::ADD(), OpcodeDebugState::VM_DEBUG_BEFORE);
     primal::valued* dest = v->fetch();
     primal::valued* src  = v->fetch();
 
@@ -12,6 +13,7 @@ bool primal::impl_ADD(primal::vm* v)
 
     v->set_flag(dest->value() != 0);
 
+    v->debug(opcodes::ADD(), OpcodeDebugState::VM_DEBUG_AFTER);
     return true;
 }
 

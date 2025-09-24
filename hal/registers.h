@@ -9,14 +9,28 @@
 #include <map>
 #include <functional>
 #include <array>
+#include <stdexcept>
 
 namespace primal
 {
+#if TARGET_ARCH == 32
+
     static constexpr std::array< std::pair<uint32_t, uint8_t> , 4> masks = {std::make_pair(0x000000FF, 0),
                                                                             std::make_pair(0x0000FF00, 8),
                                                                             std::make_pair(0x00FF0000, 16),
                                                                             std::make_pair(0xFF000000, 24)
     };
+#else
+    static constexpr std::array< std::pair<uint64_t, uint8_t> , 8> masks = {std::make_pair(0x00000000000000FF, 0),
+                                                                            std::make_pair(0x000000000000FF00, 8),
+                                                                            std::make_pair(0x0000000000FF0000, 16),
+                                                                            std::make_pair(0x00000000FF000000, 24),
+                                                                            std::make_pair(0x000000FF00000000, 32),
+                                                                            std::make_pair(0x0000FF0000000000, 40),
+                                                                            std::make_pair(0x00FF000000000000, 48),
+                                                                            std::make_pair(0xFF00000000000000, 56)
+    };
+#endif
 
 /**
  * This defines a structure which can be assigend a value to. When you implement your opcodes
@@ -84,11 +98,14 @@ namespace primal
         virtual void set_value(word_t v) {m_value = v;}
 
         virtual type_destination get_type() const = 0;
+        virtual std::string debug() const = 0;
 
         word_t m_value = 0;
     };
 
 /* This class represents a concrete register that can be found in the system */
+    // ... existing code in hal/registers.h ...
+    /* This class represents a concrete register that can be found in the system */
     struct reg final : public valued
     {
         reg()                   : m_reg_idx(0) {}
@@ -102,6 +119,24 @@ namespace primal
         bool operator == (const reg& v) const { return m_value == v.m_value; }
         using valued::operator==;
 
+        // Post-increment operator
+        reg operator++(int) {
+            reg temp = *this;
+            m_value++;
+            return temp;
+        }
+
+        // Post-decrement operator
+        reg operator--(int) {
+            reg temp = *this;
+            m_value--;
+            return temp;
+        }
+
+        operator word_t() const {
+            return m_value;
+        }
+
         void set_value(const reg& ov) {m_value = ov.m_value;}
         using valued::set_value;
 
@@ -110,8 +145,13 @@ namespace primal
 
         type_destination get_type() const override { return type_destination::TYPE_MOD_REG; }
 
+        std::string debug() const override;
+
         uint8_t m_reg_idx;
     };
+
+    // ... rest of the code in hal/registers.h ...
+
 
 /* This class represents a memory address that can be used in the system */
     struct memaddress final : public valued
@@ -126,6 +166,8 @@ namespace primal
         word_t value() const override { return m_getter(m_address); }
 
         type_destination get_type() const override { return type_destination::TYPE_MOD_MEM_REG_IDX; }
+
+        std::string debug() const override;
 
         word_t m_address = -1;
         std::function<word_t(word_t)> m_getter;
@@ -144,6 +186,8 @@ namespace primal
         word_t value() const override { return m_getter(m_address); }
         type_destination get_type() const override { return type_destination::TYPE_MOD_MEM_REG_BYTE; }
 
+        std::string debug() const override ;
+
         word_t m_address = -1;
         std::function<uint8_t(word_t)> m_getter;
         std::function<void(word_t, uint8_t)> m_setter;
@@ -160,6 +204,8 @@ namespace primal
 
         type_destination get_type() const override { return type_destination::TYPE_MOD_REG_BYTE; }
 
+        std::string debug() const override;
+
         reg* m_r;
         uint8_t m_bidx;
     };
@@ -172,11 +218,28 @@ namespace primal
 
         void set_value(word_t) override
         {
-            throw "cannot do this";
+            throw std::runtime_error("invalid binary: cannot assign to a numeric value");
         }
 
         type_destination get_type() const override { return type_destination::TYPE_MOD_IMM; }
 
+        std::string debug() const override;
+
+    };
+
+    struct immediate_byte : public valued
+    {
+        immediate_byte() = default;
+        explicit immediate_byte(word_t p) { m_value = p; }
+
+        void set_value(word_t) override
+        {
+            throw std::runtime_error("invalid binary: cannot assign to a numeric value");
+        }
+
+        type_destination get_type() const override { return type_destination::TYPE_MOD_IMM_BYTE; }
+
+        std::string debug() const override;
     };
 
 }

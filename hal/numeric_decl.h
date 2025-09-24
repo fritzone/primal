@@ -5,6 +5,10 @@
 
 template <class T> T htovm(T t);
 
+#ifndef TARGET_ARCH
+#define TARGET_ARCH 64
+#endif
+
 // this is the default type for the numbers in the VM
 #if TARGET_ARCH == 32
     using word_t = ::int32_t;

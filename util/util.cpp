@@ -3,7 +3,9 @@
 
 #include <algorithm>
 #include <string>
+#include <cstring>
 #include <ctype.h>
+#include <token.h>
 
 bool util::is_identifier_char(char c) { return isalnum(c) || c == '_'; }
 bool util::is_whitespace(char c) { return c == ' ' || c == '\t' || c == '\r' || c == '\n'; }
@@ -49,4 +51,14 @@ const std::string &util::InputParser::getCmdOption(const std::string &option) co
 bool util::InputParser::cmdOptionExists(const std::string &option) const{
     return std::find(this->tokens.begin(), this->tokens.end(), option)
             != this->tokens.end();
+}
+
+std::string util::read_lp_string(const std::vector<uint8_t> &bytecode, word_t &offset) {
+    uint8_t len = read_value<uint8_t>(bytecode, offset);
+    if (offset + len > static_cast<word_t>(bytecode.size())) {
+        throw std::runtime_error("Unexpected end of file while reading string.");
+    }
+    std::string value(reinterpret_cast<const char*>(&bytecode[offset]), len);
+    offset += len;
+    return value;
 }

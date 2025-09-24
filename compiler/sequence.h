@@ -27,6 +27,7 @@ namespace primal
             PT_CONSUMED         = 3,        // a keyword which consumes its epxression, so no work is needed here
             PT_FUNCTION_CALL    = 4,        // a function call
             PT_FUNCTION_DECL    = 5,        // a function declaration
+            PT_NUMBER           = 6,        // a simple number, like found in var[345]
             PT_INVALID          = 255       // something went wrong
         };
 
@@ -50,6 +51,8 @@ namespace primal
         /* Factory method to create a sequence for the given keyword */
         static std::shared_ptr<sequence> create(std::vector<token> &tokens, source& src);
 
+        void set_string_seq(const std::string &newString_seq);
+
     protected:
 
         /* Compiles the simples of the expressions */
@@ -59,6 +62,7 @@ namespace primal
 
         source& m_src;
         std::shared_ptr<ast> m_root;
+        std::string m_string_seq;
     };
 
 }

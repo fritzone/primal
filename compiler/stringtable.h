@@ -13,8 +13,9 @@ public:
 
     struct entry final
     {
-        word_t location;
+        word_t location {0};
         std::string the_string;
+        word_t in_mem_location {0};
     };
 
     static stringtable& instance();

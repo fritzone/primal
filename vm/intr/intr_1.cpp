@@ -14,19 +14,39 @@ namespace primal
  */
 bool intr_1(vm* v)
 {
-    if(v->r(1) == 0)
+    if(v->r(1).value() == 0)
     {
         std::cout << v->r(2).value();
     }
     else
     {
-        word_t addr = VM_MEM_SEGMENT_SIZE + v->r(2).value();
+        word_t addr = v->r(2).value();
         word_t len = v->r(1).value();
         while(len)
         {
-            std::cout << static_cast<char>(v->get_mem_byte(addr));
-            addr ++;
-            len --;
+            char c = static_cast<char>(v->get_mem_byte(addr));
+            if(c != '\\')
+            {
+                std::cout << c;
+                addr ++;
+                len --;
+            }
+            else
+            {
+                addr ++;
+                len --;
+                if(len)
+                {
+                    c = static_cast<char>(v->get_mem_byte(addr));
+                    addr ++;
+                    len --;
+                    switch(c)
+                    {
+                    case 'n': std::cout << std::endl;
+                        break;
+                    }
+                }
+            }
         }
     }
     return true;

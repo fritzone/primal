@@ -1,6 +1,8 @@
 #ifndef BYTE_ORDER_H
 #define BYTE_ORDER_H
 
+#define COMPILED_ON_LITTLE_ENDIAN
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -9,9 +11,9 @@ extern "C" {
 
 #ifdef COMPILED_ON_LITTLE_ENDIAN
 
-static uint16_t htovm_16(uint16_t s) {return s; }
-static uint32_t htovm_32(uint32_t l) {return l; }
-static uint64_t htovm_64(uint64_t ll){return ll;}
+uint16_t htovm_16(uint16_t s);
+uint32_t htovm_32(uint32_t l);
+uint64_t htovm_64(uint64_t ll);
 
 #else
 typedef union

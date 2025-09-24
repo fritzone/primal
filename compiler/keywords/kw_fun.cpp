@@ -7,31 +7,70 @@
 #include "variable.h"
 
 #include <iostream>
+#include <options.h>
 
 using namespace primal;
 
 sequence::prepared_type kw_fun::prepare(std::vector<token> &tokens)
 {
-    if(tokens.empty())
-    {
+    if (tokens.empty()) {
         return sequence::prepared_type::PT_INVALID;
     }
 
-    // function name should be the first token
+    // Function name is the first token.
     m_function = fun::register_function(tokens[0].data(), m_src);
-
     variable::enter_function(tokens[0].data());
-
     tokens.erase(tokens.begin());
 
-    if(!tokens.empty())
-    {
-        // then the parameters
-        m_function->identify_parameters(tokens);
+    // Find parameter list bounds '(' and ')'.
+    auto it_open = std::find_if(tokens.begin(), tokens.end(), [](const token& t){ return t.get_type() == token::type::TT_OPEN_PARENTHESES; });
+    auto it_close = std::find_if(tokens.begin(), tokens.end(), [](const token& t){ return t.get_type() == token::type::TT_CLOSE_PARENTHESES; });
+
+    if (it_open == tokens.end() || it_close == tokens.end() || it_close < it_open) {
+        throw syntax_error("Malformed parameter list for function " + m_function->name());
     }
 
-    m_function->parse();
+    // Extract tokens for the parameter list.
+    std::vector<token> param_tokens(it_open + 1, it_close);
+    m_function->identify_parameters(param_tokens);
 
+    // Check for an optional return type specifier after the parameter list.
+    {
+    auto it_ret = it_close + 1;
+    if (it_ret != tokens.end()) {
+        entity_type ret_type = get_entity_type(it_ret->data());
+        if (ret_type != entity_type::ET_UNKNOWN) {
+            m_function->set_return_type(ret_type);
+        } else {
+            throw syntax_error("Invalid return type specified for function " + m_function->name());
+        }
+
+        // move it one forward, if there is an extern specifier too
+        it_close ++;
+    }
+    }
+
+    {
+    // Check for an optional extern specifier after the parameter list.
+    auto it_extr = it_close + 1;
+    if (it_extr != tokens.end()) {
+        if(it_extr->data() == "extern")
+        {
+            m_function->set_extern(true);
+        }
+        else
+        {
+            throw syntax_error("Invalid specifier for function " + m_function->name() + " " + it_extr->data());
+        }
+    }
+    }
+
+    //  if(!m_function->is_extern())
+    {
+
+        // Parse the function body.
+        m_function->parse();
+    }
     variable::leave_function();
 
     return sequence::prepared_type::PT_FUNCTION_DECL;
@@ -39,5 +78,19 @@ sequence::prepared_type kw_fun::prepare(std::vector<token> &tokens)
 
 bool kw_fun::compile(compiler* c)
 {
-    return m_function->compile(c);
+
+    if(options::instance().generate_assembly())
+    {
+        options::instance().asm_stream() << "===" << m_string_seq << "===" << std::endl;
+    }
+
+
+    //if(!m_function->is_extern())
+    {
+        return m_function->compile(c);
+    }
+    //else
+    {
+        return true;
+    }
 }

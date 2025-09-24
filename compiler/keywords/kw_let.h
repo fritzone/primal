@@ -28,6 +28,10 @@ namespace primal
     private:
         std::shared_ptr<variable> m_variable;
         std::string m_name;
+        bool m_indexed = false;
+        std::string m_index_expression = "";
+        std::vector<token> m_index_tokens;
+        std::shared_ptr<sequence> m_index_seq;
     };
 
 

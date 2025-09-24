@@ -23,7 +23,7 @@ namespace primal
         options() = default;
 
         // whether the compilation phase will also show the generated assembly
-        bool m_generate_assembly = false;
+        bool m_generate_assembly = true;
 
 //        auto m_asm_stream = std::cout;
     };

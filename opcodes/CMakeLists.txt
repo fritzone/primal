@@ -27,7 +27,7 @@ endfunction()
 ########################################################################################################################
 # Register all the opcodes and the corresponding binary value the keywords, add yours and extend here if necessary.    #
 #                                                                                                                      #
-#              Register the keyword by using: register_opcode(NEW_OPCODE BINARY_VALUE PARAMCOUNT)                      #
+#              Register the keyword by using: register_opcode(NEW_OPCODE BINARY_VALUE PARAMCOUNT OPCODE_FAMILY)        #
 #                                                                                                                      #
 #       Do not forget to provide the implementation in the impl directory to perform the required operations.          #
 #                                                                                                                      #
@@ -61,6 +61,7 @@ register_opcode("NOT" 0x58 1 OF_BIN)
 register_opcode("CALL" 0x59 1 OF_JUMP)
 register_opcode("RET" 0x60 0 OF_JUMP)
 register_opcode("INTR" 0x61 1 OF_JUMP)
+register_opcode("INC" 0xEE 1 OF_ARITH)
 
 ########################################################################################################################
 #                 Done, no more opcodes have to be added after this point in the code                                  #
@@ -119,7 +120,10 @@ foreach(opcode ${registered_opcodes})
 endforeach()
 file(APPEND ${OPCC} "}\n\n }\n")
 
-include_directories(${CMAKE_CURRENT_BINARY_DIR})
+include_directories(
+    ${CMAKE_CURRENT_BINARY_DIR}
+    ${CMAKE_SOURCE_DIR}/interface/include
+)
 
 set(${project}-sources ${OPCH} ${OPCC} ${opcode-sources})
 add_library(opcode-compilers ${opcode-compiler-sources} ${OPCC})

@@ -3,6 +3,7 @@
 #include "opcodes.h"
 #include "variable.h"
 #include "registers.h"
+#include "exceptions.h"
 #include "token.h"
 #include "label.h"
 #include "options.h"
@@ -86,6 +87,37 @@ generate &generate::operator<<(variable &&var)
     return *this;
 }
 
+generate &generate::operator << (indexed_variable_access iva)
+{
+    auto& var = iva.m_var;
+    word_t a = var->location() * word_size;
+    auto address = htovm(a);
+
+    if(options::instance().generate_assembly()) {
+
+        std::stringstream ss;
+        ss << "[" << (var->frame() ? "$r254" + std::string(address>=0?"+":"") : "") << address << "]";
+        options::instance().asm_stream() << std::setfill(' ') << std::left << std::setw(10) << ss.str();
+        params_sent ++;
+    }
+
+    if(var->frame()) // if this variable is in a function make some address calculations
+    {
+        // at the entry point reg 254 is set up to pointto the first element after the SP, ie. the first local variable
+        compiled_code::instance(m_compiler).append(static_cast<uint8_t>(util::to_integral(type_destination ::TYPE_MOD_MEM_REG_IDX_OFFS)));
+        compiled_code::instance(m_compiler).append(254);
+        compiled_code::instance(m_compiler).append('+');
+        compiled_code::instance(m_compiler).append_number(address);
+    }
+    else            // this is a global
+    {
+        compiled_code::instance(m_compiler).append(static_cast<uint8_t>(util::to_integral(type_destination ::TYPE_MOD_MEM_IMM)));
+        compiled_code::instance(m_compiler).append_number(address);
+    }
+
+    return *this;
+}
+
 generate &generate::operator<<(std::shared_ptr<variable> var)
 {
     return operator<<(std::forward<variable>(*var));
@@ -137,7 +169,8 @@ generate &generate::operator<<(const token &tok)
             break;
         }
     default:
-        throw std::string("this token cannot be generated: " + tok.data());
+
+        throw syntax_error("this token cannot be generated: " + tok.data());
 
     }
     return *this;
@@ -172,6 +205,10 @@ generate &generate::operator<<(declare_label &&dl)
 
 generate &generate::operator <<(type_destination td)
 {
+    if(options::instance().generate_assembly()) {
+        options::instance().asm_stream() << to_string(td) << "[" << static_cast<int>(static_cast<uint8_t>(util::to_integral(td))) << "]";
+    }
+
     compiled_code::instance(m_compiler).append(static_cast<uint8_t>(util::to_integral(td)));
     return *this;
 }
@@ -209,26 +246,29 @@ void compiled_code::encountered(const label& l, bool absolute, int delta )
 
 void compiled_code::encountered(const std::string &s, bool absolute, int delta)
 {
-    if(bytes.size() > std::numeric_limits<uint32_t>::max())
+    if(bytes.size() > std::numeric_limits<word_t>::max())
     {
-        throw "sorry mate, this application is too complex for me to compile";
+        throw std::runtime_error("application complexity exceeded compiler capacity");
     }
 
-    if(options::instance().generate_assembly())options::instance().asm_stream() << "\nENC: " << s << " at:" << std::dec << PRIMAL_HEADER_SIZE + static_cast<uint32_t>(delta + static_cast<int>(bytes.size()))  << std::endl;
+    if(options::instance().generate_assembly())
+    {
+        options::instance().asm_stream() << "\nENC: " << s << " at:" << std::dec << PRIMAL_HEADER_SIZE + static_cast<word_t>(delta + static_cast<int>(bytes.size()))  << std::endl;
+    }
 
     if(label_encounters.count(s) > 0)
     {
-        label_encounters[s].push_back( {absolute, static_cast<uint32_t>(delta + static_cast<int>(bytes.size())) } );
+        label_encounters[s].push_back( {absolute, static_cast<word_t>(delta + static_cast<int>(bytes.size())) } );
     }
     else
     {
-        label_encounters[s] = { {absolute, static_cast<uint32_t>(delta + static_cast<int>(bytes.size())) } };
+        label_encounters[s] = { {absolute, static_cast<word_t>(delta + static_cast<int>(bytes.size())) } };
     }
 }
 
 void compiled_code::declare_label(const label& l)
 {
-    label_declarations[l.name()] = static_cast<uint32_t>(bytes.size());
+    label_declarations[l.name()] = static_cast<word_t>(bytes.size());
 }
 
 void compiled_code::string_encountered(int strtbl_idx)
@@ -243,23 +283,38 @@ void compiled_code::string_encountered(int strtbl_idx)
     }
 }
 
+/*
+ * Format:
+ *
+ * .P10<int64_t:funtable><int64_t:stack_segment_start><int64_t:stringtable>
+ * 0   +4 (8)            +12 (8)                      +20 (8)
+ * The reserved is patched to the function table
+ *
+ */
 void compiled_code::finalize()
 {
+    // get the functions
+    auto fun_map = m_compiler->get_function_summaries();
+
     // insert the offset of the string table bytes
     for(size_t i=0; i<word_size; i++)
     {
         bytes.insert(bytes.begin(), 0xFF);
+        std::cout  << "0xFF ";
     }
     // insert the index of the stack segments' start
     for(size_t i=0; i<word_size; i++)
     {
         bytes.insert(bytes.begin(), 0xFF);
+        std::cout  << "0xFF ";
     }
-    // insert the reserved bytes
+    // insert the reserved bytes for function table location
     for(size_t i=0; i<word_size; i++)
     {
         bytes.insert(bytes.begin(), 0xFF);
+        std::cout  << "0xFF ";
     }
+
     // insert the version 1.0 and .P to mark it as a primal compiled script
     bytes.insert(bytes.begin(), '0');bytes.insert(bytes.begin(), '1');bytes.insert(bytes.begin(), 'P');bytes.insert(bytes.begin(), '.');
 
@@ -284,11 +339,21 @@ void compiled_code::finalize()
 
             if(options::instance().generate_assembly())
             {
-                options::instance().asm_stream() << std::dec << "decl:" << ldecl.first << "(@" << ldecl.second << ") " << " ref found at " << lref.second  << " patching to:" << vm_ord << std::endl;
+                options::instance().asm_stream() << std::dec << "decl:" << ldecl.first
+                                                 << "(@" << ldecl.second << ") " << " ref found at "
+                                                 << lref.second  << " patching to:" << vm_ord << std::endl;
             }
 
             memcpy( &bytes[0] + lref.second + PRIMAL_HEADER_SIZE, &vm_ord, sizeof(vm_ord));
-
+            // let's see if we have a function at ldecl.second
+            for(auto& f : fun_map)
+            {
+                if(f.address == ldecl.second)
+                {
+                    std::cout << "!! - found ref:" << f.name << std::endl;
+                    f.address = vm_ord - VM_MEM_SEGMENT_SIZE;
+                }
+            }
         }
     }
 
@@ -296,14 +361,14 @@ void compiled_code::finalize()
     {
     word_t l = bytes.size();
     word_t vm_l = htovm(l);
-    memcpy( &bytes[4], &vm_l, sizeof(vm_l));
+    memcpy( &bytes[20], &vm_l, sizeof(vm_l));
     }
 
     // fix the stack start offset
     {
     word_t l = m_compiler->last_varcount(nullptr);
     word_t vm_l = htovm(l);
-    memcpy( &bytes[8], &vm_l, sizeof(vm_l));
+    memcpy( &bytes[12], &vm_l, sizeof(vm_l));
     }
 
     // finalize the stringtable
@@ -324,14 +389,62 @@ void compiled_code::finalize()
     {
         word_t i = s_e.first;
         auto& entry = stringtable::instance().e(i);
-        word_t vm_loc = htovm(entry.location);
+        word_t vm_loc = htovm(entry.location) + VM_MEM_SEGMENT_SIZE; // +1: because it starts with the length
         for(const auto& e : s_e.second)
         {
             memcpy(&bytes[0] + e + PRIMAL_HEADER_SIZE, &vm_loc, sizeof(vm_loc));
         }
     }
 
+    // Now, fix the reserved bytes to point to the function table
+    {
+        word_t l = bytes.size();
+        word_t vm_l = htovm(l);
+        memcpy( &bytes[4], &vm_l, sizeof(vm_l));
+    }
+    // Place in the function map towards the end of it
+    unsigned char *ptr = (unsigned char *)".fun";
+    bytes.insert(bytes.end(), ptr, ptr + 4);
+
+    auto summaries = fun_map;
+
+    {
+        word_t function_table_count = static_cast<word_t>(summaries.size());
+        word_t ft_count = htovm(function_table_count);
+        for (size_t i = 0; i < sizeof(ft_count); ++i) {
+            bytes.push_back( * (reinterpret_cast<uint8_t *>(&ft_count) + i));
+        }
+    }
+
+    for (const auto& f: summaries) {
+        // 1. Function Name (Length-prefixed)
+        uint8_t name_len = static_cast<uint8_t>(strlen(f.name));
+        bytes.push_back(name_len);
+        bytes.insert(bytes.end(), std::begin(f.name), std::begin(f.name) + name_len);
+
+        // 2. Address
+        word_t address = htovm(f.address);
+        word_t ft_addr_bytes = htovm(address);
+        for (size_t i = 0; i < sizeof(ft_addr_bytes); ++i) {
+            bytes.push_back( * (reinterpret_cast<uint8_t *>(&ft_addr_bytes) + i));
+        }
+
+        // 3. Is Extern Flag
+        bytes.push_back(static_cast<uint8_t>(f.is_extern));
+
+        // 4. Return Type
+        bytes.push_back(static_cast<uint8_t>(f.return_type));
+
+        // 5. Parameter Types (Length-prefixed)
+        uint8_t param_count = static_cast<uint8_t>(f.parameter_count);
+        bytes.push_back(param_count);
+        for (size_t i = 0; i<static_cast<size_t>(param_count); i++ ) {
+            bytes.push_back(static_cast<uint8_t>(*(f.parameter_types + i)));
+        }
+    }
     // all done theoretically
+
+    std::cout << std::endl;
 }
 
 void compiled_code::append_number(word_t v)

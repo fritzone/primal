@@ -8,6 +8,7 @@
 #include <registers.h>
 
 #include <vector>
+#include <sstream>
 #include <map>
 #include <functional>
 #include <memory>
@@ -50,7 +51,7 @@ struct vm_impl
         interrupts[intrn] = t;
     }
 
-    [[noreturn]] void panic() ;
+    [[noreturn]] void panic(const char *reason) ;
 
 
     void bindump(const char* title = nullptr, word_t start = -1, word_t end = -1, bool insert_addr = true);
@@ -97,13 +98,29 @@ struct vm_impl
 
     word_t pop();
 
+
+    void peek(size_t& ip);
+    type_destination peek_type_dest(size_t &ip) const;
+    uint8_t peek_register_index(size_t &ip) const;
+    word_t peek_immediate(size_t &ip) const;
+    uint8_t peek_byte(size_t &ip) const;
+
+
+    void set_debug(bool newDebug);
+#ifdef TICKS
+    void set_speed(uint64_t hertz) { m_clock_speed = hertz; }
+#endif
+
+public:
+    void memdump(word_t start, word_t end, word_t mark, bool insert_addr = true);
+
 private:
 
-    static std::map<uint8_t, executor> opcode_runners;
+    static std::array<executor, 256> opcode_runners;
     static std::map<word_t, executor> interrupts;
 
     reg m_r[VM_REG_COUNT];              // the registers of the machine
-    word_t m_ip = 0;               // the instructions pointer
+    reg& m_ip;               // the instructions pointer
     std::unique_ptr<uint8_t[]> ms;      // the memory segment
 
     reg_subbyte t1 {&this->m_r[0], 0};
@@ -118,6 +135,10 @@ private:
     word_t max_used_sp = 0;
     word_t stack_offset = 0;
     reg& sp;
+    bool m_debug = false;
+#ifdef TICKS
+    word_t m_clock_speed = 1000;
+#endif
 };
 
 }

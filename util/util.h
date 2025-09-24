@@ -1,12 +1,23 @@
-#pragma once
+#ifndef _UTIL_H_
+#define _UTIL_H_
+
+#include "numeric_decl.h"
 
 #include <string>
 #include <cctype>
+#include <cstring>
 #include <memory>
 #include <algorithm>
 #include <functional>
 #include <map>
 #include <vector>
+#include <sstream>
+#include <type_traits>
+
+
+namespace primal{
+class token;
+}
 
 namespace util
 {
@@ -26,16 +37,18 @@ namespace util
         return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
     }
 
-    // trim from start
-    static inline std::string &sltrim(std::string &s) {
-            s.erase(s.begin(), std::find_if(s.begin(), s.end(), std::not1(std::ptr_fun<int, int>(std::isspace))));
-            return s;
+    // trim from start (left)
+    static inline std::string& sltrim(std::string& s) {
+        s.erase(s.begin(), std::find_if(s.begin(), s.end(),
+                                        [](unsigned char ch) { return !std::isspace(ch); }));
+        return s;
     }
 
-    // trim from end
-    static inline std::string &srtrim(std::string &s) {
-            s.erase(std::find_if(s.rbegin(), s.rend(), std::not1(std::ptr_fun<int, int>(std::isspace))).base(), s.end());
-            return s;
+    // trim from end (right)
+    static inline std::string& srtrim(std::string& s) {
+        s.erase(std::find_if(s.rbegin(), s.rend(),
+                             [](unsigned char ch) { return !std::isspace(ch); }).base(), s.end());
+        return s;
     }
 
     // trim from both ends
@@ -89,5 +102,47 @@ namespace util
         private:
             std::vector <std::string> tokens;
     };
+
+    template <typename T>
+    std::string to_string(const T& value) {
+        if constexpr (std::is_arithmetic_v<T>) {
+            // For numbers, delegate to std::to_string (avoids iostream overhead)
+            return std::to_string(value);
+        } else {
+            std::stringstream oss;
+            oss << value;
+            return oss.str();
+        }
+    }
+
+    template <typename T>
+    T string_to_number(const std::string& str) {
+        std::istringstream iss(str);
+        T num{};
+        iss >> num;
+
+        if (iss.fail() || !iss.eof()) {
+            throw std::invalid_argument("Invalid numeric string: " + str);
+        }
+        return num;
+    }
+
+    // Helper to read a value of a specific type from a bytecode vector
+    template<typename T>
+    T read_value(const std::vector<uint8_t>& bytecode, word_t& offset)
+    {
+        if (offset + sizeof(T) > bytecode.size())
+        {
+            throw std::runtime_error("Unexpected end of file while reading value.");
+        }
+        T value;
+        memcpy(&value, &bytecode[offset], sizeof(T));
+        offset += sizeof(T);
+        return value;
+    }
+
+    // Helper to read a length-prefixed string
+    std::string read_lp_string(const std::vector<uint8_t>& bytecode, word_t &offset);
 }
 
+#endif
