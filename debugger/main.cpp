@@ -27,7 +27,7 @@ const int FONT_BYTES_PER_CHAR = 16;
 const int MAIN_VIEW_COLS = 100;
 const int MAIN_VIEW_ROWS = 40;
 const int REGS_VIEW_COLS = 40;
-const int REGS_VIEW_ROWS = 30;
+const int REGS_VIEW_ROWS = 60;
 const int MEM_VIEW_COLS = 75;
 const int MEM_VIEW_ROWS = 30;
 
@@ -66,11 +66,11 @@ struct DisassembledInstruction {
 struct DebuggerWindow {
     SDL_Window* sdl_window = nullptr;
     SDL_Renderer* sdl_renderer = nullptr;
+    SDL_Texture* font_texture = nullptr; // Each window has its own font texture
     Uint32 window_id = 0;
     TextScreen screen;
     bool is_visible = true;
 };
-
 
 // --- Global State ---
 enum class WindowState {
@@ -317,7 +317,6 @@ void populate_header_info(const std::vector<uint8_t>& bytecode, std::vector<std:
 }
 
 
-// --- Text UI Functions ---
 void screen_clear(TextScreen* screen, SDL_Color fg, SDL_Color bg) {
     for (int i = 0; i < screen->cols * screen->rows; ++i) {
         screen->buffer[i] = { ' ', fg, bg };
@@ -337,7 +336,7 @@ void screen_print(TextScreen* screen, int x, int y, const std::string& str, SDL_
         }
     }
 }
-
+/*
 void draw_char_on_renderer(SDL_Renderer* renderer, const unsigned char* font_data, unsigned char char_code, int x, int y, SDL_Color fg, SDL_Color bg, float cell_w, float cell_h) {
     // Calculate cell boundaries precisely to avoid gaps due to floating point inaccuracies.
     int x_start = (int)round(x * cell_w);
@@ -371,24 +370,40 @@ void draw_char_on_renderer(SDL_Renderer* renderer, const unsigned char* font_dat
             }
         }
     }
-}
+} */
+// MODIFIED: Simplified to work with logical coordinates
+void draw_char_on_renderer(SDL_Renderer* renderer, SDL_Texture* font_texture, unsigned char char_code, int x, int y, SDL_Color fg, SDL_Color bg, float cell_w, float cell_h) {
+    // Background
+    SDL_SetRenderDrawColor(renderer, bg.r, bg.g, bg.b, bg.a);
+    SDL_Rect dest_rect = { (int)round(x * cell_w), (int)round(y * cell_h), (int)ceil(cell_w), (int)ceil(cell_h) };
+    SDL_RenderFillRect(renderer, &dest_rect);
 
-void render_text_screen(SDL_Renderer* renderer, TextScreen* screen, const unsigned char* font_data) {
-    int window_w, window_h;
-    SDL_GetRendererOutputSize(renderer, &window_w, &window_h);
-
-    float cell_w = (float)window_w / screen->cols;
-    float cell_h = (float)window_h / screen->rows;
-    if (cell_w < 1.0f || cell_h < 1.0f) return;
-
-    for (int y = 0; y < screen->rows; ++y) {
-        for (int x = 0; x < screen->cols; ++x) {
-            VGAChar vga_char = screen->buffer[y * screen->cols + x];
-            draw_char_on_renderer(renderer, font_data, vga_char.character_code, x, y, vga_char.fg_color, vga_char.bg_color, cell_w, cell_h);
-        }
+    // Foreground
+    if (font_texture && char_code != ' ') {
+        SDL_Rect src_rect = { char_code * FONT_CHAR_WIDTH, 0, FONT_CHAR_WIDTH, FONT_CHAR_HEIGHT };
+        SDL_SetTextureColorMod(font_texture, fg.r, fg.g, fg.b);
+        SDL_RenderCopy(renderer, font_texture, &src_rect, &dest_rect);
     }
 }
 
+
+
+// MODIFIED: Simplified to work with logical coordinates
+void render_text_screen(DebuggerWindow* window) {
+    int window_w, window_h;
+    SDL_GetRendererOutputSize(window->sdl_renderer, &window_w, &window_h);
+
+    float cell_w = (float)window_w / window->screen.cols;
+    float cell_h = (float)window_h / window->screen.rows;
+    if (cell_w < 1.0f || cell_h < 1.0f) return;
+
+    for (int y = 0; y < window->screen.rows; ++y) {
+        for (int x = 0; x < window->screen.cols; ++x) {
+            VGAChar vga_char = window->screen.buffer[y * window->screen.cols + x];
+            draw_char_on_renderer(window->sdl_renderer, window->font_texture, vga_char.character_code, x, y, vga_char.fg_color, vga_char.bg_color, cell_w, cell_h);
+        }
+    }
+}
 
 void draw_window_frame(TextScreen* screen, const std::string& title) {
     SDL_Color frame_fg = TD_BRIGHT_WHITE;
@@ -569,6 +584,44 @@ void draw_register_window(TextScreen* screen, int scroll_y) {
     }
 }
 
+SDL_Texture* create_font_texture(SDL_Renderer* renderer, const unsigned char* font_data) {
+    SDL_Surface* surface = SDL_CreateRGBSurfaceWithFormat(0, FONT_CHAR_WIDTH * FONT_NUM_CHARS, FONT_CHAR_HEIGHT, 32, SDL_PIXELFORMAT_ARGB8888);
+    if (!surface) {
+        std::cerr << "Failed to create font surface: " << SDL_GetError() << std::endl;
+        return nullptr;
+    }
+
+    SDL_LockSurface(surface);
+    Uint32* pixels = (Uint32*)surface->pixels;
+    Uint32 white = SDL_MapRGBA(surface->format, 255, 255, 255, 255);
+    Uint32 transparent = SDL_MapRGBA(surface->format, 0, 0, 0, 0);
+
+    for (int char_code = 0; char_code < FONT_NUM_CHARS; ++char_code) {
+        const unsigned char* glyph = font_data + char_code * FONT_BYTES_PER_CHAR;
+        for (int row = 0; row < FONT_CHAR_HEIGHT; ++row) {
+            for (int col = 0; col < FONT_CHAR_WIDTH; ++col) {
+                int px = char_code * FONT_CHAR_WIDTH + col;
+                int py = row;
+                if ((glyph[row] >> (7 - col)) & 1) {
+                    pixels[py * surface->w + px] = white;
+                } else {
+                    pixels[py * surface->w + px] = transparent;
+                }
+            }
+        }
+    }
+    SDL_UnlockSurface(surface);
+
+    SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_FreeSurface(surface);
+
+    if (!texture) {
+        std::cerr << "Failed to create font texture: " << SDL_GetError() << std::endl;
+        return nullptr;
+    }
+    SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND);
+    return texture;
+}
 
 void draw_memory_window(TextScreen* screen, const std::vector<uint8_t>& mem_data, int scroll_y) {
     draw_window_frame(screen, "Memory View");
@@ -640,6 +693,7 @@ int main(int argc, char** argv) {
     }
 
     SDL_Init(SDL_INIT_VIDEO);
+    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");
 
     DebuggerWindow main_window;
     main_window.screen.cols = MAIN_VIEW_COLS;
@@ -648,6 +702,8 @@ int main(int argc, char** argv) {
     main_window.sdl_window = SDL_CreateWindow("Primal Debugger", 100, 100, MAIN_VIEW_COLS * 9, MAIN_VIEW_ROWS * 18, SDL_WINDOW_RESIZABLE);
     main_window.sdl_renderer = SDL_CreateRenderer(main_window.sdl_window, -1, SDL_RENDERER_ACCELERATED);
     main_window.window_id = SDL_GetWindowID(main_window.sdl_window);
+    //SDL_RenderSetLogicalSize(main_window.sdl_renderer, MAIN_VIEW_COLS * FONT_CHAR_WIDTH, MAIN_VIEW_ROWS * FONT_CHAR_HEIGHT);
+
 
     DebuggerWindow regs_window;
     regs_window.screen.cols = REGS_VIEW_COLS;
@@ -656,15 +712,16 @@ int main(int argc, char** argv) {
     regs_window.sdl_window = SDL_CreateWindow("Registers", 100 + MAIN_VIEW_COLS * 9 + 20, 100, REGS_VIEW_COLS * 9, REGS_VIEW_ROWS * 18, SDL_WINDOW_RESIZABLE);
     regs_window.sdl_renderer = SDL_CreateRenderer(regs_window.sdl_window, -1, SDL_RENDERER_ACCELERATED);
     regs_window.window_id = SDL_GetWindowID(regs_window.sdl_window);
+    //SDL_RenderSetLogicalSize(regs_window.sdl_renderer, REGS_VIEW_COLS * FONT_CHAR_WIDTH, REGS_VIEW_ROWS * FONT_CHAR_HEIGHT);
 
     DebuggerWindow mem_window;
     mem_window.screen.cols = MEM_VIEW_COLS;
     mem_window.screen.rows = MEM_VIEW_ROWS;
     mem_window.screen.buffer.resize(MEM_VIEW_COLS * MEM_VIEW_ROWS);
-    mem_window.sdl_window = SDL_CreateWindow("Memory", 120, 120, MEM_VIEW_COLS * 9, MEM_VIEW_ROWS * 18, SDL_WINDOW_RESIZABLE);
+    mem_window.sdl_window = SDL_CreateWindow("Memory", 120, 120 + REGS_VIEW_ROWS * 18 + 40, MEM_VIEW_COLS * 9, MEM_VIEW_ROWS * 18, SDL_WINDOW_RESIZABLE);
     mem_window.sdl_renderer = SDL_CreateRenderer(mem_window.sdl_window, -1, SDL_RENDERER_ACCELERATED);
     mem_window.window_id = SDL_GetWindowID(mem_window.sdl_window);
-    mem_window.is_visible = true;
+    //SDL_RenderSetLogicalSize(mem_window.sdl_renderer, MEM_VIEW_COLS * FONT_CHAR_WIDTH, MEM_VIEW_ROWS * FONT_CHAR_HEIGHT);
 
     unsigned char font_data[FONT_NUM_CHARS * FONT_BYTES_PER_CHAR];
     FILE* font_file = fopen(FONT_FILENAME, "rb");
@@ -675,6 +732,15 @@ int main(int argc, char** argv) {
     fread(font_data, 1, FONT_NUM_CHARS * FONT_BYTES_PER_CHAR, font_file);
     fclose(font_file);
 
+    // Create a font texture for EACH window
+    main_window.font_texture = create_font_texture(main_window.sdl_renderer, font_data);
+    regs_window.font_texture = create_font_texture(regs_window.sdl_renderer, font_data);
+    mem_window.font_texture = create_font_texture(mem_window.sdl_renderer, font_data);
+
+    if (!main_window.font_texture || !regs_window.font_texture || !mem_window.font_texture) {
+        return 1;
+    }
+
     bool quit = false;
     SDL_Event e;
     while (!quit) {
@@ -682,10 +748,24 @@ int main(int argc, char** argv) {
             if (e.type == SDL_QUIT) {
                 quit = true;
             }
-            if (e.type == SDL_WINDOWEVENT && e.window.event == SDL_WINDOWEVENT_CLOSE) {
-                if (e.window.windowID == main_window.window_id) { quit = true; }
-                else if (e.window.windowID == regs_window.window_id) { regs_window.is_visible = false; SDL_HideWindow(regs_window.sdl_window); }
-                else if (e.window.windowID == mem_window.window_id) { mem_window.is_visible = false; SDL_HideWindow(mem_window.sdl_window); }
+            if (e.type == SDL_WINDOWEVENT) {
+                if (e.window.event == SDL_WINDOWEVENT_RESIZED) {
+                    // Only apply aspect ratio to main and memory windows
+                    if (e.window.windowID == main_window.window_id || e.window.windowID == mem_window.window_id) {
+                        SDL_Window* resized_window = SDL_GetWindowFromID(e.window.windowID);
+                        if (resized_window) {
+                            int new_width = e.window.data1;
+                            int new_height = static_cast<int>(round(new_width * (3.0 / 4.0)));
+                            SDL_SetWindowSize(resized_window, new_width, new_height);
+                        }
+                    }
+                }
+
+                if (e.window.event == SDL_WINDOWEVENT_CLOSE) {
+                    if (e.window.windowID == main_window.window_id) { quit = true; }
+                    else if (e.window.windowID == regs_window.window_id) { regs_window.is_visible = false; SDL_HideWindow(regs_window.sdl_window); }
+                    else if (e.window.windowID == mem_window.window_id) { mem_window.is_visible = false; SDL_HideWindow(mem_window.sdl_window); }
+                }
             }
             if (e.type == SDL_KEYDOWN) {
                 int max_regs_scroll = 0;
@@ -705,7 +785,7 @@ int main(int argc, char** argv) {
                     if (regs_window.is_visible) SDL_ShowWindow(regs_window.sdl_window);
                     else SDL_HideWindow(regs_window.sdl_window);
                     break;
-                case SDLK_F9: // NEW
+                case SDLK_F9:
                     mem_window.is_visible = !mem_window.is_visible;
                     if (mem_window.is_visible) SDL_ShowWindow(mem_window.sdl_window);
                     else SDL_HideWindow(mem_window.sdl_window);
@@ -783,8 +863,7 @@ int main(int argc, char** argv) {
                 screen_print(&main_window.screen, 2, 7, "F7 and F10 will be used for execution control.", TD_GRAY, TD_BLUE);
             }
         }
-
-        render_text_screen(main_window.sdl_renderer, &main_window.screen, font_data);
+        render_text_screen(&main_window);
         SDL_RenderPresent(main_window.sdl_renderer);
 
         if (regs_window.is_visible) {
@@ -792,7 +871,7 @@ int main(int argc, char** argv) {
             SDL_RenderClear(regs_window.sdl_renderer);
             screen_clear(&regs_window.screen, TD_WHITE, TD_BLUE);
             draw_register_window(&regs_window.screen, g_regs_scroll_y);
-            render_text_screen(regs_window.sdl_renderer, &regs_window.screen, font_data);
+            render_text_screen(&regs_window);
             SDL_RenderPresent(regs_window.sdl_renderer);
         }
 
@@ -805,11 +884,14 @@ int main(int argc, char** argv) {
             g_mem_scroll_y = std::min(g_mem_scroll_y, max_mem_scroll);
 
             draw_memory_window(&mem_window.screen, g_bytecode, g_mem_scroll_y);
-            render_text_screen(mem_window.sdl_renderer, &mem_window.screen, font_data);
+            render_text_screen(&mem_window);
             SDL_RenderPresent(mem_window.sdl_renderer);
         }
     }
 
+    SDL_DestroyTexture(main_window.font_texture);
+    SDL_DestroyTexture(regs_window.font_texture);
+    SDL_DestroyTexture(mem_window.font_texture);
     SDL_DestroyRenderer(main_window.sdl_renderer);
     SDL_DestroyWindow(main_window.sdl_window);
     SDL_DestroyRenderer(regs_window.sdl_renderer);
