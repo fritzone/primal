@@ -301,12 +301,8 @@ void print_function_table_xml(std::ostream& os, const std::vector<uint8_t>& byte
     // Read offsets from header to find the function table
     header_offset += 4; // Skip to function table offset, jump over .P10
     word_t func_table_offset = htovm(util::read_value<word_t>(bytecode, header_offset));
-    std::cout << "--- Function Symbol Table  @ " << func_table_offset << std::endl;
     word_t funcs_offs = func_table_offset + 4;
     word_t func_table_count = htovm(util::read_value<word_t>(bytecode, funcs_offs));
-
-    std::cout << "--- Function Symbol Table (" << func_table_count << " entries) ---" << std::endl;
-
     word_t current_offset = funcs_offs;
     for (word_t i = 0; i < func_table_count; ++i) {
         os << "    <Function id=\"" << i + 1 << "\">\n";
